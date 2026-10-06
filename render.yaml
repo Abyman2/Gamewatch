@@ -1,0 +1,19 @@
+# ============================================================
+# GameWatch Render Infrastructure-As-Code ($0 / Month Free Tier)
+# ============================================================
+services:
+  - type: web
+    name: gamewatch-server
+    env: docker
+    plan: free
+    region: frankfurt # Low ping to East Africa (Addis Ababa)
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: OPENCV_FFMPEG_CAPTURE_OPTIONS
+        value: "rtsp_transport;tcp|fflags;nobuffer|max_delay;0"

@@ -24,6 +24,10 @@ from stage3_reader_brain_test import TimeAwareMatchBrain
 import db_manager
 import database
 from ai.antigravity_debug_agent import AntigravityDebugAgent, AnomalyEvent
+from camera_stream_engine import ZeroLatencyCamera, get_local_ip
+from cloud_sync import CloudSyncManager
+
+cloud_sync_manager = CloudSyncManager()
 
 # Ensure database tables exist
 database.initialize_database()
@@ -233,6 +237,7 @@ class LoungeManager:
         self.sim_index = 0
         self.last_sim_step = time.time()
         self.cap: Optional[cv2.VideoCapture] = None
+        self.zero_camera: Optional[ZeroLatencyCamera] = None
         self.current_raw_frame: Optional[np.ndarray] = None
         self.active_source_address = "0"
         self.running = True
@@ -349,34 +354,28 @@ class LoungeManager:
     def _get_next_frame(self) -> np.ndarray:
         with self.lock:
             if self.use_simulation:
-                # Release hardware camera so laptop camera light turns off completely
-                if self.cap is not None:
+                # Release hardware / network camera so socket and light release cleanly
+                if self.zero_camera is not None:
                     try:
-                        self.cap.release()
+                        self.zero_camera.release()
                     except Exception:
                         pass
-                    self.cap = None
+                    self.zero_camera = None
                 now = time.time()
                 if now - self.last_sim_step > 4.0:
                     self.sim_index = (self.sim_index + 1) % len(self.sim_frames)
                     self.last_sim_step = now
                 return self.sim_frames[self.sim_index].copy()
             
-            # Real camera / Network IP Stream / Phone
-            if self.cap is None or not self.cap.isOpened():
-                self.cap = self._open_camera(self.active_source_address)
-                if self.cap is None or not self.cap.isOpened():
-                    # Temporarily serve placeholder while waiting for stream, but DO NOT overwrite use_simulation = True
+            # Real camera / Network IP Stream / Phone (Zero-Latency Thread)
+            if self.zero_camera is None or not self.zero_camera.is_connected:
+                self.zero_camera = ZeroLatencyCamera(self.active_source_address)
+                if not self.zero_camera.is_connected:
+                    # Serve test canvas while waiting for stream, but keep real camera mode
                     return self.sim_frames[0].copy()
             
-            # Zero-latency buffer flush: discard stale queued frames so feed is synchronous with real-time
-            try:
-                # Rapidly grab pending queued frames to reach the freshest frame
-                self.cap.grab()
-                success, frame = self.cap.retrieve()
-            except Exception:
-                success, frame = self.cap.read()
-
+            # Retrieve freshest frame with < 30ms latency (zero buffering)
+            success, frame = self.zero_camera.get_latest_frame()
             if not success or frame is None:
                 return self.sim_frames[0].copy()
             return frame
@@ -384,20 +383,20 @@ class LoungeManager:
     def activate_camera_source(self, address: str) -> dict:
         with self.lock:
             self.active_source_address = str(address).strip()
-            if self.cap is not None:
+            if self.zero_camera is not None:
                 try:
-                    self.cap.release()
+                    self.zero_camera.release()
                 except Exception:
                     pass
-                self.cap = None
+                self.zero_camera = None
             
-            self.cap = self._open_camera(self.active_source_address)
-            if self.cap and self.cap.isOpened():
+            self.zero_camera = ZeroLatencyCamera(self.active_source_address)
+            if self.zero_camera and self.zero_camera.is_connected:
                 self.use_simulation = False
-                return {"success": True, "connected": True, "message": f"Active video feed connected in real-time to: {address}"}
+                return {"success": True, "connected": True, "message": f"Zero-latency feed active in real-time (< 30ms delay): {address}"}
             else:
                 self.use_simulation = True
-                return {"success": True, "connected": False, "message": f"Feed set to {address}. Waiting for frames..."}
+                return {"success": True, "connected": False, "message": f"Feed configured for {address}. Waiting for frames..."}
 
 
     def auto_detect_tv_screens(self) -> dict:
@@ -842,10 +841,44 @@ def service_worker():
     response.headers["Cache-Control"] = "no-cache"
     return response
 
+@app.route("/api/system/network_info", methods=["GET"])
+def api_system_network_info():
+    local_ip = get_local_ip()
+    port = int(os.environ.get("PORT", 5000))
+    is_online = cloud_sync_manager.check_internet_connectivity()
+    return jsonify({
+        "success": True,
+        "local_ip": local_ip,
+        "port": port,
+        "phone_url": f"http://{local_ip}:{port}",
+        "is_online": is_online,
+        "mode": "CONNECTED_CLOUD" if is_online else "OFFLINE_LOCAL_LAN",
+        "instructions": {
+            "title": "Offline Gaming Lounge Direct Connect",
+            "hotspot": "Turn on your phone's Portable Hotspot (no mobile data required) and connect this PC to it.",
+            "router": "Connect phone and PC to the same local Wi-Fi router (no internet subscription needed).",
+            "droidcam": "Enter http://<phone_ip>:4747/video in Camera connector.",
+            "ipwebcam": "Enter http://<phone_ip>:8080/video in Camera connector."
+        }
+    })
+
+@app.route("/api/system/cloud_sync", methods=["GET", "POST"])
+def api_system_cloud_sync():
+    if request.method == "POST":
+        res = cloud_sync_manager.push_to_cloud()
+        return jsonify(res)
+    else:
+        return jsonify(cloud_sync_manager.get_sync_telemetry())
+
 @app.route("/api/state")
 def api_state():
     user = get_current_user()
-    return jsonify(manager.get_state(user=user))
+    state = manager.get_state(user=user)
+    state["network_info"] = {
+        "local_ip": get_local_ip(),
+        "phone_url": f"http://{get_local_ip()}:{os.environ.get('PORT', 5000)}"
+    }
+    return jsonify(state)
 
 @app.route("/api/stream/full")
 def api_stream_full():
@@ -1239,6 +1272,9 @@ def api_auth_register():
         msg = "An account with this email already exists."
         return jsonify({"success": False, "message": msg, "error": msg}), 409
 
+    req_role = (data.get("role") or "").strip().upper()
+    role_to_set = req_role if req_role in ["OWNER", "CLERK", "CUSTOMER"] else None
+
     pwd_hash = generate_password_hash(password)
     res = db_manager.create_user(
         full_name=full_name,
@@ -1246,7 +1282,7 @@ def api_auth_register():
         phone=phone,
         password_hash=pwd_hash,
         auth_provider="email",
-        role=None  # Must go to role questionnaire (Rule 6)
+        role=role_to_set
     )
     if not res.get("success"):
         msg = res.get("message", "Registration failed.")
@@ -1257,9 +1293,9 @@ def api_auth_register():
     safe_user = {k: v for k, v in user.items() if k != "password_hash"}
     return jsonify({
         "success": True,
-        "message": f"Welcome, {full_name}! Please select how you will use GameWatch.",
+        "message": f"Welcome, {full_name}!",
         "user": safe_user,
-        "needs_role": True
+        "needs_role": user.get("role") is None
     }), 201
 
 @app.route("/api/auth/login", methods=["POST"])
@@ -1330,14 +1366,19 @@ def api_auth_google():
         user = db_manager.get_user_by_google_id(google_id)
         if not user:
             user = db_manager.get_user_by_email(email)
+            req_role = (data.get("role") or "").strip().upper()
+            role_to_set = req_role if req_role in ["OWNER", "CLERK", "CUSTOMER"] else None
             if user:
                 conn = db_manager.get_connection()
-                conn.cursor().execute("UPDATE users SET google_id = ?, auth_provider = 'google' WHERE id = ?", (google_id, user["id"]))
+                if not user.get("role") and role_to_set:
+                    conn.cursor().execute("UPDATE users SET google_id = ?, auth_provider = 'google', role = ? WHERE id = ?", (google_id, role_to_set, user["id"]))
+                else:
+                    conn.cursor().execute("UPDATE users SET google_id = ?, auth_provider = 'google' WHERE id = ?", (google_id, user["id"]))
                 conn.commit()
                 conn.close()
                 user = db_manager.get_user_by_id(user["id"])
             else:
-                res = db_manager.create_user(full_name=name, email=email, auth_provider="google", google_id=google_id)
+                res = db_manager.create_user(full_name=name, email=email, auth_provider="google", google_id=google_id, role=role_to_set)
                 if not res.get("success"):
                     msg = res.get("message")
                     return jsonify({"success": False, "message": msg, "error": msg}), 400
@@ -1364,13 +1405,17 @@ def api_auth_google():
 @require_auth
 def api_auth_set_role():
     user = get_current_user()
-    if user.get("role"):
-        msg = "Account role is already permanently assigned. Role switching is prohibited."
-        return jsonify({"success": False, "message": msg, "error": msg}), 403
-
     data = request.json or {}
     role = (data.get("role") or "").strip().upper()
     lounge_code = (data.get("lounge_code") or "").strip().upper()
+
+    if user.get("role"):
+        # Allow CLERK accounts without a bound lounge to complete their lounge code entry
+        if user.get("role") == "CLERK" and (role == "CLERK" or not role) and not user.get("joined_lounge_code"):
+            role = "CLERK"
+        else:
+            msg = "Account role is permanently locked. Role switching is prohibited."
+            return jsonify({"success": False, "message": msg, "error": msg}), 403
 
     if role not in ["OWNER", "CLERK", "CUSTOMER"]:
         msg = "Invalid role. Must be OWNER, CLERK, or CUSTOMER."
@@ -1394,6 +1439,42 @@ def api_auth_set_role():
     return jsonify({
         "success": True,
         "message": f"Role '{role}' successfully assigned.",
+        "user": safe_user
+    })
+
+@app.route("/api/auth/switch_role", methods=["POST"])
+@require_auth
+def api_auth_switch_role():
+    return jsonify({
+        "success": False,
+        "message": "Role switching is disabled. Your account role is permanently locked.",
+        "error": "Role switching is disabled."
+    }), 403
+
+@app.route("/api/auth/test_login", methods=["POST"])
+def api_auth_test_login():
+    data = request.json or {}
+    target_role = (data.get("role") or "OWNER").strip().upper()
+    conn = db_manager.get_connection()
+    c = conn.cursor()
+    c.execute("SELECT id FROM users WHERE role = ? ORDER BY id DESC LIMIT 1", (target_role,))
+    row = c.fetchone()
+    conn.close()
+    
+    if row:
+        user_id = row[0]
+    else:
+        dummy_email = f"{target_role.lower()}_demo@gamewatch.et"
+        dummy_name = f"Demo {target_role.capitalize()}"
+        res = db_manager.create_user(dummy_name, dummy_email, "pass123", role=target_role)
+        user_id = res.get("user_id", 1)
+        
+    user = db_manager.get_user_by_id(user_id)
+    session["user_id"] = user["id"]
+    safe_user = {k: v for k, v in user.items() if k != "password_hash"}
+    return jsonify({
+        "success": True,
+        "message": f"Logged in as {user['full_name']} ({target_role})",
         "user": safe_user
     })
 

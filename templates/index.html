@@ -122,6 +122,12 @@
                     <span>Learn More →</span>
                 </button>
             </div>
+
+            <!-- Quick Sidebar Sign Out Button -->
+            <button type="button" class="sidebar-signout-btn" onclick="handleLogout()" title="Sign Out of GameWatch">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                <span>Sign Out</span>
+            </button>
         </aside>
 
         <!-- ========== MAIN SAAS WORKSPACE ========== -->
@@ -169,13 +175,41 @@
                         <span class="notif-badge-dot"></span>
                     </button>
 
-                    <div class="workspace-profile-badge" onclick="switchView('settings')" title="Manage Account & Lounge Settings">
-                        <div class="profile-avatar-initials" id="top-avatar-initials">AK</div>
-                        <div class="profile-meta-col">
-                            <span class="profile-name-text" id="top-operator-name">Abel Kedede</span>
-                            <span class="profile-role-text" id="top-operator-role">Admin</span>
+                    <!-- Interactive Profile Badge & Dropdown -->
+                    <div class="workspace-profile-wrapper" id="workspace-profile-wrapper">
+                        <div class="workspace-profile-badge" id="top-profile-badge-btn" onclick="toggleUserProfileDropdown(event)" title="Account Profile & Quick Switch">
+                            <div class="profile-avatar-initials" id="top-avatar-initials">AK</div>
+                            <div class="profile-meta-col">
+                                <span class="profile-name-text" id="top-operator-name">Abel Kedede</span>
+                                <span class="profile-role-text" id="top-operator-role">Admin</span>
+                            </div>
+                            <svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#667A94" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#667A94" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+
+                        <!-- Dropdown Menu -->
+                        <div class="workspace-profile-dropdown" id="workspace-profile-dropdown">
+                            <div class="wpd-user-header">
+                                <div class="wpd-avatar" id="wpd-avatar">AK</div>
+                                <div class="wpd-user-meta">
+                                    <div class="wpd-name" id="wpd-name">Abel Kedede</div>
+                                    <div class="wpd-email" id="wpd-email">abel.kedede@gamewatch.et</div>
+                                    <span class="wpd-role-tag" id="wpd-role-tag">Owner / Admin</span>
+                                </div>
+                            </div>
+
+                            <div class="wpd-divider"></div>
+
+                            <div class="wpd-actions">
+                                <button type="button" class="wpd-item-btn" id="wpd-settings-btn" onclick="openSettingsFromDropdown()">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                    <span>Lounge Settings</span>
+                                </button>
+                                <button type="button" class="wpd-item-btn wpd-logout-btn" onclick="closeUserProfileDropdown(); handleLogout();">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                    <span>Sign Out</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="header-stat">
@@ -388,6 +422,20 @@
                     <p class="auth-subtitle">Smart Game-Lounge Management</p>
                 </div>
 
+                <!-- Selected Workspace Role Indicator (Step 2 of Onboarding) -->
+                <div class="auth-role-header-pill" id="auth-role-pill-banner" style="display:none;">
+                    <div class="arhp-left">
+                        <span class="arhp-icon" id="arhp-icon">👑</span>
+                        <div class="arhp-text">
+                            <span class="arhp-sub">SELECTED WORKSPACE</span>
+                            <span class="arhp-role" id="arhp-role-label">Lounge Owner</span>
+                        </div>
+                    </div>
+                    <button type="button" class="arhp-change-btn" onclick="switchView('role-select')" title="Switch to a different account role">
+                        <span>← Change Role</span>
+                    </button>
+                </div>
+
                 <!-- Google OAuth Button -->
                 <button class="btn-google-auth" id="btn-google-login" onclick="handleGoogleAuth()">
                     <svg class="google-icon" viewBox="0 0 24 24">
@@ -493,21 +541,23 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     </button>
                 </form>
+
+
             </div>
         </section>
 
-        <!-- VIEW: QUESTIONNAIRE (ROLE SELECTION - RULE 6) -->
+        <!-- VIEW: QUESTIONNAIRE (ROLE SELECTION - STEP 1 OF ONBOARDING) -->
         <section class="app-view questionnaire-container" id="view-role-select">
             <div class="q-content">
                 <div class="q-header">
                     <span class="q-badge">ONBOARDING · ACCOUNT ROLE</span>
                     <h1 class="q-title">How will you use GameWatch?</h1>
-                    <p class="q-subtitle">Select your role once. Your account will be configured with this workspace.</p>
+                    <p class="q-subtitle">Select your role to get started. You can change your choice anytime.</p>
                 </div>
 
                 <div class="role-cards-grid">
                     <!-- 1. Owner Option -->
-                    <div class="role-selection-card" onclick="handleSelectRole('OWNER')">
+                    <div class="role-selection-card" onclick="chooseOnboardingRole('OWNER')">
                         <div class="role-card-top">
                             <div class="role-icon-box owner">👑</div>
                             <div class="role-title-box">
@@ -515,20 +565,19 @@
                                 <span class="role-quote">"I run a gaming lounge."</span>
                             </div>
                         </div>
-                        <p class="role-desc">Full access to business revenue, camera TV calibration, clerk shifts, and tamper-evident audit logs.</p>
+                        <p class="role-desc">Full command center: business revenue, camera TV calibration, clerk shifts, and tamper-evident audit logs.</p>
                         <div class="role-features-row">
                             <span class="rf-pill">💰 Financials</span>
                             <span class="rf-pill">📹 Calibration</span>
                             <span class="rf-pill">🔒 Audit Vault</span>
                         </div>
-                        <button class="btn-select-role owner">
-                            <span>Select Owner</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        <button type="button" class="btn-select-role owner">
+                            <span>Select Owner →</span>
                         </button>
                     </div>
 
-                    <!-- 2. Clerk Option (Requires Owner Code) -->
-                    <div class="role-selection-card" onclick="openClerkCodeModal()">
+                    <!-- 2. Clerk Option -->
+                    <div class="role-selection-card" onclick="chooseOnboardingRole('CLERK')">
                         <div class="role-card-top">
                             <div class="role-icon-box clerk">👤</div>
                             <div class="role-title-box">
@@ -536,38 +585,42 @@
                                 <span class="role-quote">"I work at a gaming lounge."</span>
                             </div>
                         </div>
-                        <p class="role-desc">Requires 6-character Lounge Owner Code. Manage shifts, payments, and checkout for your owner's stations.</p>
+                        <p class="role-desc">Fast cashier & match counter: record customer matches, collect cash & Telebirr, and manage shift registers.</p>
                         <div class="role-features-row">
-                            <span class="rf-pill">🔑 Needs Owner Code</span>
+                            <span class="rf-pill">🔑 Station Counter</span>
                             <span class="rf-pill">💳 Checkout</span>
-                            <span class="rf-pill">🏁 Shift Drawer</span>
+                            <span class="rf-pill">🏁 Shift Register</span>
                         </div>
                         <button type="button" class="btn-select-role clerk">
-                            <span>Enter Owner Code</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            <span>Select Clerk →</span>
                         </button>
                     </div>
 
-                    <!-- 3. Customer Option (Connect or Explore) -->
-                    <div class="role-selection-card" onclick="openCustomerOnboardingModal()">
+                    <!-- 3. Customer Option -->
+                    <div class="role-selection-card" onclick="chooseOnboardingRole('CUSTOMER')">
                         <div class="role-card-top">
                             <div class="role-icon-box customer">🎮</div>
                             <div class="role-title-box">
                                 <span class="role-name">Customer / Player</span>
-                                <span class="role-quote">"I want to play and discover gaming lounges."</span>
+                                <span class="role-quote">"I want to play & discover lounges."</span>
                             </div>
                         </div>
-                        <p class="role-desc">Connect directly via Table Code or Explore verified gaming lounges nearby in Addis Ababa.</p>
+                        <p class="role-desc">Gamer community hub: live station availability, tournament brackets, and queue tracking across Addis Ababa.</p>
                         <div class="role-features-row">
                             <span class="rf-pill">🔍 Explore Lounges</span>
-                            <span class="rf-pill">📺 Live TV Availability</span>
-                            <span class="rf-pill">⏳ Queue List</span>
+                            <span class="rf-pill">📺 Live TVs</span>
+                            <span class="rf-pill">🏆 Tournaments</span>
                         </div>
                         <button type="button" class="btn-select-role customer">
-                            <span>Connect / Explore</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                            <span>Select Player →</span>
                         </button>
                     </div>
+                </div>
+
+                <!-- Direct link for existing accounts -->
+                <div class="onboarding-footer-row">
+                    <span>Already have an account?</span>
+                    <button type="button" class="btn-link-signin" onclick="goToSignInWithoutRole()">Sign In directly →</button>
                 </div>
             </div>
         </section>
@@ -1676,10 +1729,7 @@
                     </div>
                     <div class="agf-right-block">
                         <span class="agf-copy">© 2026 TSEGA Labs. All rights reserved.</span>
-                        <div class="agf-status-pill">
-                            <span class="live-dot-green"></span>
-                            <span>Engine Operational</span>
-                        </div>
+
                     </div>
                 </div>
             </footer>
@@ -3023,7 +3073,7 @@
                     <span id="mnd-theme-icon">🌓</span>
                     <span id="mnd-theme-txt">Switch Theme</span>
                 </button>
-                <button type="button" class="mnd-tool-btn mnd-btn-logout" onclick="logout(); closeMobileNavDrawer();">
+                <button type="button" class="mnd-tool-btn mnd-btn-logout" onclick="handleLogout(); closeMobileNavDrawer();">
                     <span>🚪</span>
                     <span>Logout</span>
                 </button>

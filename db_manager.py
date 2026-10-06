@@ -734,7 +734,9 @@ def update_user_role(user_id: int, role: str, lounge_code: str = None) -> dict:
         return {"success": False, "message": "User not found."}
     
     # Rule 5 & 22: ONE USER = ONE ROLE. Role cannot be switched once selected.
-    if existing["role"] and existing["role"] in valid_roles:
+    # Exception: Allow an unbound CLERK to submit and bind their required lounge access code
+    is_clerk_binding = (existing["role"] == "CLERK" and role_norm == "CLERK" and not existing["joined_lounge_code"])
+    if existing["role"] and existing["role"] in valid_roles and not is_clerk_binding:
         connection.close()
         return {
             "success": False, 

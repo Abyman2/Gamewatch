@@ -1,0 +1,3 @@
+# Cloudflare Pages API Reverse Proxy Rule
+# Automatically proxies /api/ requests to the free-tier backend container
+/api/*  https://gamewatch-server.onrender.com/api/:splat  200

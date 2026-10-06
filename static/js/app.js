@@ -228,27 +228,31 @@ function switchView(viewId) {
         v.classList.toggle('active', v.id === `view-${viewId}`);
     });
 
-    // Header visibility: hide on auth and questionnaire views
     const isAuthOrRole = (viewId === 'auth' || viewId === 'role-select');
-    const header = document.getElementById('app-top-header');
+
+    // Toggle body class for clean full-screen isolation on auth view
+    if (isAuthOrRole) {
+        document.body.classList.add('auth-view-active');
+    } else {
+        document.body.classList.remove('auth-view-active');
+    }
+
+    // Direct layout element visibility
+    const sidebar = document.getElementById('app-sidebar');
+    const header = document.getElementById('app-workspace-header');
+    const heroBillboard = document.getElementById('hero-sponsor-billboard');
+    const marqueeTicker = document.getElementById('discovery-marquee-wrap');
+    const mobileBottomNav = document.getElementById('mobile-bottom-nav');
+
+    if (sidebar) sidebar.style.display = isAuthOrRole ? 'none' : '';
     if (header) header.style.display = isAuthOrRole ? 'none' : 'flex';
+    if (mobileBottomNav) mobileBottomNav.style.display = isAuthOrRole ? 'none' : '';
 
-    // Sponsor Visibility Architecture (Mobbin & Material UX Standards):
-    // - On 'setup' (hardware TV calibration): hide large billboards & ticker so camera canvas gets 100% viewport.
-    // - On 'home' & 'customer' (gaming hubs): display premier top billboard, dynamic marquee, and tournament banner.
-    // - On operational views ('billing', 'ai', 'analytics', 'settings'): show sleek marquee ticker without pushing admin tools down.
-    const topBillboard = document.getElementById('sponsor-billboard-top');
-    const bottomBillboard = document.getElementById('sponsor-billboard-bottom');
-    const marqueeTicker = document.getElementById('sponsor-marquee-ticker');
-
-    if (topBillboard) {
-        topBillboard.style.display = (!isAuthOrRole && (viewId === 'home' || viewId === 'customer')) ? 'block' : 'none';
+    if (heroBillboard) {
+        heroBillboard.style.display = (!isAuthOrRole && (viewId === 'home' || viewId === 'customer')) ? 'block' : 'none';
     }
     if (marqueeTicker) {
         marqueeTicker.style.display = (!isAuthOrRole && viewId !== 'setup') ? 'block' : 'none';
-    }
-    if (bottomBillboard) {
-        bottomBillboard.style.display = (!isAuthOrRole && (viewId === 'home' || viewId === 'customer')) ? 'block' : 'none';
     }
 
     // Scroll to top
@@ -2157,56 +2161,164 @@ function showSplashError(msg) {
 // HEADER USER PILL & BADGE SYNCHRONIZATION
 // ============================================================
 function updateHeaderUserBadge(user, role) {
+    const effectiveRole = (role || (user && user.role) || (App && App.currentRole) || '').toUpperCase();
+    const roleLower = effectiveRole.toLowerCase();
+
+    let displayName = 'Guest';
+    let displayInitials = 'GW';
+    let roleTitle = 'Logged Out';
+
+    if (user) {
+        displayName = user.full_name || (user.email ? user.email.split('@')[0] : 'Account');
+        const parts = displayName.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            displayInitials = (parts[0][0] + parts[1][0]).toUpperCase();
+        } else if (parts.length === 1 && parts[0].length > 0) {
+            displayInitials = parts[0].slice(0, 2).toUpperCase();
+        }
+    }
+
+    if (effectiveRole === 'OWNER') roleTitle = 'Owner / Admin';
+    else if (effectiveRole === 'CLERK') roleTitle = 'Clerk';
+    else if (effectiveRole === 'CASHIER') roleTitle = 'Cashier';
+    else if (effectiveRole === 'CUSTOMER') roleTitle = 'Player';
+    else if (user) roleTitle = 'Active User';
+
+    // 1. Update the visible Workspace Header Profile Badge
+    const topAvatar = document.getElementById('top-avatar-initials');
+    const topName = document.getElementById('top-operator-name');
+    const topRole = document.getElementById('top-operator-role');
+
+    if (topAvatar) topAvatar.textContent = displayInitials;
+    if (topName) topName.textContent = displayName;
+    if (topRole) topRole.textContent = roleTitle;
+
+    // 2. Update the Dropdown Menu items
+    const wpdAvatar = document.getElementById('wpd-avatar');
+    const wpdName = document.getElementById('wpd-name');
+    const wpdEmail = document.getElementById('wpd-email');
+    const wpdRole = document.getElementById('wpd-role-tag');
+
+    if (wpdAvatar) wpdAvatar.textContent = displayInitials;
+    if (wpdName) wpdName.textContent = displayName;
+    if (wpdEmail) wpdEmail.textContent = user ? (user.email || 'operator@gamewatch.et') : 'Not signed in';
+    if (wpdRole) {
+        wpdRole.textContent = roleTitle;
+        wpdRole.className = `wpd-role-tag ${roleLower}`;
+    }
+
+    // Highlight active role in test role switcher chips
+    document.querySelectorAll('.wpd-role-chip').forEach(btn => {
+        const btnRole = (btn.getAttribute('data-role') || '').toUpperCase();
+        btn.classList.toggle('active', btnRole === effectiveRole);
+    });
+
+    // 3. Update hidden compatibility elements for existing legacy logic
     const badgeEl = document.getElementById('header-user-badge');
     const nameEl = document.getElementById('header-user-name');
     const roleTagEl = document.getElementById('header-user-role-tag');
     const iconWrapEl = document.getElementById('header-user-icon-wrap');
 
-    const effectiveRole = (role || (user && user.role) || (App && App.currentRole) || '').toUpperCase();
-    const roleLower = effectiveRole.toLowerCase();
-
-    let displayName = 'Account';
-    if (user) {
-        displayName = user.full_name || (user.email ? user.email.split('@')[0] : 'Account');
-    } else if (effectiveRole) {
-        displayName = effectiveRole.charAt(0) + effectiveRole.slice(1).toLowerCase();
-    }
-
-    if (nameEl) {
-        nameEl.textContent = displayName;
-    }
-
+    if (nameEl) nameEl.textContent = displayName;
     if (roleTagEl) {
         if (effectiveRole) {
-            roleTagEl.textContent = effectiveRole === 'CUSTOMER' ? 'PLAYER' : effectiveRole;
+            roleTagEl.textContent = roleTitle;
             roleTagEl.className = `user-pill-role-tag ${roleLower}`;
             roleTagEl.style.display = '';
         } else {
             roleTagEl.style.display = 'none';
         }
     }
+    if (iconWrapEl) iconWrapEl.className = `user-avatar-badge ${roleLower}`;
+    if (badgeEl) badgeEl.title = user ? `${displayName} · ${effectiveRole || 'Active'}` : 'Current Active Session';
 
-    if (iconWrapEl) {
-        iconWrapEl.className = `user-avatar-badge ${roleLower}`;
-    }
-
-    if (badgeEl) {
-        badgeEl.title = user ? `${displayName} · ${effectiveRole || 'Active'}` : 'Current Active Session';
-    }
-
-    // Update Settings Operator Profile Card
+    // 4. Update Settings Operator Profile Card
     const setOpName = document.getElementById('settings-operator-name');
     const setOpRole = document.getElementById('settings-operator-role');
     const setOpEmail = document.getElementById('settings-operator-email');
     if (setOpName) setOpName.textContent = displayName;
     if (setOpRole) {
-        setOpRole.textContent = effectiveRole === 'CUSTOMER' ? 'PLAYER' : effectiveRole;
+        setOpRole.textContent = roleTitle;
         setOpRole.className = `user-pill-role-tag ${roleLower}`;
     }
     if (setOpEmail) {
         setOpEmail.textContent = (user && user.email) ? user.email : (effectiveRole ? `${roleLower}@gamewatch.et` : 'operator@gamewatch.et');
     }
 }
+
+// User Profile Dropdown & Testing Persona Actions
+window.toggleUserProfileDropdown = function(e) {
+    if (e) {
+        e.stopPropagation();
+        e.preventDefault();
+    }
+    const dd = document.getElementById('workspace-profile-dropdown');
+    if (dd) dd.classList.toggle('open');
+};
+
+window.closeUserProfileDropdown = function() {
+    const dd = document.getElementById('workspace-profile-dropdown');
+    if (dd) dd.classList.remove('open');
+};
+
+document.addEventListener('click', (e) => {
+    const wrap = document.getElementById('workspace-profile-wrapper');
+    if (wrap && !wrap.contains(e.target)) {
+        window.closeUserProfileDropdown();
+    }
+});
+
+window.openSettingsFromDropdown = function() {
+    window.closeUserProfileDropdown();
+    if (App.currentRole === 'OWNER') {
+        switchView('settings');
+    } else {
+        showToast('ℹ Lounge configuration is reserved for the Owner account', 'info');
+    }
+};
+
+window.switchTestRole = async function(role) {
+    window.closeUserProfileDropdown();
+    try {
+        const res = await fetch('/api/auth/switch_role', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: role })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showToast(data.error || 'Role switch failed', 'error');
+            return;
+        }
+        App.currentUser = data.user;
+        showToast(`Role switched to ${role} (${data.user.full_name})`);
+        applyRole(role);
+    } catch (err) {
+        showToast('Connection error switching role', 'error');
+    }
+};
+
+window.quickTestLogin = async function(role) {
+    try {
+        const res = await fetch('/api/auth/test_login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: role })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            showToast(data.error || 'Test login failed', 'error');
+            return;
+        }
+        App.currentUser = data.user;
+        showToast(`Logged in as ${data.user.full_name} (${role})`);
+        applyRole(role);
+    } catch (err) {
+        showToast('Connection error during test login', 'error');
+    }
+};
+
+window.logout = window.handleLogout;
 
 // ============================================================
 // ROLE APPLICATION & PERMISSIONS (Hoisted Function Declaration)
@@ -2264,6 +2376,10 @@ function applyRole(role) {
 
         switchView('customer');
     } else if (role === 'CLERK') {
+        if (!App.currentUser?.joined_lounge_code) {
+            openClerkCodeModal();
+            return;
+        }
         // Clerk sees Stations, Billing, Analytics, Customer, and Shift Banner
         if (homeTab) homeTab.style.display = 'flex';
         if (bnavHome) bnavHome.style.display = 'flex';
@@ -2317,11 +2433,11 @@ async function initAuthAndRole() {
     try {
         const res = await fetch('/api/auth/me');
         if (!res.ok) {
-            // Not authenticated
+            // Not authenticated: Show Onboarding role selection FIRST (Professional Experience)
             App.currentUser = null;
             updateHeaderUserBadge(null, null);
             dismissSplashScreen();
-            switchView('auth');
+            switchView('role-select');
             return;
         }
 
@@ -2332,9 +2448,13 @@ async function initAuthAndRole() {
         updateHeaderUserBadge(data.user, data.user?.role);
 
         if (!data.user || !data.user.role) {
-            // Logged in but needs role questionnaire
+            // Logged in but needs role selection
             dismissSplashScreen();
             switchView('role-select');
+        } else if (data.user.role === 'CLERK' && !data.user.joined_lounge_code) {
+            dismissSplashScreen();
+            switchView('role-select');
+            openClerkCodeModal();
         } else {
             dismissSplashScreen();
             applyRole(data.user.role);
@@ -2342,10 +2462,52 @@ async function initAuthAndRole() {
     } catch (err) {
         console.error('Auth initialization error:', err);
         dismissSplashScreen();
-        switchView('auth');
+        switchView('role-select');
         showSplashError('Session check failed — please log in');
     }
 }
+
+// Onboarding Step 1 -> Step 2 Transitions
+window.chooseOnboardingRole = function(role) {
+    role = (role || 'OWNER').toUpperCase();
+    App.selectedRole = role;
+
+    const banner = document.getElementById('auth-role-pill-banner');
+    const icon = document.getElementById('arhp-icon');
+    const label = document.getElementById('arhp-role-label');
+
+    if (banner) banner.style.display = 'flex';
+
+    if (role === 'OWNER') {
+        if (icon) icon.textContent = '👑';
+        if (label) label.textContent = 'Lounge Owner';
+    } else if (role === 'CLERK') {
+        if (icon) icon.textContent = '👤';
+        if (label) label.textContent = 'Station Clerk';
+    } else {
+        if (icon) icon.textContent = '🎮';
+        if (label) label.textContent = 'Customer / Player';
+    }
+
+    // If user is already logged in, assign role directly
+    if (App.currentUser) {
+        if (role === 'CLERK' && !App.currentUser.joined_lounge_code) {
+            openClerkCodeModal();
+        } else {
+            handleSelectRole(role);
+        }
+    } else {
+        // Unauthenticated: Proceed smoothly to Step 2 (Sign In / Register card)
+        switchView('auth');
+    }
+};
+
+window.goToSignInWithoutRole = function() {
+    App.selectedRole = null;
+    const banner = document.getElementById('auth-role-pill-banner');
+    if (banner) banner.style.display = 'none';
+    switchView('auth');
+};
 
 window.toggleAuthMode = function(mode) {
     const tabLogin = document.getElementById('tab-auth-login');
@@ -2453,7 +2615,12 @@ window.submitGoogleAuthWithEmail = async function(email, fullName) {
         const res = await fetch('/api/auth/google', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ credential: email, email: email, name: fullName })
+            body: JSON.stringify({ 
+                credential: email, 
+                email: email, 
+                name: fullName,
+                role: App.selectedRole 
+            })
         });
         const data = await res.json();
         if (!res.ok) {
@@ -2463,8 +2630,13 @@ window.submitGoogleAuthWithEmail = async function(email, fullName) {
 
         App.currentUser = data.user;
         showToast(`Google authenticated as ${data.user.full_name}`);
-        if (!data.user.role) {
+        const effectiveRole = data.user.role || App.selectedRole;
+        if (!effectiveRole) {
             switchView('role-select');
+        } else if (effectiveRole === 'CLERK' && !data.user.joined_lounge_code) {
+            openClerkCodeModal();
+        } else if (!data.user.role && App.selectedRole) {
+            handleSelectRole(App.selectedRole);
         } else {
             applyRole(data.user.role);
         }
@@ -2524,8 +2696,13 @@ window.handleEmailLogin = async function(e) {
         App.currentUser = data.user;
         showToast(`Welcome back, ${data.user.full_name}`);
 
-        if (!data.user.role) {
+        const effectiveRole = data.user.role || App.selectedRole;
+        if (!effectiveRole) {
             switchView('role-select');
+        } else if (effectiveRole === 'CLERK' && !data.user.joined_lounge_code) {
+            openClerkCodeModal();
+        } else if (!data.user.role && App.selectedRole) {
+            handleSelectRole(App.selectedRole);
         } else {
             applyRole(data.user.role);
         }
@@ -2597,7 +2774,8 @@ window.handleRegistration = async function(e) {
                 email: email,
                 phone: phone,
                 password: password,
-                confirm_password: confirmPassword
+                confirm_password: confirmPassword,
+                role: App.selectedRole
             })
         });
         const data = await res.json();
@@ -2608,13 +2786,27 @@ window.handleRegistration = async function(e) {
 
         App.currentUser = data.user;
         showToast(`Account created! Welcome, ${data.user.full_name}`);
-        switchView('role-select');
+        const effectiveRole = data.user.role || App.selectedRole;
+        if (!effectiveRole) {
+            switchView('role-select');
+        } else if (effectiveRole === 'CLERK' && !data.user.joined_lounge_code) {
+            openClerkCodeModal();
+        } else if (!data.user.role && App.selectedRole) {
+            handleSelectRole(App.selectedRole);
+        } else {
+            applyRole(data.user.role);
+        }
     } catch (err) {
         showToast('Connection error during registration', 'error');
     }
 };
 
 window.handleSelectRole = async function(role) {
+    role = (role || '').toUpperCase();
+    if (role === 'CLERK' && !App.currentUser?.joined_lounge_code) {
+        openClerkCodeModal();
+        return;
+    }
     try {
         const res = await fetch('/api/auth/set_role', {
             method: 'POST',
@@ -2641,9 +2833,10 @@ window.handleLogout = async function() {
     } catch (e) {}
 
     App.currentUser = null;
+    App.selectedRole = null;
     updateHeaderUserBadge(null, null);
     showToast('Logged out of GameWatch');
-    switchView('auth');
+    switchView('role-select'); // Shows Onboarding FIRST!
 };
 
 window.toggleLoungeSettingsEdit = function(showEdit) {
@@ -4034,24 +4227,44 @@ window.openClerkCodeModal = function() {
     const modal = document.getElementById('clerk-code-modal');
     if (modal) {
         modal.classList.add('open');
-        document.getElementById('input-clerk-code')?.focus();
+        const codeInput = document.getElementById('input-clerk-code');
+        if (codeInput) {
+            codeInput.value = '';
+            setTimeout(() => codeInput.focus(), 100);
+        }
+        const errSpan = document.getElementById('err-clerk-code');
+        if (errSpan) {
+            errSpan.textContent = '';
+            errSpan.classList.remove('visible');
+        }
     }
 };
 
 window.closeClerkCodeModal = function() {
     const modal = document.getElementById('clerk-code-modal');
     if (modal) modal.classList.remove('open');
+    if ((App.currentRole === 'CLERK' || App.selectedRole === 'CLERK' || App.currentUser?.role === 'CLERK') && !App.currentUser?.joined_lounge_code) {
+        showToast('Lounge Access Code is required for Station Clerks to access stations.', 'warning');
+        handleLogout();
+    }
 };
 
 window.submitClerkLoungeCode = async function(e) {
     if (e) e.preventDefault();
     const codeInput = document.getElementById('input-clerk-code');
     const errSpan = document.getElementById('err-clerk-code');
+    const submitBtn = document.getElementById('btn-submit-clerk-code');
     const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
 
     if (!code) {
         if (errSpan) { errSpan.textContent = '⚠ Lounge code is required'; errSpan.classList.add('visible'); }
         return;
+    }
+    if (errSpan) { errSpan.textContent = ''; errSpan.classList.remove('visible'); }
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Verifying...</span>';
     }
 
     try {
@@ -4060,6 +4273,10 @@ window.submitClerkLoungeCode = async function(e) {
         const isValid = verifyData && (verifyData.valid === true || verifyData.success === true) && verifyData.lounge;
         if (!verifyRes.ok || !isValid) {
             if (errSpan) { errSpan.textContent = '⚠ ' + (verifyData.message || verifyData.error || 'Invalid Lounge Access Code'); errSpan.classList.add('visible'); }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Verify &amp; Connect Lounge</span>';
+            }
             return;
         }
 
@@ -4070,9 +4287,11 @@ window.submitClerkLoungeCode = async function(e) {
         });
         const data = await res.json();
         if (data.success) {
-            closeClerkCodeModal();
-            showToast(`Connected to ${verifyData.lounge.name} as Station Clerk!`);
             App.currentUser = data.user;
+            App.currentUser.joined_lounge_code = code;
+            const modal = document.getElementById('clerk-code-modal');
+            if (modal) modal.classList.remove('open');
+            showToast(`Connected to ${verifyData.lounge.name} as Station Clerk!`);
             applyRole('CLERK');
             fetchState();
         } else {
@@ -4080,6 +4299,11 @@ window.submitClerkLoungeCode = async function(e) {
         }
     } catch (err) {
         showToast('Error verifying lounge code: ' + err.message, 'error');
+    } finally {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span>Verify &amp; Connect Lounge</span>';
+        }
     }
 };
 
