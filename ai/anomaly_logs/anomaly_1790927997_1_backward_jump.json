@@ -1,0 +1,15 @@
+{
+    "timestamp": "2026-10-02 10:59:57",
+    "tv_id": 1,
+    "event_type": "BACKWARD_JUMP",
+    "current_state": "MATCH_IN_PROGRESS",
+    "detected_clock": "01:05",
+    "detected_seconds": 65,
+    "previous_clock": "03:15",
+    "previous_seconds": 195,
+    "real_elapsed_seconds": 4.0,
+    "confidence": 0.89,
+    "scores": null,
+    "image_path": null,
+    "details": null
+}

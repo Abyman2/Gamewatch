@@ -1,0 +1,13 @@
+{
+    "lounge_name": "GameWatch Test Lounge",
+    "telebirr": {
+        "enabled": true,
+        "recipient_name": "ABEL (5614)",
+        "qr_image": "payment_qr/telebirr_qr.jpg"
+    },
+    "cbe": {
+        "enabled": true,
+        "recipient_name": "GameWatch Test Lounge",
+        "qr_image": "payment_qr/cbe_qr.png"
+    }
+}

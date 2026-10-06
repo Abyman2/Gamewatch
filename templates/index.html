@@ -1,0 +1,2894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="GameWatch — The All-in-One PS Management System for Staff, Players & Customers. Play · Manage · Connect.">
+    <meta name="theme-color" content="#060a14">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" type="image/png" href="/static/img/logo.png">
+    <link rel="apple-touch-icon" href="/static/img/logo.png">
+    <title>GameWatch</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css?v=15">
+    <script>
+        (function() {
+            try {
+                var theme = localStorage.getItem('gamewatch_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                var meta = document.querySelector('meta[name="theme-color"]');
+                if (meta) meta.setAttribute('content', theme === 'dark' ? '#061A35' : '#F4F8FD');
+            } catch(e) {}
+        })();
+    </script>
+</head>
+<body>
+
+    <!-- ========== INSTAGRAM-STYLE NATIVE APP SPLASH SCREEN ========== -->
+    <div class="splash-screen" id="splash-screen">
+        <div class="splash-center">
+            <div class="splash-logo-pulse">
+                <div class="splash-pulse-ring"></div>
+                <div class="splash-logo-wrap">
+                    <img src="/static/img/logo_icon.png" alt="GameWatch" class="splash-logo-img">
+                </div>
+            </div>
+            <div class="splash-brand-text">
+                <h1 class="splash-title">GAMEWATCH</h1>
+                <p class="splash-tagline">Smart Game-Lounge OS</p>
+            </div>
+            <div class="splash-spinner-bar">
+                <div class="splash-spinner-fill"></div>
+            </div>
+        </div>
+        <div class="splash-footer">
+            <span class="splash-meta">From Addis Ababa · v1.0</span>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- GAMEWATCH ENTERPRISE SAAS SHELL (Matching Image 2 Spec)       -->
+    <!-- ============================================================ -->
+    <div class="saas-shell">
+        <!-- ========== DEEP NAVY SAAS SIDEBAR ========== -->
+        <aside class="saas-sidebar" id="app-sidebar">
+            <a href="#" class="sidebar-brand" onclick="switchView('home'); return false;">
+                <div class="sidebar-logo-glow">
+                    <img src="/static/img/logo_icon.png" alt="GameWatch" class="sidebar-logo-img">
+                </div>
+                <div class="sidebar-brand-text">
+                    <span class="sidebar-brand-name">GAMEWATCH</span>
+                    <span class="sidebar-brand-tag">See More. Know More.</span>
+                </div>
+            </a>
+
+            <!-- Navigation Tabs matching Image 2 -->
+            <nav class="sidebar-nav" id="sidebar-desktop-tabs">
+                <button class="sidebar-nav-item desktop-tab active" data-view="home" id="dtab-home">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                    <span>Dashboard</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="home" id="dtab-stations">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    <span>Stations</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="setup" id="dtab-setup">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span>Setup</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="billing" id="dtab-billing">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                    <span>Billing</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="customer" id="dtab-customer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Lounge</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="ai" id="dtab-ai">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                    <span>AI Insights</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="analytics" id="dtab-analytics">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span>Analytics</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+                <button class="sidebar-nav-item desktop-tab" data-view="settings" id="dtab-settings">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                    <span>Settings</span>
+                    <span class="sidebar-active-indicator"></span>
+                </button>
+            </nav>
+
+            <!-- Bottom Pro Promo Card (Matching Image 2) -->
+            <div class="sidebar-promo-card">
+                <div class="spc-icon-wrap">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </div>
+                <div class="spc-title">Level up your viewing experience</div>
+                <div class="spc-desc">AI-powered insights, smarter alerts, bigger engagement.</div>
+                <button type="button" class="btn-sidebar-pro" onclick="switchView('ai')">
+                    <span>Learn More →</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ========== MAIN SAAS WORKSPACE ========== -->
+        <div class="saas-workspace" id="app-workspace">
+            <!-- Hidden Background Compatibility Elements for JS State -->
+            <div style="display:none;" aria-hidden="true">
+                <div id="header-user-badge"><span id="header-user-name">Account</span><span id="header-user-role-tag">OWNER</span><div id="header-user-icon-wrap"></div></div>
+                <div id="header-lounge-pill"><span id="header-lounge-code-text">GW-BOLE-101</span></div>
+                <div id="btn-header-theme"><span id="header-theme-icon">🌓</span><span id="header-theme-label">Light</span></div>
+                <button type="button" id="btn-header-profile"></button>
+                <button type="button" id="btn-header-explore"></button>
+                <button type="button" id="btn-header-logout"></button>
+                <span id="header-active-tvs">0/0</span>
+                <span id="header-clock">--:--</span>
+                <button id="btn-toggle-simulation"></button>
+            </div>
+
+            <!-- Single Unified Responsive Header across Desktop, Tablet & Mobile -->
+            <header class="workspace-header" id="app-workspace-header">
+                <!-- Mobile brand logo shown only on tablet/phone when sidebar is hidden -->
+                <div class="workspace-brand-mobile" onclick="switchView('home')" title="GameWatch Smart Gaming OS">
+                    <div class="wbm-logo-box">
+                        <img src="/static/img/logo_icon.png" alt="GameWatch" class="wbm-logo">
+                    </div>
+                    <span class="wbm-title">GAMEWATCH</span>
+                </div>
+
+                <div class="workspace-search-wrap">
+                    <svg class="workspace-search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <input type="text" class="workspace-search-input" id="workspace-search-input" placeholder="Search stations, locations, or customers..." oninput="handleWorkspaceSearch(this.value)">
+                </div>
+
+                <div class="workspace-header-actions">
+                    <button type="button" class="btn-header-round" id="btn-notifications" onclick="showToast('🔔 All stations are online and active', 'info')" title="Notifications">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span class="notif-badge-dot"></span>
+                    </button>
+
+                    <div class="workspace-profile-badge" onclick="switchView('settings')" title="Manage Account & Lounge Settings">
+                        <div class="profile-avatar-initials" id="top-avatar-initials">AK</div>
+                        <div class="profile-meta-col">
+                            <span class="profile-name-text" id="top-operator-name">Abel Kedede</span>
+                            <span class="profile-role-text" id="top-operator-role">Admin</span>
+                        </div>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#667A94" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </div>
+
+                    <div class="header-stat">
+                        <span class="dot"></span>
+                        <span id="header-active-tvs-desk">0/0</span>
+                    </div>
+                    <span class="header-clock" id="header-clock-desk">--:--</span>
+                    <button class="sim-toggle" id="btn-toggle-simulation-desk" onclick="document.getElementById('btn-toggle-simulation').click()" title="Toggle simulation test mode">SIM</button>
+                </div>
+            </header>
+
+            <!-- ========== PREMIER HERO BILLBOARD (ShebaTech + 3D Angled PS5 Product Showcase) ========== -->
+            <aside class="hero-sponsor-card" id="hero-sponsor-billboard" aria-label="Premier Lounge Partner">
+                <div class="hsc-inner" id="hero-slide-container" onclick="handleHeroCtaClick()">
+                    <div class="hsc-left">
+                        <div class="hsc-brand-icon-box" id="hero-icon-box">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                <line x1="6" y1="12" x2="10" y2="12"></line>
+                                <line x1="8" y1="10" x2="8" y2="14"></line>
+                                <circle cx="16" cy="12" r="1.2" fill="currentColor"></circle>
+                                <circle cx="18" cy="10" r="1.2" fill="currentColor"></circle>
+                            </svg>
+                        </div>
+                        <div class="hsc-text-block">
+                            <span class="hsc-tag" id="hero-tag">Official Gaming Hardware Partner</span>
+                            <div class="hsc-headline" id="hero-title">ShebaTech Gaming &amp; Accessories</div>
+                            <div class="hsc-sub" id="hero-desc">Original DualSense Controllers, PS5 Discs &amp; Repair Center – Bole Medhanialem</div>
+                        </div>
+                    </div>
+                    <div class="hsc-right">
+                        <div class="hsc-3d-wrap">
+                            <img src="/static/img/ps5_3d_hero.jpg" alt="PS5 Console &amp; Controller" class="hsc-product-img-3d" id="hero-img">
+                        </div>
+                        <button type="button" class="btn-hero-cta" id="hero-cta-btn" onclick="event.stopPropagation(); handleHeroCtaClick()">
+                            <span id="hero-cta-label">Call Store (10% Off) →</span>
+                        </button>
+                        <div class="hsc-carousel-controls">
+                            <button type="button" class="hsc-nav-btn" onclick="event.stopPropagation(); prevHeroSlide()" title="Previous Sponsor">‹</button>
+                            <div class="hsc-dots" id="hero-dots-container">
+                                <span class="hsc-dot active" onclick="event.stopPropagation(); setHeroSlide(0)"></span>
+                                <span class="hsc-dot" onclick="event.stopPropagation(); setHeroSlide(1)"></span>
+                                <span class="hsc-dot" onclick="event.stopPropagation(); setHeroSlide(2)"></span>
+                                <span class="hsc-dot" onclick="event.stopPropagation(); setHeroSlide(3)"></span>
+                            </div>
+                            <button type="button" class="hsc-nav-btn" onclick="event.stopPropagation(); nextHeroSlide()" title="Next Sponsor">›</button>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ========== SMOOTH CONTINUOUS ROTATING DISCOVERY PARTNER MARQUEE ========== -->
+            <div class="discovery-marquee-wrap" id="discovery-marquee-wrap" aria-label="Featured Sponsors">
+                <div class="discovery-marquee-track">
+                    <!-- Set 1 -->
+                    <div class="discovery-card" onclick="openSponsorLink('fiber')" title="View Habesha High-Speed Fiber">
+                        <div class="dc-icon-box">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">High-Speed Fiber</span>
+                                <span class="dc-badge dc-badge-blue">PARTNER</span>
+                            </div>
+                            <span class="dc-sub">Ping for EA FC 25</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('predator')" title="Visit Predator Energy Official Website">
+                        <div class="dc-photo-box">
+                            <img src="/static/img/predator_energy.jpg" alt="Predator Energy">
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Predator Energy</span>
+                                <span class="dc-badge dc-badge-gold">FEATURED</span>
+                            </div>
+                            <span class="dc-sub">Official Gamer Fuel</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('repair')" title="View Bole Console Repair Lab Services">
+                        <div class="dc-icon-box" style="color:#10B981; background:#DCFCE7;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Bole Repair Lab</span>
+                                <span class="dc-badge dc-badge-green">VERIFIED</span>
+                            </div>
+                            <span class="dc-sub">HDMI Port &amp; Thermal Paste</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('hub')" title="View Sheba Gaming Hub Wholesale Supplies">
+                        <div class="dc-icon-box" style="color:#7C5CFC; background:#F3E8FF;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><circle cx="16" cy="12" r="1.2" fill="currentColor"></circle><circle cx="18" cy="10" r="1.2" fill="currentColor"></circle></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Sheba Gaming Hub</span>
+                                <span class="dc-badge dc-badge-purple">SPONSORED</span>
+                            </div>
+                            <span class="dc-sub">Original PS5 Joysticks</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('fiber')" title="View Habesha High-Speed Gaming Fiber">
+                        <div class="dc-icon-box">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a15.3 15.3 0 0 0 4 18M12 3a15.3 15.3 0 0 1-4 18M2 12h20"></path></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Habesha High-Speed</span>
+                                <span class="dc-badge dc-badge-blue">PARTNER</span>
+                            </div>
+                            <span class="dc-sub">Ultra-Low Ping for EA FC 25</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <!-- Set 2 (Continuous seamless loop duplicate) -->
+                    <div class="discovery-card" onclick="openSponsorLink('fiber')" title="View Habesha High-Speed Fiber">
+                        <div class="dc-icon-box">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><line x1="12" y1="20" x2="12.01" y2="20"></line></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">High-Speed Fiber</span>
+                                <span class="dc-badge dc-badge-blue">PARTNER</span>
+                            </div>
+                            <span class="dc-sub">Ping for EA FC 25</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('predator')" title="Visit Predator Energy Official Website">
+                        <div class="dc-photo-box">
+                            <img src="/static/img/predator_energy.jpg" alt="Predator Energy">
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Predator Energy</span>
+                                <span class="dc-badge dc-badge-gold">FEATURED</span>
+                            </div>
+                            <span class="dc-sub">Official Gamer Fuel</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('repair')" title="View Bole Console Repair Lab Services">
+                        <div class="dc-icon-box" style="color:#10B981; background:#DCFCE7;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line><line x1="15" y1="20" x2="15" y2="23"></line><line x1="20" y1="9" x2="23" y2="9"></line><line x1="20" y1="14" x2="23" y2="14"></line><line x1="1" y1="9" x2="4" y2="9"></line><line x1="1" y1="14" x2="4" y2="14"></line></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Bole Repair Lab</span>
+                                <span class="dc-badge dc-badge-green">VERIFIED</span>
+                            </div>
+                            <span class="dc-sub">HDMI Port &amp; Thermal Paste</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('hub')" title="View Sheba Gaming Hub Wholesale Supplies">
+                        <div class="dc-icon-box" style="color:#7C5CFC; background:#F3E8FF;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"></rect><line x1="6" y1="12" x2="10" y2="12"></line><line x1="8" y1="10" x2="8" y2="14"></line><circle cx="16" cy="12" r="1.2" fill="currentColor"></circle><circle cx="18" cy="10" r="1.2" fill="currentColor"></circle></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Sheba Gaming Hub</span>
+                                <span class="dc-badge dc-badge-purple">SPONSORED</span>
+                            </div>
+                            <span class="dc-sub">Original PS5 Joysticks</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+
+                    <div class="discovery-card" onclick="openSponsorLink('fiber')" title="View Habesha High-Speed Gaming Fiber">
+                        <div class="dc-icon-box">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a15.3 15.3 0 0 0 4 18M12 3a15.3 15.3 0 0 1-4 18M2 12h20"></path></svg>
+                        </div>
+                        <div class="dc-info">
+                            <div class="dc-header-row">
+                                <span class="dc-title">Habesha High-Speed</span>
+                                <span class="dc-badge dc-badge-blue">PARTNER</span>
+                            </div>
+                            <span class="dc-sub">Ultra-Low Ping for EA FC 25</span>
+                        </div>
+                        <span class="dc-arrow">›</span>
+                    </div>
+                </div>
+            </div>
+
+    <!-- ========== MAIN CONTENT ========== -->
+    <main class="app-content">
+
+        <!-- VIEW: AUTH / LOGIN & REGISTER -->
+        <section class="app-view auth-container" id="view-auth">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-logo-badge">
+                        <img src="/static/img/logo_icon.png" alt="Logo" class="auth-logo">
+                    </div>
+                    <h2 class="auth-title">GameWatch</h2>
+                    <p class="auth-subtitle">Smart Game-Lounge Management</p>
+                </div>
+
+                <!-- Google OAuth Button -->
+                <button class="btn-google-auth" id="btn-google-login" onclick="handleGoogleAuth()">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.9c2.28-2.1 3.64-5.2 3.64-9.15z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.9-3.05c-1.08.72-2.45 1.16-4.03 1.16-3.1 0-5.74-2.1-6.68-4.93H1.21v3.15C3.25 21.4 7.31 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.32 14.27c-.24-.72-.38-1.49-.38-2.27s.14-1.55.38-2.27V6.58H1.21C.44 8.11 0 9.8 0 12s.44 3.89 1.21 5.42l4.11-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.25 2.6 1.21 6.58l4.11 3.15c.94-2.83 3.58-4.98 6.68-4.98z"/>
+                    </svg>
+                    <span>Continue with Google</span>
+                </button>
+
+                <div class="auth-divider">
+                    <span>or continue with email</span>
+                </div>
+
+                <!-- Mode Toggle Tabs -->
+                <div class="auth-tabs">
+                    <button class="auth-tab active" id="tab-auth-login" onclick="toggleAuthMode('login')">Sign In</button>
+                    <button class="auth-tab" id="tab-auth-signup" onclick="toggleAuthMode('signup')">Create Account</button>
+                </div>
+
+                <!-- Login Form -->
+                <form class="auth-form" id="form-auth-login" onsubmit="handleEmailLogin(event)">
+                    <div class="field">
+                        <label for="input-login-email">Email Address <span class="badge-req">* Required</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            <input type="email" class="field-input with-icon" id="input-login-email" placeholder="you@gamewatch.et" required autocomplete="email" oninput="clearFieldError('input-login-email')">
+                        </div>
+                        <span class="field-err-msg" id="err-input-login-email"></span>
+                    </div>
+
+                    <div class="field">
+                        <div class="field-label-row">
+                            <label for="input-login-password">Password <span class="badge-req">* Required</span></label>
+                            <a href="javascript:void(0)" class="field-link" onclick="openForgotPasswordModal()">Forgot Password?</a>
+                        </div>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <input type="password" class="field-input with-icon" id="input-login-password" placeholder="••••••••" required autocomplete="current-password" oninput="clearFieldError('input-login-password')">
+                            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('input-login-password')">👁️</button>
+                        </div>
+                        <span class="field-err-msg" id="err-input-login-password"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block btn-auth-submit" id="btn-submit-login">
+                        <span>Sign In</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                    </button>
+                </form>
+
+                <!-- Registration Form -->
+                <form class="auth-form" id="form-auth-signup" style="display:none;" onsubmit="handleRegistration(event)">
+                    <div class="field">
+                        <label for="signup-full-name">Full Name <span class="badge-req">* Required</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                            <input type="text" class="field-input with-icon" id="signup-full-name" placeholder="e.g. Abebe Kebede" required autocomplete="name" oninput="clearFieldError('signup-full-name')">
+                        </div>
+                        <span class="field-err-msg" id="err-signup-full-name"></span>
+                    </div>
+                    <div class="field">
+                        <label for="signup-email">Email Address <span class="badge-req">* Required</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            <input type="email" class="field-input with-icon" id="signup-email" placeholder="you@example.com" required autocomplete="email" oninput="validateRealEmailInput(this)">
+                        </div>
+                        <span class="field-err-msg" id="err-signup-email"></span>
+                    </div>
+                    <div class="field">
+                        <label for="signup-phone">Phone Number <span class="badge-opt">Optional</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                            <input type="tel" class="field-input with-icon" id="signup-phone" placeholder="+251 9... (Optional)" autocomplete="tel">
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="signup-password">Password <span class="badge-req">* Required</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <input type="password" class="field-input with-icon" id="signup-password" placeholder="Create strong password" required autocomplete="new-password" oninput="onPasswordInput(this.value)">
+                            <button type="button" class="btn-toggle-pwd" onclick="togglePasswordVisibility('signup-password')">👁️</button>
+                        </div>
+                        <span class="field-err-msg" id="err-signup-password"></span>
+                        <!-- Real-time Password Complexity Rules Checklist -->
+                        <div class="pwd-rules-bar" id="pwd-rules-bar">
+                            <span class="pwd-chip" id="pwd-rule-len"><span class="chip-icon">○</span> Min 6 chars</span>
+                            <span class="pwd-chip" id="pwd-rule-upper"><span class="chip-icon">○</span> Capital Letter (A-Z)</span>
+                            <span class="pwd-chip" id="pwd-rule-lower"><span class="chip-icon">○</span> Small Letter (a-z)</span>
+                            <span class="pwd-chip" id="pwd-rule-special"><span class="chip-icon">○</span> Special (!@#$...)</span>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="signup-confirm-password">Confirm Password <span class="badge-req">* Required</span></label>
+                        <div class="input-wrap">
+                            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                            <input type="password" class="field-input with-icon" id="signup-confirm-password" placeholder="Re-type password" required autocomplete="new-password" oninput="clearFieldError('signup-confirm-password')">
+                        </div>
+                        <span class="field-err-msg" id="err-signup-confirm-password"></span>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-auth-submit" id="btn-submit-signup">
+                        <span>Create Account</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- VIEW: QUESTIONNAIRE (ROLE SELECTION - RULE 6) -->
+        <section class="app-view questionnaire-container" id="view-role-select">
+            <div class="q-content">
+                <div class="q-header">
+                    <span class="q-badge">ONBOARDING · ACCOUNT ROLE</span>
+                    <h1 class="q-title">How will you use GameWatch?</h1>
+                    <p class="q-subtitle">Select your role once. Your account will be configured with this workspace.</p>
+                </div>
+
+                <div class="role-cards-grid">
+                    <!-- 1. Owner Option -->
+                    <div class="role-selection-card" onclick="handleSelectRole('OWNER')">
+                        <div class="role-card-top">
+                            <div class="role-icon-box owner">👑</div>
+                            <div class="role-title-box">
+                                <span class="role-name">Lounge Owner</span>
+                                <span class="role-quote">"I run a gaming lounge."</span>
+                            </div>
+                        </div>
+                        <p class="role-desc">Full access to business revenue, camera TV calibration, clerk shifts, and tamper-evident audit logs.</p>
+                        <div class="role-features-row">
+                            <span class="rf-pill">💰 Financials</span>
+                            <span class="rf-pill">📹 Calibration</span>
+                            <span class="rf-pill">🔒 Audit Vault</span>
+                        </div>
+                        <button class="btn-select-role owner">
+                            <span>Select Owner</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+
+                    <!-- 2. Clerk Option (Requires Owner Code) -->
+                    <div class="role-selection-card" onclick="openClerkCodeModal()">
+                        <div class="role-card-top">
+                            <div class="role-icon-box clerk">👤</div>
+                            <div class="role-title-box">
+                                <span class="role-name">Station Clerk</span>
+                                <span class="role-quote">"I work at a gaming lounge."</span>
+                            </div>
+                        </div>
+                        <p class="role-desc">Requires 6-character Lounge Owner Code. Manage shifts, payments, and checkout for your owner's stations.</p>
+                        <div class="role-features-row">
+                            <span class="rf-pill">🔑 Needs Owner Code</span>
+                            <span class="rf-pill">💳 Checkout</span>
+                            <span class="rf-pill">🏁 Shift Drawer</span>
+                        </div>
+                        <button type="button" class="btn-select-role clerk">
+                            <span>Enter Owner Code</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+
+                    <!-- 3. Customer Option (Connect or Explore) -->
+                    <div class="role-selection-card" onclick="openCustomerOnboardingModal()">
+                        <div class="role-card-top">
+                            <div class="role-icon-box customer">🎮</div>
+                            <div class="role-title-box">
+                                <span class="role-name">Customer / Player</span>
+                                <span class="role-quote">"I want to play and discover gaming lounges."</span>
+                            </div>
+                        </div>
+                        <p class="role-desc">Connect directly via Table Code or Explore verified gaming lounges nearby in Addis Ababa.</p>
+                        <div class="role-features-row">
+                            <span class="rf-pill">🔍 Explore Lounges</span>
+                            <span class="rf-pill">📺 Live TV Availability</span>
+                            <span class="rf-pill">⏳ Queue List</span>
+                        </div>
+                        <button type="button" class="btn-select-role customer">
+                            <span>Connect / Explore</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW: HOME / COMMAND CENTER -->
+        <section class="app-view active" id="view-home">
+            <div class="page-header">
+                <h1 class="page-title">Stations</h1>
+                <p class="page-subtitle">Live match tracking &amp; billing</p>
+            </div>
+
+            <!-- PRD Shift Status Banner (Clerk Operations) -->
+            <div class="shift-banner" id="shift-banner">
+                <div class="shift-left">
+                    <span class="shift-indicator" id="shift-indicator-dot"></span>
+                    <div class="shift-text">
+                        <span class="shift-title" id="shift-title">Clerk Shift</span>
+                        <span class="shift-meta" id="shift-meta">Checking shift status...</span>
+                    </div>
+                </div>
+                <button class="btn-shift-action" id="btn-shift-action" onclick="handleShiftAction()">Start Shift</button>
+            </div>
+
+            <!-- Unified Lounge Telemetry Bar (Zero generic card-soup) -->
+            <div class="lounge-telemetry-bar">
+                <div class="telemetry-cell">
+                    <span class="t-label">STATIONS</span>
+                    <div class="t-value-wrap">
+                        <span class="t-val text-cyan" id="qs-active">0</span>
+                        <span class="t-unit">/<span id="qs-total">2</span> LIVE</span>
+                    </div>
+                </div>
+                <div class="telemetry-sep"></div>
+                <div class="telemetry-cell">
+                    <span class="t-label">VERIFIED GAMES</span>
+                    <div class="t-value-wrap">
+                        <span class="t-val text-white" id="qs-games">0</span>
+                        <span class="t-unit">MATCHES</span>
+                    </div>
+                </div>
+                <div class="telemetry-sep"></div>
+                <div class="telemetry-cell">
+                    <span class="t-label">TODAY'S REVENUE</span>
+                    <div class="t-value-wrap">
+                        <span class="t-val text-electric" id="qs-revenue">0</span>
+                        <span class="t-unit">ETB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TV Station Cards -->
+            <div class="tv-list" id="tv-stations-grid">
+                <!-- Dynamically rendered -->
+            </div>
+        </section>
+
+
+        <!-- VIEW: TV SETUP / CALIBRATION -->
+        <section class="app-view" id="view-setup">
+            <div class="page-header setup-page-header">
+                <div class="setup-header-left">
+                    <div class="setup-header-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                    </div>
+                    <div>
+                        <h1 class="page-title">TV Setup</h1>
+                        <p class="page-subtitle">Configure screen boundaries for each station</p>
+                    </div>
+                </div>
+                <div class="setup-header-actions">
+                    <div class="calib-mode-pills" id="calib-mode-selector">
+                        <button type="button" class="btn-calib-mode active" id="btn-mode-keystone" onclick="setCalibrationMode('keystone')">
+                            <span>⬡ 4-Point Keystone</span>
+                            <span class="mode-tag-pill">Angled</span>
+                        </button>
+                        <button type="button" class="btn-calib-mode" id="btn-mode-box" onclick="setCalibrationMode('box')">
+                            <span>⬚ Box</span>
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-autodetect-pill" id="btn-auto-detect-tvs" onclick="triggerAutoDetectTVs()">
+                        <span class="sparkle-icon">✨</span>
+                        <span>Auto-Detect TVs</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="calibration-wrap">
+                <div class="canvas-column">
+                    <div class="canvas-card">
+                        <div class="canvas-head">
+                            <div class="canvas-head-left">
+                                <span class="live-dot-red"></span>
+                                <span class="canvas-label">Camera Feed</span>
+                                <span class="canvas-station-pill" id="active-station-tag" onclick="document.getElementById('station-select').focus()">
+                                    <span>TV 2 - Station</span>
+                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                </span>
+                            </div>
+                            <div class="canvas-head-right">
+                                <span class="badge-live-preview">
+                                    <span class="live-dot-green"></span>
+                                    <span>Live Preview</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="canvas-area" id="canvas-container">
+                            <img src="/api/stream/full" id="master-stream-img" alt="Camera">
+                            <canvas id="calibration-canvas" width="1280" height="576"></canvas>
+                        </div>
+
+                        <div class="canvas-foot">
+                            <div class="canvas-keystone-toolbar">
+                                <div class="ck-presets-row">
+                                    <span class="ck-label">📐 Angle Presets:</span>
+                                    <button type="button" class="btn-chip-preset" onclick="applyKeystonePreset('flat')">Flat (0°)</button>
+                                    <button type="button" class="btn-chip-preset" onclick="applyKeystonePreset('ceiling')">Ceiling 45°</button>
+                                    <button type="button" class="btn-chip-preset" onclick="applyKeystonePreset('left')">Left 35°</button>
+                                    <button type="button" class="btn-chip-preset" onclick="applyKeystonePreset('right')">Right 35°</button>
+                                </div>
+                                <div class="ck-toggles-row">
+                                    <label class="toggle-anti-glare-label" title="Suppresses harsh fluorescent ceiling lamp glare on screen">
+                                        <input type="checkbox" id="chk-anti-glare" checked onchange="toggleAntiGlare(this.checked)">
+                                        <span class="tag-slider"></span>
+                                        <span class="tag-txt">☀ Anti-Glare Filter</span>
+                                    </label>
+                                    <span class="keystone-angle-badge" id="keystone-angle-badge">📐 Keystone: 0.0°</span>
+                                </div>
+                            </div>
+                            <div class="canvas-foot-actions">
+                                <button type="button" class="btn-icon-tool" id="btn-edit-selection" title="Reset Pin Corners" onclick="resetActivePins()">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                </button>
+                                <button type="button" class="btn-icon-tool" id="btn-clear-selection" title="Clear Selection">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
+                                <code class="coord-display" id="roi-coords-display">TL:--, TR:--, BR:--, BL:--</code>
+                            </div>
+                        </div>
+
+                        <!-- Detected Stations Auto-Zoom Strip -->
+                        <div class="detected-tvs-panel" id="detected-tvs-panel" style="display:none;">
+                            <div class="dtp-head">
+                                <div class="dtp-head-left">
+                                    <span class="dtp-badge">🎯 AI AUTO-DETECT</span>
+                                    <span class="dtp-title">Detected TV Stations in Room</span>
+                                </div>
+                                <span class="dtp-hint">Click a station to auto-zoom &amp; calibrate scoreboard</span>
+                            </div>
+                            <div class="dtp-grid" id="detected-tvs-grid"></div>
+                        </div>
+                    </div>
+
+                    <!-- 4 Telemetry Status Cards (Matching Image 2) -->
+                    <div class="setup-telemetry-grid">
+                        <div class="telemetry-pill-card">
+                            <div class="tpc-icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                            </div>
+                            <div class="tpc-content">
+                                <div class="tpc-val" id="tpc-configured-count">2 / 2</div>
+                                <div class="tpc-sub"><span class="status-dot dot-green"></span> Screens Configured</div>
+                            </div>
+                        </div>
+
+                        <div class="telemetry-pill-card">
+                            <div class="tpc-icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
+                            </div>
+                            <div class="tpc-content">
+                                <div class="tpc-val">Auto-Detect</div>
+                                <div class="tpc-sub"><span class="status-dot dot-green"></span> Available</div>
+                            </div>
+                        </div>
+
+                        <div class="telemetry-pill-card">
+                            <div class="tpc-icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+                            </div>
+                            <div class="tpc-content">
+                                <div class="tpc-val">Real-time Feed</div>
+                                <div class="tpc-sub"><span class="status-dot dot-green"></span> Active</div>
+                            </div>
+                        </div>
+
+                        <div class="telemetry-pill-card">
+                            <div class="tpc-icon-box">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            </div>
+                            <div class="tpc-content">
+                                <div class="tpc-val">Last Updated</div>
+                                <div class="tpc-sub" id="tpc-last-updated">2 min ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Configuration Control Panel (Matching Image 2) -->
+                <div class="config-card">
+                    <div class="config-head">
+                        <div class="config-head-icon">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        </div>
+                        <div>
+                            <span class="config-title">Configuration</span>
+                            <span class="config-sub">Set up your station and detection settings</span>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="station-select">STATION</label>
+                        <div class="input-with-icon">
+                            <span class="field-prefix-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                            </span>
+                            <select class="field-input" id="station-select">
+                                <option value="1">TV 1 (Executive Lounge)</option>
+                                <option value="2" selected>TV 2 (VIP Station)</option>
+                                <option value="new">+ Add New Station</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="station-name-input">NAME</label>
+                        <div class="input-with-icon">
+                            <span class="field-prefix-icon">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            </span>
+                            <input type="text" class="field-input" id="station-name-input" placeholder="TV 1 - Executive Lounge" value="TV 1 - Executive Lounge">
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="customer-name-input">CUSTOMER</label>
+                        <div class="input-with-icon">
+                            <span class="field-prefix-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            </span>
+                            <input type="text" class="field-input" id="customer-name-input" placeholder="Abel &amp; Friends" value="Abel &amp; Friends">
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-analyze-screen" id="btn-analyze-now">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <span>Analyze Screen</span>
+                    </button>
+
+                    <div class="sb-detect-header">
+                        <div class="sbd-left">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span>Scoreboard Detection</span>
+                        </div>
+                        <span class="badge-auto-detecting">Auto-Detecting</span>
+                    </div>
+
+                    <div class="crop-inputs-row">
+                        <div class="field">
+                            <label>TV RECTIFICATION</label>
+                            <input type="text" class="field-input text-center" id="crop-tv-display-val" value="960 x 540" readonly>
+                        </div>
+                        <div class="field">
+                            <label>SCOREBOARD ROI</label>
+                            <input type="text" class="field-input text-center" id="crop-sb-display-val" value="Auto-Track" readonly>
+                        </div>
+                    </div>
+
+                    <div class="keystone-status-row" id="keystone-summary-row">
+                        <div class="ks-badge-chip">
+                            <span class="ks-icon">📐</span>
+                            <span id="keystone-tilt-desc">Angle: 0.0° (Flat)</span>
+                        </div>
+                        <div class="ks-badge-chip">
+                            <span class="ks-icon">☀</span>
+                            <span id="anti-glare-desc">Glare: Filter Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Preserved container for crop analysis data bindings -->
+                    <div class="crop-card" id="crop-analysis-card" style="display:none;">
+                        <div class="crop-status" id="crop-status-badge">
+                            <span class="cdot"></span>
+                            <span id="crop-status-text">Awaiting selection</span>
+                        </div>
+                        <div class="crop-previews">
+                            <div class="crop-preview">
+                                <span class="crop-preview-label">TV Crop</span>
+                                <div class="crop-preview-img" id="preview-tv-container">
+                                    <span class="placeholder-text">Draw box</span>
+                                </div>
+                            </div>
+                            <div class="crop-preview">
+                                <span class="crop-preview-label">Scoreboard</span>
+                                <div class="crop-preview-img" id="preview-sb-container">
+                                    <span class="placeholder-text">Auto-detect</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tele-rows" id="crop-telemetry-summary">
+                            <div class="tele-row">
+                                <span class="trl">CLOCK</span>
+                                <span class="trv" id="crop-clock-read">--:--</span>
+                            </div>
+                            <div class="tele-row">
+                                <span class="trl">SCORE</span>
+                                <span class="trv" id="crop-score-read">-:-</span>
+                            </div>
+                            <div class="tele-row">
+                                <span class="trl">CONFIDENCE</span>
+                                <span class="trv text-blue" id="crop-conf-read">--%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-save-config" id="btn-studio-save-station">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+                        <span>Save Configuration</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+
+                    <div class="tip-box">
+                        <strong>💡</strong> After saving TV 1, select TV 2 and draw another box. Both screens track in parallel.
+                    </div>
+                </div>
+            </div>
+
+            <!-- CAMERA & VIDEO SOURCE CONNECTORS HUB (Hardening Step) -->
+            <div class="camera-hub-panel">
+                <div class="camera-hub-head">
+                    <div class="cam-head-left">
+                        <div class="cam-head-icon">📹</div>
+                        <div>
+                            <div class="cam-head-title-row">
+                                <h3 class="cam-head-title">Connected Video Feeds &amp; Camera Hub</h3>
+                                <span class="cam-badge-count" id="camera-count-badge">2 Active Feeds</span>
+                            </div>
+                            <p class="cam-head-sub">Connect Smartphones (DroidCam / IP Webcam), USB Capture Cards, RTSP CCTV, or PC screens to detect TVs.</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary btn-open-add-cam" id="btn-open-add-cam" onclick="openAddCameraModal()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>+ Connect Camera / Phone</span>
+                    </button>
+                </div>
+
+                <!-- Connectors Grid -->
+                <div class="camera-grid" id="camera-sources-grid">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+
+                <!-- Fast Quick-Guide Strip -->
+                <div class="cam-how-to-strip">
+                    <span class="strip-label">📱 CONNECT A PHONE IN 30 SECONDS:</span>
+                    <span class="strip-step"><strong>1.</strong> Install free <em>DroidCam</em> or <em>IP Webcam</em> on phone.</span>
+                    <span class="strip-step"><strong>2.</strong> Connect phone to the lounge Wi-Fi.</span>
+                    <span class="strip-step"><strong>3.</strong> Enter the IP address shown on phone (e.g. <code>http://192.168.1.105:4747/video</code>) and hit Test Stream.</span>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW: BILLING -->
+        <section class="app-view" id="view-billing">
+            <div class="page-header">
+                <h1 class="page-title">Billing</h1>
+                <p class="page-subtitle">Revenue &amp; transaction history</p>
+            </div>
+
+            <!-- Financial Ledger Breakdown (Cash vs Digital vs Bank) -->
+            <div class="financial-breakdown-bar">
+                <div class="fin-cell">
+                    <span class="fin-lbl">TOTAL REVENUE</span>
+                    <div class="fin-val-wrap">
+                        <span class="fin-val text-blue" id="ledger-daily-revenue">0</span>
+                        <span class="fin-unit">ETB</span>
+                    </div>
+                    <span class="fin-sub"><span id="ledger-daily-games">0</span> matches verified</span>
+                </div>
+                <div class="fin-cell">
+                    <span class="fin-lbl">💵 CASH IN DRAWER</span>
+                    <div class="fin-val-wrap">
+                        <span class="fin-val text-white" id="ledger-cash-revenue">0</span>
+                        <span class="fin-unit">ETB</span>
+                    </div>
+                    <span class="fin-sub">Expected in register</span>
+                </div>
+                <div class="fin-cell">
+                    <span class="fin-lbl">🟢 TELEBIRR DIGITAL</span>
+                    <div class="fin-val-wrap">
+                        <span class="fin-val text-cyan" id="ledger-telebirr-revenue">0</span>
+                        <span class="fin-unit">ETB</span>
+                    </div>
+                    <span class="fin-sub">Recipient: <span id="ledger-telebirr-recipient">Cashier</span></span>
+                </div>
+                <div class="fin-cell" id="ledger-cbe-cell">
+                    <span class="fin-lbl">🏦 CBE MOBILE</span>
+                    <div class="fin-val-wrap">
+                        <span class="fin-val text-amber" id="ledger-cbe-revenue">0</span>
+                        <span class="fin-unit">ETB</span>
+                    </div>
+                    <span class="fin-sub">Bank transfer</span>
+                </div>
+            </div>
+
+            <div class="page-header" style="margin-top:4px;">
+                <h2 class="section-label">Recent Transactions</h2>
+            </div>
+
+            <div class="tx-list" id="ledger-transactions-body">
+                <div class="empty-state">No completed transactions yet today.</div>
+            </div>
+
+            <div class="page-header" style="margin-top:20px;">
+                <h2 class="section-label">Audit Trail &amp; Adjustments (PRD Rule 2 &amp; 10)</h2>
+            </div>
+
+            <div class="audit-list" id="ledger-audit-body">
+                <div class="empty-state">No operator adjustments recorded yet.</div>
+            </div>
+        </section>
+
+
+        <!-- VIEW: CUSTOMER / GAMER LOUNGE -->
+        <section class="app-view" id="view-customer">
+            <div class="page-header customer-lounge-header">
+                <div class="lounge-header-hero">
+                    <div class="lhh-left">
+                        <div class="lhh-badge-row">
+                            <span class="lhh-pill lhh-pill-green">🎮 LIVE GAMEZONE</span>
+                            <span class="lhh-pill lhh-pill-area" id="cust-hero-lounge-area">📍 4 Kilo, Addis Ababa</span>
+                            <span class="lhh-pill lhh-pill-code" id="cust-hero-lounge-code">GW-OWNER-050</span>
+                        </div>
+                        <h1 class="page-title" id="cust-hero-lounge-name">GameWatch Lounge</h1>
+                        <p class="page-subtitle" id="cust-hero-lounge-sub">Live station availability, real-time match referee &amp; tournaments</p>
+                    </div>
+                    <div class="lhh-right">
+                        <button type="button" class="btn btn-sm btn-outline-cyan" onclick="openLoungeExplorerModal()" title="Discover &amp; Switch PlayStation Lounges">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            <span>Switch Lounge</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Owner Promotion Banner -->
+            <div class="promo-banner" id="customer-promo-banner">
+                <div class="promo-left">
+                    <span class="promo-tag" id="promo-badge-text">🔥 HAPPY HOUR SPECIAL</span>
+                    <div class="promo-title" id="promo-title-text">Play for only 15 ETB / Match!</div>
+                    <div class="promo-sub" id="promo-sub-text">Monday – Friday before 4:00 PM (Regular: <span id="promo-regular-rate">25</span> ETB)</div>
+                </div>
+                <button class="btn-promo-action" id="promo-cta-btn" onclick="openWaitingListModal()">Join Queue</button>
+            </div>
+
+            <!-- Live TV Station Cards for Customers -->
+            <div class="customer-tvs-grid" id="customer-tvs-list">
+                <!-- Dynamically rendered -->
+            </div>
+
+            <!-- Waiting List Live Queue -->
+            <div class="queue-card">
+                <div class="queue-head">
+                    <div class="queue-head-left">
+                        <span class="queue-icon">⏳</span>
+                        <div>
+                            <div class="queue-title">Live Waiting Queue</div>
+                            <div class="queue-subtitle" id="queue-count-display">0 players in line</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-sm btn-primary" onclick="openWaitingListModal()">+ Join Queue</button>
+                </div>
+                <div class="queue-list" id="customer-queue-body">
+                    <div class="empty-state">No players currently waiting. Stations available right now!</div>
+                </div>
+            </div>
+
+            <!-- TOURNAMENTS & EVENTS SECTION (Owner creates & manages bills / Customers register) -->
+            <div class="tournaments-section">
+                <div class="section-head-flex">
+                    <div class="tourn-section-title">
+                        <span class="tourn-icon">🏆</span>
+                        <div>
+                            <h3 class="tourn-h3">Lounge Tournaments &amp; Events</h3>
+                            <p class="tourn-p">Official competitions with live participant brackets and cash prize pools</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary" id="btn-owner-create-event" onclick="openCreateEventModal()" style="display:none;">
+                        + Create Tournament
+                    </button>
+                </div>
+                <div class="events-cards-grid" id="customer-events-list">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+            </div>
+
+            <!-- REDESIGNED LUXURY LOUNGE HUB & CONTACT SHOWCASE -->
+            <footer class="lounge-hub-footer" id="customer-lounge-hub-footer">
+                <div class="lounge-hub-header">
+                    <div class="lounge-brand-badge">
+                        <div class="lounge-logo-ring">
+                            <img src="/static/img/logo_icon.png" alt="Logo" class="lounge-brand-logo">
+                        </div>
+                        <div class="lounge-brand-info">
+                            <div class="lounge-title-row">
+                                <h3 class="lounge-hub-title" id="cust-lounge-title">GameWatch Lounge</h3>
+                                <span class="lounge-verified-tag">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    VERIFIED VENUE
+                                </span>
+                            </div>
+                            <p class="lounge-hub-sub">Next-Gen PlayStation Arena &amp; Automated Match Referee Hub</p>
+                        </div>
+                    </div>
+                    <div class="lounge-status-pill">
+                        <span class="live-dot-green"></span>
+                        <span class="status-txt">AI REFEREE ACTIVE</span>
+                    </div>
+                </div>
+
+                <div class="lounge-cards-grid">
+                    <!-- 1. Location & Arena -->
+                    <div class="lounge-hub-card">
+                        <div class="lhc-icon-wrap map-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div class="lhc-body">
+                            <span class="lhc-label">PRIME LOCATION</span>
+                            <div class="lhc-value" id="cust-contact-address">Addis Ababa, Ethiopia</div>
+                            <span class="lhc-hint">Bole Medhanialem · Prime Gaming Arena</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Phone & Booking -->
+                    <div class="lounge-hub-card">
+                        <div class="lhc-icon-wrap phone-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                        </div>
+                        <div class="lhc-body">
+                            <span class="lhc-label">PHONE &amp; INQUIRIES</span>
+                            <a href="tel:+251900000000" class="lhc-value lhc-link" id="cust-contact-phone">+251 900 000000</a>
+                            <span class="lhc-hint">Open Daily · 10:00 AM – 12:00 AM</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Official Email -->
+                    <div class="lounge-hub-card">
+                        <div class="lhc-icon-wrap mail-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                <polyline points="22,6 12,13 2,6"></polyline>
+                            </svg>
+                        </div>
+                        <div class="lhc-body">
+                            <span class="lhc-label">OFFICIAL EMAIL</span>
+                            <a href="mailto:support@gamewatch.et" class="lhc-value lhc-link" id="cust-contact-email">support@gamewatch.et</a>
+                            <span class="lhc-hint">Tournaments &amp; VIP Booking Inquiries</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. Match Rates & Fair Play -->
+                    <div class="lounge-hub-card">
+                        <div class="lhc-icon-wrap rate-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+                                <line x1="6" y1="12" x2="10" y2="12"></line>
+                                <line x1="8" y1="10" x2="8" y2="14"></line>
+                                <circle cx="16" cy="12" r="1"></circle>
+                                <circle cx="18" cy="10" r="1"></circle>
+                            </svg>
+                        </div>
+                        <div class="lhc-body">
+                            <span class="lhc-label">STANDARD RATES</span>
+                            <div class="lhc-value"><span id="cust-rate-display">25</span> ETB <span class="rate-unit">/ Verified Match</span></div>
+                            <span class="lhc-hint">Anti-Theft AI Referee Automated Billing</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Community & Social Connections -->
+                <div class="lounge-community-bar">
+                    <span class="comm-label">COMMUNITY:</span>
+                    <div class="comm-links">
+                        <a href="https://t.me/gamewatch_et" target="_blank" rel="noopener" class="comm-chip" title="Join GameWatch Telegram Community">
+                            <svg class="comm-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+                            </svg>
+                            <span>Telegram Lounge</span>
+                        </a>
+                        <a href="https://wa.me/251921615614" target="_blank" rel="noopener" class="comm-chip" title="WhatsApp Customer Desk">
+                            <svg class="comm-icon" width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM12.05 20.15C10.57 20.15 9.12 19.76 7.85 19.01L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.3C4.24 14.99 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.69 12.05 3.69C14.25 3.69 16.31 4.55 17.87 6.11C19.42 7.67 20.28 9.73 20.28 11.93C20.27 16.48 16.58 20.15 12.05 20.15ZM16.57 14.39C16.32 14.27 15.1 13.67 14.87 13.58C14.65 13.5 14.48 13.46 14.32 13.7C14.15 13.95 13.68 14.51 13.54 14.67C13.4 14.84 13.25 14.86 13.01 14.73C12.76 14.61 11.96 14.35 11.02 13.51C10.28 12.85 9.78 12.04 9.64 11.8C9.5 11.55 9.62 11.42 9.75 11.29C9.86 11.18 10 11.01 10.12 10.87C10.25 10.73 10.29 10.63 10.37 10.46C10.45 10.3 10.41 10.15 10.35 10.03C10.29 9.91 9.8 8.7 9.59 8.2C9.4 7.71 9.2 7.78 9.05 7.77C8.91 7.76 8.75 7.76 8.58 7.76C8.42 7.76 8.15 7.82 7.93 8.06C7.7 8.31 7.07 8.9 7.07 10.1C7.07 11.3 7.95 12.45 8.07 12.62C8.19 12.78 9.79 15.26 12.26 16.32C12.85 16.57 13.3 16.72 13.66 16.84C14.25 17.02 14.79 17 15.22 16.93C15.7 16.86 16.69 16.33 16.9 15.74C17.11 15.15 17.11 14.65 17.05 14.54C16.99 14.44 16.82 14.39 16.57 14.39Z"/>
+                            </svg>
+                            <span>WhatsApp Desk</span>
+                        </a>
+                        <a href="https://instagram.com/GameWatchET" target="_blank" rel="noopener" class="comm-chip" title="Instagram @GameWatchET">
+                            <svg class="comm-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                            </svg>
+                            <span>@GameWatchET</span>
+                        </a>
+                    </div>
+                </div>
+            </footer>
+        </section>
+
+
+        <!-- VIEW: AI DIAGNOSTICS -->
+        <section class="app-view" id="view-ai">
+            <div class="page-header">
+                <h1 class="page-title">AI Advisory</h1>
+                <p class="page-subtitle">Ask why a game was verified or rejected</p>
+            </div>
+
+            <div class="ai-wrap">
+                <div class="ai-card-main">
+                    <div class="ai-head">
+                        <div class="ai-icon">🤖</div>
+                        <div class="ai-head-text">
+                            <div class="ai-title">Explainability</div>
+                            <div class="ai-desc">Natural language game diagnostics</div>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="ai-tv-select">Station</label>
+                        <select class="field-input" id="ai-tv-select">
+                            <option value="1">TV 1</option>
+                            <option value="2">TV 2</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="ai-query-input">Question</label>
+                        <input type="text" class="field-input" id="ai-query-input" value="Why wasn't this game counted?" placeholder="Ask about a game...">
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="btn-ask-ai">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        Run Diagnostic
+                    </button>
+
+                    <div class="ai-output" id="ai-report-output">
+                        <span class="ai-placeholder">Tap "Run Diagnostic" to inspect verification evidence.</span>
+                    </div>
+                </div>
+
+                <div class="rules-card">
+                    <div class="rules-title">Verification Rules</div>
+                    <ul class="rule-items">
+                        <li><strong>Core Engine:</strong> OpenCV + Time-Aware Brain — 100% billing authority. AI is advisory only.</li>
+                        <li><strong>Monotonic:</strong> ≥120s continuous clock progression required before counting a game.</li>
+                        <li><strong>Obstruction:</strong> Blocked frames preserve trusted state — no dropped matches.</li>
+                        <li><strong>Clock Filter:</strong> Backward time jumps trigger diagnostics to protect customer wallets.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: BUSINESS ANALYTICS & WEEKLY INTELLIGENCE -->
+        <section class="app-view" id="view-analytics">
+            <div class="page-header">
+                <div class="page-header-flex">
+                    <div>
+                        <h1 class="page-title">Business Analytics &amp; Performance</h1>
+                        <p class="page-subtitle">Weekly revenue trends, peak player traffic &amp; AI business advisory</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="loadBusinessAnalytics()" title="Refresh weekly intelligence">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        <span>Refresh Insights</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Top KPI Cards Grid -->
+            <div class="analytics-kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-blue">💰</div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">7-DAY REVENUE</span>
+                        <div class="kpi-value"><span id="ana-week-revenue">0</span> <small>ETB</small></div>
+                        <div class="kpi-trend">
+                            <span class="trend-pill trend-up" id="ana-growth-pill">📈 +0%</span>
+                            <span class="trend-sub">vs previous week</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-green">🎮</div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">WEEKLY MATCHES PLAYED</span>
+                        <div class="kpi-value" id="ana-week-games">0</div>
+                        <div class="kpi-subtext" id="ana-week-txs">0 checkout sessions</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-purple">🔥</div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">PEAK GAMING HOURS</span>
+                        <div class="kpi-value kpi-sm" id="ana-peak-hours">4:00 PM – 8:00 PM</div>
+                        <div class="kpi-subtext" id="ana-peak-capacity">High player concentration</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon-wrap kpi-amber">📺</div>
+                    <div class="kpi-body">
+                        <span class="kpi-label">TOP STATION UTILIZATION</span>
+                        <div class="kpi-value kpi-sm" id="ana-top-station">TV 1 (Executive)</div>
+                        <div class="kpi-subtext" id="ana-top-station-sub">Highest earnings venue</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Charts & Distribution Grid -->
+            <div class="analytics-charts-grid">
+                <!-- 7-Day Revenue Trend Bar Chart -->
+                <div class="analytics-card chart-card">
+                    <div class="chart-card-head">
+                        <div class="chart-title">Weekly Revenue Breakdown (ETB)</div>
+                        <span class="chart-badge">Past 7 Days</span>
+                    </div>
+                    <div class="weekly-bar-chart" id="weekly-bar-chart">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+
+                <!-- Payment Breakdown -->
+                <div class="analytics-card payment-breakdown-card">
+                    <div class="chart-card-head">
+                        <div class="chart-title">Payment Settlement Channels</div>
+                        <span class="chart-badge">Digital vs Cash</span>
+                    </div>
+                    <div class="payment-channels-list" id="ana-payment-channels">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Station Performance & AI Advisory Grid -->
+            <div class="analytics-detail-grid">
+                <!-- Station Performance Breakdown -->
+                <div class="analytics-card stations-perf-card">
+                    <div class="chart-card-head">
+                        <div class="chart-title">Station Performance &amp; Utilization</div>
+                        <span class="chart-badge">All TVs</span>
+                    </div>
+                    <div class="station-perf-table-wrap">
+                        <table class="station-perf-table" id="ana-stations-table">
+                            <thead>
+                                <tr>
+                                    <th>Station</th>
+                                    <th>Matches</th>
+                                    <th>Revenue</th>
+                                    <th>Sessions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ana-stations-tbody">
+                                <!-- Dynamically filled -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- AI Business Advisor Capsule -->
+                <div class="analytics-card ai-advisor-card">
+                    <div class="chart-card-head">
+                        <div class="chart-title">
+                            <span class="ai-sparkle-icon">✨</span>
+                            <span>AI Profitability &amp; Operations Advisor</span>
+                        </div>
+                        <span class="badge-ai-live">LIVE INTELLIGENCE</span>
+                    </div>
+                    <div class="ai-advisor-body" id="ana-ai-advisor-list">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW: OWNER SETTINGS & CONFIGURATION -->
+        <section class="app-view" id="view-settings">
+            <div class="page-header">
+                <h1 class="page-title">Lounge Settings</h1>
+                <p class="page-subtitle">Configure business identity, location profile, pricing &amp; promotional ads</p>
+            </div>
+
+            <div class="settings-wrap">
+                <!-- 0. Operator Profile & Lounge Identity Card -->
+                <div class="operator-profile-card" id="operator-profile-card">
+                    <div class="opc-inner">
+                        <div class="opc-user-info">
+                            <div class="opc-avatar-wrap">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </div>
+                            <div class="opc-user-meta">
+                                <div class="opc-name-row">
+                                    <h2 class="opc-operator-name" id="settings-operator-name">Abebe Kebede</h2>
+                                    <span class="user-pill-role-tag owner" id="settings-operator-role">OWNER</span>
+                                </div>
+                                <span class="opc-email" id="settings-operator-email">abyman24680@gmail.com</span>
+                            </div>
+                        </div>
+
+                        <div class="opc-controls-grid">
+                            <div class="opc-control-item">
+                                <span class="opc-label">Lounge Access Code</span>
+                                <div class="opc-code-row">
+                                    <code class="opc-code-badge" id="settings-lounge-code">GW-BOLE-101</code>
+                                    <button type="button" class="btn-copy-chip" onclick="copyLoungeCode()" title="Copy Access Code">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                        <span>Copy</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="opc-control-item">
+                                <span class="opc-label">Display Mode</span>
+                                <div class="opc-theme-toggle-group">
+                                    <button type="button" class="btn-theme-chip active" id="opc-theme-dark" onclick="applyTheme('dark')">
+                                        <span>🌙 Dark</span>
+                                    </button>
+                                    <button type="button" class="btn-theme-chip" id="opc-theme-light" onclick="applyTheme('light')">
+                                        <span>☀️ Light</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="opc-control-item opc-logout-item">
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="handleLogout()" style="width:100%; justify-content:center; gap:6px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                    <span>Sign Out</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 1. Open Verified Lounge Profile & Location Card -->
+                <div class="lounge-profile-card" id="lounge-profile-card">
+                    <div class="lpc-head">
+                        <div class="lpc-badge-row">
+                            <span class="verified-lounge-pill">✔ VERIFIED LOUNGE</span>
+                            <span class="lpc-area-pill" id="lpc-area-display">📍 4 Kilo</span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-cyan btn-edit-lounge" onclick="toggleLoungeSettingsEdit(true)">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                            <span>Edit Details</span>
+                        </button>
+                    </div>
+                    <div class="lpc-body">
+                        <h2 class="lpc-name" id="lpc-name-display">Abyman GameZone</h2>
+                        <div class="lpc-address" id="lpc-address-display">Addis Ababa, 4 Kilo (near AAU King George Street)</div>
+                        <div class="lpc-meta-grid">
+                            <div class="lpc-meta-item">
+                                <span class="lpc-meta-label">Lounge Access Code</span>
+                                <div class="lpc-code-val">
+                                    <span id="lpc-code-display">GW-OWNER-050</span>
+                                    <button type="button" class="btn-copy-chip" onclick="copyLoungeCode()" title="Copy Code">📋</button>
+                                </div>
+                            </div>
+                            <div class="lpc-meta-item">
+                                <span class="lpc-meta-label">Standard Match Rate</span>
+                                <div class="lpc-rate-val"><span id="lpc-rate-display">25</span> ETB / match</div>
+                            </div>
+                            <div class="lpc-meta-item">
+                                <span class="lpc-meta-label">Public Contact Phone</span>
+                                <div class="lpc-contact-val" id="lpc-phone-display">0921615614</div>
+                            </div>
+                            <div class="lpc-meta-item">
+                                <span class="lpc-meta-label">Public Support Email</span>
+                                <div class="lpc-contact-val" id="lpc-email-display">abyman24680@gmail.com</div>
+                            </div>
+                            <div class="lpc-meta-item">
+                                <span class="lpc-meta-label">Digital Payment (Telebirr)</span>
+                                <div class="lpc-contact-val" id="lpc-telebirr-display">🟢 Active</div>
+                            </div>
+                            <div class="lpc-meta-item">
+                                <span class="lpc-meta-label">Bank Transfer (CBE)</span>
+                                <div class="lpc-contact-val" id="lpc-cbe-display">🏦 Active</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Settings Edit Form (Hidden by default when card is shown) -->
+                <form class="config-card" id="form-lounge-settings" onsubmit="handleSaveSettings(event)" style="display:none;">
+                    <div class="form-card-head">
+                        <span class="config-title">Edit Lounge Configuration</span>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="toggleLoungeSettingsEdit(false)">Cancel</button>
+                    </div>
+
+                    <div class="field">
+                        <label for="cfg-lounge-name">Lounge / GameZone Name</label>
+                        <input type="text" class="field-input" id="cfg-lounge-name" placeholder="e.g. Abyman GameZone" required>
+                    </div>
+
+                    <div class="field-row">
+                        <div class="field" style="flex:1;">
+                            <label for="cfg-area">Neighborhood / Area (For Customer Search)</label>
+                            <select class="field-input" id="cfg-area">
+                                <option value="4 Kilo">4 Kilo (Arat Kilo)</option>
+                                <option value="Bole">Bole</option>
+                                <option value="Piazza">Piazza</option>
+                                <option value="CMC">CMC</option>
+                                <option value="Kazanchis">Kazanchis</option>
+                                <option value="Megenagna">Megenagna</option>
+                                <option value="Sarbet">Sarbet</option>
+                                <option value="Gerji">Gerji</option>
+                                <option value="Lebu">Lebu</option>
+                            </select>
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label for="cfg-rate">Rate Per Game (ETB)</label>
+                            <input type="number" class="field-input" id="cfg-rate" placeholder="25" min="1" step="0.5" required>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="cfg-address">Physical Address / Street Location</label>
+                        <input type="text" class="field-input" id="cfg-address" placeholder="e.g. Addis Ababa, 4 Kilo (near AAU King George Street)" required>
+                    </div>
+
+                    <hr class="divider">
+                    <span class="config-title">Payment Accounts &amp; QR Codes</span>
+
+                    <!-- Telebirr Configuration -->
+                    <div class="payment-setup-box">
+                        <div class="psb-head">
+                            <span class="psb-title">🟢 Telebirr Digital Settlement</span>
+                        </div>
+                        <div class="field-row">
+                            <div class="field" style="flex:1;">
+                                <label for="cfg-telebirr-name">Account Name</label>
+                                <input type="text" class="field-input" id="cfg-telebirr-name" placeholder="e.g. Lounge Cashier">
+                            </div>
+                            <div class="field" style="flex:1;">
+                                <label for="cfg-telebirr-phone">Account Phone Number</label>
+                                <input type="text" class="field-input" id="cfg-telebirr-phone" placeholder="e.g. 0921615614">
+                            </div>
+                        </div>
+                        <div class="field">
+                            <label for="cfg-telebirr-qr-file">Upload Telebirr Payment QR Image</label>
+                            <input type="file" class="field-input-file" id="cfg-telebirr-qr-file" accept="image/*" onchange="previewTelebirrQr(event)">
+                            <div class="qr-preview-box" id="telebirr-qr-preview-box" style="display:none;">
+                                <img id="telebirr-qr-preview-img" alt="QR Preview" style="max-height:100px; border-radius:6px; margin-top:6px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CBE Configuration with None Option -->
+                    <div class="payment-setup-box">
+                        <div class="psb-head">
+                            <span class="psb-title">🏦 CBE Mobile Banking Transfer</span>
+                            <label class="cbe-none-toggle">
+                                <input type="checkbox" id="cfg-cbe-none" onchange="toggleCbeInputs(this.checked)">
+                                <span>None (I don't have CBE)</span>
+                            </label>
+                        </div>
+                        <div id="cbe-inputs-wrap">
+                            <div class="field-row">
+                                <div class="field" style="flex:1;">
+                                    <label for="cfg-cbe-name">CBE Account Name</label>
+                                    <input type="text" class="field-input" id="cfg-cbe-name" placeholder="e.g. Lounge Owner">
+                                </div>
+                                <div class="field" style="flex:1;">
+                                    <label for="cfg-cbe-number">CBE Account Number</label>
+                                    <input type="text" class="field-input" id="cfg-cbe-number" placeholder="e.g. 1000...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="divider">
+                    <span class="config-title">Public Contact Information</span>
+                    <div class="field-row">
+                        <div class="field" style="flex:1;">
+                            <label for="cfg-phone">Public Contact Phone</label>
+                            <input type="text" class="field-input" id="cfg-phone" placeholder="+251 921 615614">
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label for="cfg-email">Public Support Email</label>
+                            <input type="email" class="field-input" id="cfg-email" placeholder="support@gamewatch.et">
+                        </div>
+                    </div>
+
+                    <div class="settings-actions-bar">
+                        <button type="submit" class="btn btn-primary btn-block btn-save-settings" id="btn-save-settings">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            <span>Save Configuration &amp; Rates</span>
+                        </button>
+                    </div>
+                </form>
+
+                <!-- 3. Promotional Ads & Announcements Section -->
+                <div class="promotions-manager-section">
+                    <div class="section-head-flex">
+                        <div>
+                            <h3 class="section-title">📢 Promotional Campaigns &amp; Ads</h3>
+                            <p class="section-subtitle">Add announcements, Happy Hour pricing, and ads displayed directly on the Gamer Lounge banner.</p>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="openCreatePromoModal()">
+                            + Create New Promotion
+                        </button>
+                    </div>
+                    <div class="promotions-cards-list" id="settings-promotions-list">
+                        <!-- Populated dynamically via app.js -->
+                    </div>
+                </div>
+
+                <!-- 4. Visual Appearance & Theme Selection -->
+                <div class="config-card" id="theme-settings-card" style="margin-top:20px;">
+                    <div class="form-card-head">
+                        <span class="config-title">🎨 Display &amp; Visual Theme</span>
+                        <span class="badge badge-cyan" id="current-theme-badge">Dark Mode</span>
+                    </div>
+                    <p style="font-size:0.75rem; color:var(--text-secondary); margin-bottom:14px;">
+                        Choose between GameWatch deep obsidian dark mode or ultra-crisp studio light mode with high-contrast surfaces.
+                    </p>
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <button type="button" class="btn btn-secondary" onclick="applyTheme('dark')" id="btn-theme-dark" style="flex:1; min-width:140px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <span>🌙</span> <span>Dark Mode</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" onclick="applyTheme('light')" id="btn-theme-light" style="flex:1; min-width:140px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                            <span>☀️</span> <span>Light Mode</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========== PREMIER BOTTOM BILLBOARD SPONSOR (Panoramic Stadium Showcase Matching Screenshot 2) ========== -->
+        <aside class="sponsor-billboard-panoramic" id="sponsor-billboard-bottom" aria-label="Official Title Sponsor" onclick="handleFooterCtaClick()">
+            <button type="button" class="sbb-arrow-btn sbb-arrow-left" onclick="event.stopPropagation(); prevFooterSlide()" title="Previous Tournament Slide">‹</button>
+            
+            <div class="sbb-content-inner">
+                <div class="sbb-badge-trophy" id="footer-badge-icon">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="#F59E0B" stroke="#D97706" stroke-width="1.5">
+                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                        <path d="M4 22h16"></path>
+                        <path d="M10 14.66V17c0 .55-.45 1-1 1H8c-.55 0-1 .45-1 1v1h10v-1c0-.55-.45-1-1-1h-1c-.55 0-1-.45-1-1v-2.34"></path>
+                        <path d="M6 4h12v5a6 6 0 0 1-12 0V4z"></path>
+                    </svg>
+                </div>
+                
+                <div class="sbb-text-block">
+                    <span class="sbb-tag" id="footer-slide-tag">PREMIER NATIONAL LEAGUE TITLE SPONSOR</span>
+                    <h3 class="sbb-title" id="footer-slide-title">Harif Sport &amp; Entertainment</h3>
+                    <p class="sbb-meta" id="footer-slide-desc">Official EA FC 25 National Tournament Series &bull; 100,000 ETB Grand Final Cash Prize Pool</p>
+                </div>
+
+                <div class="sbb-action-col">
+                    <button type="button" class="btn-tournament-standings" id="footer-slide-btn" onclick="event.stopPropagation(); handleFooterCtaClick()">
+                        <span id="footer-slide-btn-text">Tournament Standings →</span>
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="sbb-arrow-btn sbb-arrow-right" onclick="event.stopPropagation(); nextFooterSlide()" title="Next Tournament Slide">›</button>
+
+            <div class="sbb-pagination-bars" id="footer-bars-container">
+                <span class="sbb-bar active" onclick="event.stopPropagation(); setFooterSlide(0)"></span>
+                <span class="sbb-bar" onclick="event.stopPropagation(); setFooterSlide(1)"></span>
+                <span class="sbb-bar" onclick="event.stopPropagation(); setFooterSlide(2)"></span>
+                <span class="sbb-bar" onclick="event.stopPropagation(); setFooterSlide(3)"></span>
+            </div>
+        </aside>
+
+    </main>
+        </div><!-- /.saas-workspace -->
+    </div><!-- /.saas-shell -->
+
+    <!-- ========== ADD CAMERA CONNECTOR MODAL ========== -->
+    <div class="modal-bg" id="add-camera-modal">
+        <div class="modal-sheet modal-camera-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">📹</span>
+                    <div>
+                        <div class="modal-head-title">Connect Video / Camera Source</div>
+                        <div class="modal-head-sub">Phone, USB Capture, RTSP CCTV, or PC Feed</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeAddCameraModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Preset Quick Buttons -->
+                <div class="cam-preset-picker">
+                    <span class="preset-label">Quick Select Device Preset:</span>
+                    <div class="preset-chips">
+                        <button type="button" class="preset-chip active" onclick="quickFillCamPreset('DROIDCAM')">📱 DroidCam Phone</button>
+                        <button type="button" class="preset-chip" onclick="quickFillCamPreset('IPWEBCAM')">📱 IP Webcam Phone</button>
+                        <button type="button" class="preset-chip" onclick="quickFillCamPreset('USB')">📹 USB / HDMI Capture</button>
+                        <button type="button" class="preset-chip" onclick="quickFillCamPreset('RTSP')">🌐 IP CCTV (RTSP)</button>
+                        <button type="button" class="preset-chip" onclick="quickFillCamPreset('PC')">💻 PC Screen Stream</button>
+                    </div>
+                </div>
+
+                <form id="add-camera-form" onsubmit="saveCameraConnector(event)">
+                    <div class="field">
+                        <label for="cam-name-input">Connector / Camera Name</label>
+                        <input type="text" class="field-input" id="cam-name-input" placeholder="e.g. Phone Camera TV 1" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="cam-type-select">Source Device Type</label>
+                        <select class="field-input" id="cam-type-select" onchange="onSourceTypeChange(this.value)">
+                            <option value="PHONE">📱 Smartphone (DroidCam / IP Webcam App)</option>
+                            <option value="USB">📹 USB Webcam / HDMI Game Capture (Elgato / Cam Link)</option>
+                            <option value="RTSP">🌐 IP Security CCTV Camera (RTSP Stream)</option>
+                            <option value="PC">💻 PC Stream / Virtual OBS Camera</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="cam-address-input">Stream IP Address / URL / Device Index</label>
+                        <div class="input-wrap">
+                            <input type="text" class="field-input" id="cam-address-input" placeholder="http://192.168.1.105:4747/video" required>
+                        </div>
+                        <span class="field-hint" id="cam-address-hint">For DroidCam on phone, enter: <code>http://&lt;phone-ip&gt;:4747/video</code></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="cam-tv-select">Station Assignment</label>
+                        <select class="field-input" id="cam-tv-select">
+                            <option value="1">TV 1 (Executive Lounge)</option>
+                            <option value="2">TV 2 (VIP Station)</option>
+                            <option value="3">TV 3 (PlayStation 5)</option>
+                            <option value="0">All Stations (Wide-Angle Room View)</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Device Guide Box -->
+                    <div class="cam-guide-box" id="cam-dynamic-guide">
+                        <div class="cgb-title" id="cgb-title">💡 How to Connect Your Smartphone (DroidCam):</div>
+                        <ol class="cgb-list" id="cgb-list">
+                            <li>Download the free <strong>DroidCam</strong> app on your phone (Android/iOS).</li>
+                            <li>Connect your phone to the same Wi-Fi router as this GameWatch PC.</li>
+                            <li>Open DroidCam, note the Wi-Fi IP &amp; Port (4747), enter: <code>http://&lt;phone_ip&gt;:4747/video</code>.</li>
+                        </ol>
+                    </div>
+
+                    <!-- Interactive Troubleshooting Drawer -->
+                    <div class="cam-troubleshoot-box">
+                        <div class="ctb-head" onclick="toggleTroubleshootGuide()">
+                            <span>❓ Feed not appearing or showing offline? (Troubleshooting)</span>
+                            <span id="ctb-arrow">▼</span>
+                        </div>
+                        <div class="ctb-body" id="ctb-body" style="display:none;">
+                            <ul class="ctb-list">
+                                <li><strong>Check Same Wi-Fi:</strong> Phone and PC must be on the same local Wi-Fi router subnet (not mobile cellular data).</li>
+                                <li><strong>Test in Browser Tab:</strong> Paste the stream URL (e.g. <code>http://192.168.1.105:8080/video</code>) into a new Chrome tab. If you see video there, GameWatch will connect instantly!</li>
+                                <li><strong>Windows Firewall:</strong> Ensure Python is allowed through Windows Defender Firewall for Private Networks.</li>
+                                <li><strong>Keep App in Foreground:</strong> Do not lock your phone screen or let the camera app sleep in the background.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="modal-foot-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeAddCameraModal()">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btn-submit-camera">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Save &amp; Connect Stream</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CHECKOUT MODAL (slide-up sheet) ========== -->
+    <div class="modal-bg" id="checkout-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">💳</span>
+                    <div>
+                        <div class="modal-head-title">Station Checkout</div>
+                        <div class="modal-head-sub" id="modal-station-title">TV 1</div>
+                    </div>
+                </div>
+                <button class="modal-close" id="btn-close-modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="bill-card">
+                    <div class="bill-row">
+                        <span>Customer</span>
+                        <strong id="modal-customer-name">Player</strong>
+                    </div>
+                    <div class="bill-row">
+                        <span>Verified Matches</span>
+                        <span class="badge-games" id="modal-verified-games">0 Games</span>
+                    </div>
+                    <div class="bill-row">
+                        <span>Rate</span>
+                        <span id="modal-rate-display">25 ETB/game</span>
+                    </div>
+                    <div class="bill-row" id="checkout-discount-row">
+                        <span>Discount Applied</span>
+                        <span id="modal-discount-price">0 ETB</span>
+                    </div>
+                    <hr class="bill-divider">
+                    <div class="bill-total">
+                        <span>TOTAL DUE</span>
+                        <span class="bill-total-amount" id="modal-total-price">0 ETB</span>
+                    </div>
+                </div>
+
+                <div class="pay-tabs">
+                    <button class="pay-tab active" data-method="TELEBIRR" id="tab-pay-telebirr">Telebirr</button>
+                    <button class="pay-tab" data-method="CBE" id="tab-pay-cbe">CBE</button>
+                    <button class="pay-tab" data-method="CASH" id="tab-pay-cash">Cash</button>
+                </div>
+
+                <!-- DIGITAL PAYMENT SECTION (TELEBIRR / CBE) -->
+                <div class="digital-pay-wrap" id="qr-display-section">
+                    <!-- Compact QR & Account Details Row -->
+                    <div class="qr-compact-box">
+                        <div class="qr-compact-frame">
+                            <img src="/api/payment_qr/telebirr" alt="QR" id="modal-qr-image">
+                        </div>
+                        <div class="qr-compact-meta">
+                            <div class="qr-method-tag" id="modal-qr-method-pill">🟢 TELEBIRR DIGITAL</div>
+                            <div class="qr-compact-name" id="modal-qr-recipient">Recipient: <strong>ABEL</strong></div>
+                            <div class="qr-compact-phone" id="modal-qr-phone">Phone: <code>0911561432</code></div>
+                            <div class="qr-compact-hint" id="modal-qr-hint">Customer scans to pay</div>
+                        </div>
+                    </div>
+
+                    <!-- PAYMENT PROOF PHOTO CAPTURE ZONE (Client's Screen) -->
+                    <div class="proof-capture-card">
+                        <div class="proof-card-head">
+                            <div class="proof-card-title-row">
+                                <span class="proof-cam-icon">📸</span>
+                                <div>
+                                    <div class="proof-title">Client's Phone Payment Proof</div>
+                                    <div class="proof-subtitle">Snap client's screen or upload screenshot</div>
+                                </div>
+                            </div>
+                            <span class="proof-badge-pending" id="proof-status-badge">Photo or SMS Code</span>
+                        </div>
+
+                        <!-- Action buttons to capture photo -->
+                        <div class="proof-btn-row" id="proof-input-buttons">
+                            <label class="btn btn-sm btn-outline-cyan btn-take-photo">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                                <span>Take Photo</span>
+                                <input type="file" id="input-proof-camera" accept="image/*" capture="environment" style="display:none;" onchange="handlePaymentProofSelected(event)">
+                            </label>
+
+                            <label class="btn btn-sm btn-secondary btn-upload-proof">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                                <span>Upload Image</span>
+                                <input type="file" id="input-proof-file" accept="image/*" style="display:none;" onchange="handlePaymentProofSelected(event)">
+                            </label>
+
+                            <button type="button" class="btn btn-sm btn-secondary btn-webcam-proof" id="btn-webcam-toggle" onclick="toggleWebcamProofSnapshot()" title="Open live webcam/camera to snap screen">
+                                <span>📹 Cam</span>
+                            </button>
+                        </div>
+
+                        <!-- Live Webcam View -->
+                        <div class="webcam-live-box" id="webcam-proof-view" style="display:none;">
+                            <video id="webcam-proof-video" autoplay playsinline></video>
+                            <div class="webcam-live-actions">
+                                <button type="button" class="btn btn-sm btn-primary" onclick="captureWebcamSnapshot()" style="flex:1;">
+                                    <span>📸 Capture Client's Screen</span>
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" onclick="stopWebcamProofStream()">
+                                    <span>Cancel</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Attached Proof Preview Card -->
+                        <div class="proof-preview-strip" id="proof-preview-card" style="display:none;">
+                            <img id="proof-preview-img" src="" alt="Proof Preview">
+                            <div class="proof-preview-details">
+                                <span class="proof-preview-status">✔ Proof Photo Attached</span>
+                                <span class="proof-preview-sub" id="proof-filesize-text">Ready for verification</span>
+                            </div>
+                            <button type="button" class="btn-clear-proof" onclick="clearPaymentProof()" title="Remove / Retake photo">&times;</button>
+                        </div>
+                    </div>
+
+                    <!-- OPTIONAL SMS REFERENCE FIELD -->
+                    <div class="field" style="margin-top: 4px; width: 100%;">
+                        <label for="checkout-digital-ref" style="font-size:0.78rem; display:flex; justify-content:space-between;">
+                            <span>Transaction Reference / SMS Code</span>
+                            <span style="color:var(--text-tertiary); font-weight:normal;">(Optional if photo taken)</span>
+                        </label>
+                        <input type="text" class="field-input" id="checkout-digital-ref" placeholder="e.g. 5K98X21 or leave blank if photo attached" style="text-transform:uppercase; font-family:var(--font-mono); font-size:0.85rem;">
+                    </div>
+                </div>
+
+                <!-- CASH PAYMENT SECTION (PRD Rule 14) -->
+                <div class="cash-calc-section" id="cash-display-section" style="display: none; padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-subtle); border-radius: 10px; margin-top: 10px;">
+                    <div class="field">
+                        <label for="checkout-cash-received">Cash Received From Customer (ETB)</label>
+                        <input type="number" class="field-input" id="checkout-cash-received" placeholder="e.g. 100" min="0" step="1" oninput="calculateCashChange()">
+                    </div>
+                    <div class="bill-row" style="padding: 8px 0; font-size: 1rem;">
+                        <span>Change Due to Customer:</span>
+                        <strong id="checkout-cash-change" class="text-electric" style="font-size: 1.15rem;">0 ETB</strong>
+                    </div>
+                </div>
+
+                <div class="field" style="margin-top: 10px;">
+                    <label for="checkout-notes-input">Session / Payment Notes (Optional)</label>
+                    <input type="text" class="field-input" id="checkout-notes-input" placeholder="e.g. Split payment, 3 players">
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="btn btn-secondary" id="btn-modal-cancel">Cancel</button>
+                <button class="btn-confirm" id="btn-modal-confirm-pay">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Confirm &amp; Close Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PRD RULE 2: ADJUSTMENT REASON MODAL ========== -->
+    <div class="modal-bg" id="adjustment-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">⚖️</span>
+                    <div>
+                        <div class="modal-head-title" id="adj-modal-title">Manual Adjustment</div>
+                        <div class="modal-head-sub" id="adj-modal-station">TV 1 · Executive Lounge</div>
+                    </div>
+                </div>
+                <button class="modal-close" id="btn-close-adj-modal">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="adj-action-banner" id="adj-action-summary">
+                    Adding +1 Verified Match (+25 ETB)
+                </div>
+
+                <div class="field">
+                    <label class="field-label-accent">Why is this adjusted manually? (Audited per PRD Rule 2)</label>
+                    <div class="reason-options">
+                        <label class="reason-option">
+                            <input type="radio" name="adj-reason-opt" value="Camera missed detection" checked>
+                            <span>GameWatch missed detection</span>
+                        </label>
+                        <label class="reason-option">
+                            <input type="radio" name="adj-reason-opt" value="Camera view obscured">
+                            <span>Camera view obscured / blurry</span>
+                        </label>
+                        <label class="reason-option">
+                            <input type="radio" name="adj-reason-opt" value="Customer package arrangement">
+                            <span>Customer package / arrangement</span>
+                        </label>
+                        <label class="reason-option">
+                            <input type="radio" name="adj-reason-opt" value="Test or practice game">
+                            <span>Test or practice game</span>
+                        </label>
+                        <label class="reason-option">
+                            <input type="radio" name="adj-reason-opt" value="Other">
+                            <span>Other operational reason</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="adj-note">Explanation note (optional)</label>
+                    <input type="text" class="field-input" id="adj-note" placeholder="e.g. Scoreboard was blocked by player">
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="btn btn-secondary" id="btn-cancel-adj">Cancel</button>
+                <button class="btn-confirm" id="btn-submit-adj">
+                    Confirm &amp; Record Audit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== PRD SECTION 12: END SHIFT MODAL ========== -->
+    <div class="modal-bg" id="end-shift-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🏁</span>
+                    <div>
+                        <div class="modal-head-title">End Shift &amp; Cash Reconcile</div>
+                        <div class="modal-head-sub" id="end-shift-clerk">Active Shift</div>
+                    </div>
+                </div>
+                <button class="modal-close" id="btn-close-end-shift">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="shift-summary-grid">
+                    <div class="shift-sum-box">
+                        <span class="ss-lbl">GAMES</span>
+                        <span class="ss-val" id="shift-sum-games">0</span>
+                    </div>
+                    <div class="shift-sum-box">
+                        <span class="ss-lbl">ADJUSTMENTS</span>
+                        <span class="ss-val text-amber" id="shift-sum-adj">0</span>
+                    </div>
+                    <div class="shift-sum-box">
+                        <span class="ss-lbl">TELEBIRR / CBE</span>
+                        <span class="ss-val text-cyan" id="shift-sum-digital">0 ETB</span>
+                    </div>
+                    <div class="shift-sum-box">
+                        <span class="ss-lbl">EXPECTED CASH</span>
+                        <span class="ss-val text-electric" id="shift-sum-cash">0 ETB</span>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="shift-actual-cash">Actual Cash in Drawer (ETB)</label>
+                    <input type="number" class="field-input" id="shift-actual-cash" placeholder="e.g. 750" value="0">
+                </div>
+
+                <div class="field">
+                    <label for="shift-notes">Shift Handover Notes (optional)</label>
+                    <input type="text" class="field-input" id="shift-notes" placeholder="e.g. All stations checked, drawer balanced">
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="btn btn-secondary" id="btn-cancel-end-shift">Cancel</button>
+                <button class="btn-confirm" id="btn-submit-end-shift">
+                    Confirm &amp; Clock Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== WAITING LIST MODAL ========== -->
+    <div class="modal-bg" id="waiting-list-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">⏳</span>
+                    <div>
+                        <div class="modal-head-title">Join Live Queue</div>
+                        <div class="modal-head-sub">We'll alert you when your TV is ready</div>
+                    </div>
+                </div>
+                <button class="modal-close" id="btn-close-queue-modal" onclick="closeWaitingListModal()">&times;</button>
+            </div>
+
+            <form class="modal-body" onsubmit="submitWaitingList(event)">
+                <div class="field">
+                    <label for="queue-name-input">Player / Team Name</label>
+                    <input type="text" class="field-input" id="queue-name-input" placeholder="e.g. Dawit &amp; Friends" required>
+                </div>
+                <div class="field">
+                    <label for="queue-phone-input">Phone Number (Optional)</label>
+                    <input type="tel" class="field-input" id="queue-phone-input" placeholder="09... (for ready SMS / alert)">
+                </div>
+                <div class="field">
+                    <label for="queue-station-select">Preferred Station</label>
+                    <select class="field-input" id="queue-station-select">
+                        <option value="Any Station">Any Available Station</option>
+                        <option value="TV 1 (Executive Lounge)">TV 1 (Executive Lounge)</option>
+                        <option value="TV 2 (VIP Station)">TV 2 (VIP Station)</option>
+                    </select>
+                </div>
+                <div class="modal-foot" style="padding: 16px 0 0 0;">
+                    <button type="button" class="btn btn-secondary" onclick="closeWaitingListModal()">Cancel</button>
+                    <button type="submit" class="btn-confirm">
+                        <span>Confirm &amp; Join Queue</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== PRD SECTION 16: TRANSACTION DETAIL MODAL ========== -->
+    <div class="modal-bg" id="tx-detail-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🧾</span>
+                    <div>
+                        <div class="modal-head-title" id="txd-id">TRANSACTION #GW-000000</div>
+                        <div class="modal-head-sub" id="txd-status-badge">PAID</div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeTxDetailModal()">&times;</button>
+            </div>
+
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- ACTORS -->
+                <div class="bill-card" style="padding: 12px;">
+                    <div class="bill-row">
+                        <span class="text-secondary">Customer:</span>
+                        <strong id="txd-customer" class="text-white">—</strong>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-secondary">Station:</span>
+                        <span id="txd-station" class="text-white">—</span>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-secondary">Clerk:</span>
+                        <span id="txd-clerk" class="text-white">—</span>
+                    </div>
+                </div>
+
+                <!-- SESSION DURATION -->
+                <div class="bill-card" style="padding: 12px;">
+                    <span class="section-label" style="margin-bottom: 6px; display: block;">Session Timing</span>
+                    <div class="bill-row">
+                        <span class="text-secondary">Start Time:</span>
+                        <span id="txd-start" class="text-white">—</span>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-secondary">End Time:</span>
+                        <span id="txd-end" class="text-white">—</span>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-secondary">Duration:</span>
+                        <span id="txd-duration" class="text-electric font-mono">—</span>
+                    </div>
+                </div>
+
+                <!-- GAMES -->
+                <div class="bill-card" style="padding: 12px;">
+                    <span class="section-label" style="margin-bottom: 6px; display: block;">Verified Games</span>
+                    <div class="bill-row">
+                        <span id="txd-games-calc" class="text-white">0 × 25 ETB</span>
+                        <span id="txd-games-total" class="font-mono">0 ETB</span>
+                    </div>
+                </div>
+
+                <!-- FINANCIAL -->
+                <div class="bill-card" style="padding: 12px;">
+                    <span class="section-label" style="margin-bottom: 6px; display: block;">Financial Breakdown</span>
+                    <div class="bill-row">
+                        <span class="text-secondary">Subtotal:</span>
+                        <span id="txd-subtotal" class="text-white">0 ETB</span>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-secondary">Discount:</span>
+                        <span id="txd-discount" class="text-secondary">0 ETB</span>
+                    </div>
+                    <hr class="bill-divider">
+                    <div class="bill-total" style="padding-top: 4px;">
+                        <span>TOTAL</span>
+                        <span class="bill-total-amount text-electric" id="txd-total">0 ETB</span>
+                    </div>
+                </div>
+
+                <!-- PAYMENT -->
+                <div class="bill-card" style="padding: 12px;">
+                    <span class="section-label" style="margin-bottom: 6px; display: block;">Payment Details</span>
+                    <div class="bill-row">
+                        <span class="text-secondary">Method:</span>
+                        <strong id="txd-method" class="text-cyan">CASH</strong>
+                    </div>
+                    <div class="bill-row" id="txd-cash-row-received">
+                        <span class="text-secondary">Amount Received:</span>
+                        <span id="txd-received" class="text-white">0 ETB</span>
+                    </div>
+                    <div class="bill-row" id="txd-cash-row-change">
+                        <span class="text-secondary">Change Given:</span>
+                        <span id="txd-change" class="text-electric">0 ETB</span>
+                    </div>
+                    <div class="bill-row" id="txd-digital-row-ref">
+                        <span class="text-secondary">Digital Ref / Tx:</span>
+                        <code id="txd-ref" class="text-cyan font-mono">—</code>
+                    </div>
+                    <div class="bill-row">
+                        <span class="text-secondary">Payment Status:</span>
+                        <span id="txd-status" class="badge-status-paid">PAID</span>
+                    </div>
+                </div>
+
+                <!-- PAYMENT PROOF DISPLAY -->
+                <div class="bill-card" id="txd-proof-card" style="padding: 12px; display: none;">
+                    <span class="section-label" style="margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>📸 Client's Phone Payment Proof</span>
+                        <span class="proof-badge-verified">Verified Photo</span>
+                    </span>
+                    <div style="text-align: center; margin-top: 8px;">
+                        <img id="txd-proof-img" src="" alt="Payment Proof" style="max-width: 100%; max-height: 220px; object-fit: contain; border-radius: 8px; border: 1px solid var(--border-default); box-shadow: var(--shadow-sm); cursor: pointer;" onclick="window.open(this.src, '_blank')" title="Click to open original image">
+                        <div style="font-size: 0.72rem; color: var(--text-tertiary); margin-top: 4px;">Tap image to view full resolution</div>
+                    </div>
+                </div>
+
+                <!-- AUDIT -->
+                <div class="bill-card" style="padding: 12px;">
+                    <span class="section-label" style="margin-bottom: 6px; display: block;">Audit &amp; Compliance</span>
+                    <div class="bill-row">
+                        <span class="text-secondary">Timestamp:</span>
+                        <span id="txd-timestamp" class="text-white" style="font-size: 0.8rem;">—</span>
+                    </div>
+                    <div class="bill-row" id="txd-notes-row">
+                        <span class="text-secondary">Notes:</span>
+                        <span id="txd-notes" class="text-white">—</span>
+                    </div>
+                    <div class="bill-row" id="txd-adj-row">
+                        <span class="text-secondary">Adjustment Reason:</span>
+                        <span id="txd-adj" class="text-amber">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-foot">
+                <button type="button" class="btn btn-secondary btn-block" onclick="closeTxDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== FORGOT PASSWORD MODAL ========== -->
+    <div class="modal-bg" id="forgot-password-modal">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🔐</span>
+                    <div>
+                        <div class="modal-head-title">Reset Password</div>
+                        <div class="modal-head-sub">Enter your email and a new password</div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeForgotPasswordModal()">&times;</button>
+            </div>
+
+            <form class="modal-body" onsubmit="handleResetPassword(event)">
+                <div class="field">
+                    <label for="reset-email">Account Email</label>
+                    <input type="email" class="field-input" id="reset-email" placeholder="name@gamewatch.et" required>
+                </div>
+                <div class="field">
+                    <label for="reset-new-password">New Password (min 6 chars)</label>
+                    <input type="password" class="field-input" id="reset-new-password" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div class="field">
+                    <label for="reset-confirm-password">Confirm New Password</label>
+                    <input type="password" class="field-input" id="reset-confirm-password" placeholder="••••••••" minlength="6" required>
+                </div>
+                <div class="modal-foot" style="padding: 16px 0 0 0;">
+                    <button type="button" class="btn btn-secondary" onclick="closeForgotPasswordModal()">Cancel</button>
+                    <button type="submit" class="btn-confirm">
+                        <span>Save New Password</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== GOOGLE OAUTH MODAL ========== -->
+    <div class="modal-bg" id="google-oauth-modal">
+        <div class="modal-sheet modal-auth-popup">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <svg class="google-icon" style="width:24px;height:24px;" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <div>
+                        <div class="modal-head-title">Sign in with Google</div>
+                        <div class="modal-head-sub">Choose an account for GameWatch</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeGoogleAuthModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="google-accounts-list">
+                    <div class="google-acct-card" onclick="submitGoogleAuthWithEmail('abebe.kebede.gamewatch@gmail.com', 'Abebe Kebede')">
+                        <div class="g-avatar">A</div>
+                        <div class="g-details">
+                            <span class="g-name">Abebe Kebede (Lounge Owner)</span>
+                            <span class="g-email">abebe.kebede.gamewatch@gmail.com</span>
+                        </div>
+                        <span class="g-arrow">➔</span>
+                    </div>
+
+                    <div class="google-acct-card" onclick="submitGoogleAuthWithEmail('kidus.gamer@gmail.com', 'Kidus Gaming')">
+                        <div class="g-avatar" style="background:#10b981;">K</div>
+                        <div class="g-details">
+                            <span class="g-name">Kidus Gamer (Player)</span>
+                            <span class="g-email">kidus.gamer@gmail.com</span>
+                        </div>
+                        <span class="g-arrow">➔</span>
+                    </div>
+                </div>
+
+                <div class="auth-divider" style="margin: 16px 0;">
+                    <span>or enter another Google account</span>
+                </div>
+
+                <form onsubmit="handleCustomGoogleSubmit(event)">
+                    <div class="field">
+                        <label for="custom-google-email">Google Email Address</label>
+                        <input type="email" class="field-input" id="custom-google-email" placeholder="your.name@gmail.com" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top: 10px;">
+                        <span>Continue to GameWatch</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CLERK LOUNGE CODE MODAL ========== -->
+    <div class="modal-bg" id="clerk-code-modal">
+        <div class="modal-sheet modal-auth-popup">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🔑</span>
+                    <div>
+                        <div class="modal-head-title">Connect to Lounge Owner</div>
+                        <div class="modal-head-sub">Enter your Lounge Owner's Access Code</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeClerkCodeModal()">&times;</button>
+            </div>
+
+            <form class="modal-body" onsubmit="submitClerkLoungeCode(event)">
+                <p class="modal-desc" style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px;">
+                    As a Station Clerk, you must link your account to an existing Lounge Owner. Ask your manager or owner for their 6-character lounge code.
+                </p>
+
+                <div class="field">
+                    <label for="input-clerk-code">Lounge Access Code <span class="badge-req">Required</span></label>
+                    <div class="input-wrap">
+                        <input type="text" class="field-input" id="input-clerk-code" placeholder="e.g. GW-BOLE-101" style="text-transform:uppercase; font-family:var(--font-mono); font-weight:700; letter-spacing:1px;" required>
+                    </div>
+                    <span class="field-err-msg" id="err-clerk-code"></span>
+                </div>
+
+                <div class="lounge-preview-box" id="clerk-lounge-preview" style="display:none;"></div>
+
+                <div class="modal-foot-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeClerkCodeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-clerk-code">
+                        <span>Verify &amp; Connect Lounge</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========== CUSTOMER ONBOARDING MODAL ========== -->
+    <div class="modal-bg" id="customer-onboarding-modal">
+        <div class="modal-sheet modal-auth-popup">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🎮</span>
+                    <div>
+                        <div class="modal-head-title">Customer Lounge Connection</div>
+                        <div class="modal-head-sub">Connect to a Table or Explore Lounges</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeCustomerOnboardingModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="cust-choice-grid">
+                    <div class="cust-choice-card" onclick="openLoungeCodeEntry()">
+                        <div class="ccc-icon">🏷️</div>
+                        <div class="ccc-body">
+                            <span class="ccc-title">I Have a Lounge / Table Code</span>
+                            <span class="ccc-desc">Enter the code shown on the table sticker or counter (e.g. GW-BOLE-101)</span>
+                        </div>
+                    </div>
+
+                    <div class="cust-choice-card" onclick="chooseExploreLounges()">
+                        <div class="ccc-icon">🗺️</div>
+                        <div class="ccc-body">
+                            <span class="ccc-title">Explore Verified Lounges Nearby</span>
+                            <span class="ccc-desc">Browse gaming lounges across Addis Ababa, view live station availability &amp; rates</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Code input section (hidden by default) -->
+                <div id="cust-code-section" style="display:none; margin-top:14px;">
+                    <form onsubmit="submitCustomerLoungeCode(event)">
+                        <div class="field">
+                            <label for="input-cust-code">Lounge Code</label>
+                            <input type="text" class="field-input" id="input-cust-code" placeholder="e.g. GW-BOLE-101" style="text-transform:uppercase; font-family:var(--font-mono); font-weight:700;">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block" style="margin-top:10px;">
+                            <span>Connect to Lounge</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== LOUNGE EXPLORER MODAL ========== -->
+    <div class="modal-bg" id="lounge-explorer-modal">
+        <div class="modal-sheet modal-explorer-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🗺️</span>
+                    <div>
+                        <div class="modal-head-title">GameWatch Lounge Explorer</div>
+                        <div class="modal-head-sub">Find PlayStation Lounges &amp; Check Live Stations</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeLoungeExplorerModal()">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Search & Geolocation Bar -->
+                <div class="explorer-search-row">
+                    <div class="explorer-search-bar" style="flex:1;">
+                        <input type="text" class="field-input" id="input-explorer-search" placeholder="Search by area (4kilo, bole, piazza...) or lounge name..." oninput="onExplorerSearchInput(this.value)">
+                    </div>
+                    <button type="button" class="btn btn-outline-cyan btn-gps-locate" id="btn-gps-locate" onclick="requestUserLocation()" title="Sort lounges by distance from your current location">
+                        <span>📍 Near Me</span>
+                    </button>
+                </div>
+
+                <!-- Area Quick Chips -->
+                <div class="area-chips-bar" id="explorer-area-chips">
+                    <button type="button" class="area-chip active" onclick="filterByAreaChip('')">All Areas</button>
+                    <button type="button" class="area-chip" onclick="filterByAreaChip('4 Kilo')">📍 4 Kilo</button>
+                    <button type="button" class="area-chip" onclick="filterByAreaChip('Bole')">📍 Bole</button>
+                    <button type="button" class="area-chip" onclick="filterByAreaChip('Piazza')">📍 Piazza</button>
+                    <button type="button" class="area-chip" onclick="filterByAreaChip('CMC')">📍 CMC</button>
+                    <button type="button" class="area-chip" onclick="filterByAreaChip('Kazanchis')">📍 Kazanchis</button>
+                    <button type="button" class="area-chip" onclick="filterByAreaChip('Megenagna')">📍 Megenagna</button>
+                </div>
+
+                <!-- Lounges Grid -->
+                <div class="explorer-lounges-grid" id="explorer-lounges-list">
+                    <!-- Populated dynamically via app.js -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== OWNER: CREATE / EDIT TOURNAMENT MODAL ========== -->
+    <div class="modal-bg" id="modal-create-event">
+        <div class="modal-sheet modal-event-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🏆</span>
+                    <div>
+                        <div class="modal-head-title" id="event-modal-title">Create Tournament / Event</div>
+                        <div class="modal-head-sub">Configure entry fees, participant limit &amp; prize pool</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeCreateEventModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-event" onsubmit="handleSaveEvent(event)">
+                    <input type="hidden" id="event-edit-id" value="">
+                    <div class="field">
+                        <label for="event-title">Tournament Title <span class="text-rose">*</span></label>
+                        <input type="text" class="field-input" id="event-title" placeholder="e.g. 4 Kilo EA FC 25 Championship" required>
+                    </div>
+                    <div class="field-row">
+                        <div class="field" style="flex:1;">
+                            <label for="event-game">Game / Platform</label>
+                            <input type="text" class="field-input" id="event-game" placeholder="e.g. EA FC 25 / PS5" value="EA FC 25">
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label for="event-prize">Prize Pool</label>
+                            <input type="text" class="field-input" id="event-prize" placeholder="e.g. 5,000 ETB Cash" value="5,000 ETB">
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field" style="flex:1;">
+                            <label for="event-date">Date / Day</label>
+                            <input type="text" class="field-input" id="event-date" placeholder="e.g. Saturday, Oct 10" required>
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label for="event-time">Start Time</label>
+                            <input type="text" class="field-input" id="event-time" placeholder="e.g. 3:00 PM" required>
+                        </div>
+                    </div>
+                    <div class="field-row">
+                        <div class="field" style="flex:1;">
+                            <label for="event-fee">Entry Fee (ETB per Player)</label>
+                            <input type="number" class="field-input" id="event-fee" placeholder="100" min="0" step="5" value="100" required>
+                        </div>
+                        <div class="field" style="flex:1;">
+                            <label for="event-max">Max Player Slots</label>
+                            <input type="number" class="field-input" id="event-max" placeholder="16" min="2" max="128" value="16" required>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label for="event-rules">Rules &amp; Guidelines</label>
+                        <textarea class="field-input field-textarea" id="event-rules" rows="2" placeholder="e.g. 6-minute halves, tactical defending, single elimination bracket"></textarea>
+                    </div>
+                    <div class="modal-actions-bar">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <span>Save &amp; Publish Tournament</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== OWNER: TOURNAMENT PARTICIPANTS & BILLING MODAL ========== -->
+    <div class="modal-bg" id="modal-manage-participants">
+        <div class="modal-sheet modal-participants-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">👥</span>
+                    <div>
+                        <div class="modal-head-title" id="mpart-event-title">Tournament Management</div>
+                        <div class="modal-head-sub" id="mpart-event-meta">Attendance &amp; Fee Billing Ledger</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeParticipantsModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Summary KPI bar -->
+                <div class="mpart-kpi-bar">
+                    <div class="mpart-kpi-item">
+                        <span class="mpart-lbl">ATTENDEES REGISTERED</span>
+                        <div class="mpart-val" id="mpart-stat-count">0 / 16</div>
+                    </div>
+                    <div class="mpart-kpi-item">
+                        <span class="mpart-lbl">SLOTS LEFT</span>
+                        <div class="mpart-val text-green" id="mpart-stat-left">16</div>
+                    </div>
+                    <div class="mpart-kpi-item">
+                        <span class="mpart-lbl">FEES COLLECTED</span>
+                        <div class="mpart-val text-blue" id="mpart-stat-collected">0 ETB</div>
+                    </div>
+                </div>
+
+                <!-- Add Walk-in Attendee Quick Form -->
+                <div class="mpart-add-box">
+                    <span class="mpart-add-title">+ Add Walk-in Gamer</span>
+                    <form class="mpart-add-form" onsubmit="handleAddWalkInParticipant(event)">
+                        <input type="text" class="field-input" id="mpart-walkin-name" placeholder="Gamer Tag / Name" required style="flex:2;">
+                        <input type="text" class="field-input" id="mpart-walkin-phone" placeholder="Phone (optional)" style="flex:1.5;">
+                        <select class="field-input" id="mpart-walkin-pm" style="flex:1;">
+                            <option value="CASH">Cash</option>
+                            <option value="TELEBIRR">Telebirr</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-primary">Add &amp; Pay</button>
+                    </form>
+                </div>
+
+                <!-- Participants Table -->
+                <div class="mpart-table-wrap">
+                    <table class="mpart-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Gamer</th>
+                                <th>Phone</th>
+                                <th>Payment</th>
+                                <th>Check-in</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mpart-table-body">
+                            <!-- Populated dynamically via app.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== CUSTOMER: JOIN TOURNAMENT MODAL ========== -->
+    <div class="modal-bg" id="modal-join-event">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🎟️</span>
+                    <div>
+                        <div class="modal-head-title" id="join-event-title">Join Tournament</div>
+                        <div class="modal-head-sub" id="join-event-sub">Enter gamer info to reserve bracket slot</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeJoinEventModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-join-event" onsubmit="handleSubmitJoinEvent(event)">
+                    <input type="hidden" id="join-event-id" value="">
+                    <div class="join-event-cost-card">
+                        <span class="cost-lbl">ENTRY FEE DUE AT COUNTER / TELEBIRR</span>
+                        <div class="cost-val" id="join-event-fee-display">100 ETB</div>
+                    </div>
+
+                    <div class="field">
+                        <label for="join-gamer-name">Gamer Tag / Full Name <span class="text-rose">*</span></label>
+                        <input type="text" class="field-input" id="join-gamer-name" placeholder="e.g. Alex_Pro99" required>
+                    </div>
+                    <div class="field">
+                        <label for="join-gamer-phone">Phone Number (For Bracket Match Calls) <span class="text-rose">*</span></label>
+                        <input type="text" class="field-input" id="join-gamer-phone" placeholder="e.g. 0911223344" required>
+                    </div>
+                    <div class="field">
+                        <label for="join-gamer-pm">Payment Preference</label>
+                        <select class="field-input" id="join-gamer-pm">
+                            <option value="CASH">Cash at Counter</option>
+                            <option value="TELEBIRR">Telebirr Digital</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top:14px;">
+                        <span>Confirm &amp; Reserve Slot</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== OWNER: CREATE / EDIT PROMOTION MODAL ========== -->
+    <div class="modal-bg" id="modal-create-promo">
+        <div class="modal-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">📢</span>
+                    <div>
+                        <div class="modal-head-title" id="promo-modal-title">Create Promotion / Ad</div>
+                        <div class="modal-head-sub">Displayed on the Gamer Lounge banner</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeCreatePromoModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="form-create-promo" onsubmit="handleSavePromo(event)">
+                    <input type="hidden" id="promo-edit-id" value="">
+                    <div class="field">
+                        <label for="promo-inp-title">Headline / Title <span class="text-rose">*</span></label>
+                        <input type="text" class="field-input" id="promo-inp-title" placeholder="e.g. Play for only 15 ETB / Match!" required>
+                    </div>
+                    <div class="field">
+                        <label for="promo-inp-badge">Badge Label</label>
+                        <input type="text" class="field-input" id="promo-inp-badge" placeholder="e.g. 🔥 HAPPY HOUR SPECIAL" value="🔥 HAPPY HOUR SPECIAL">
+                    </div>
+                    <div class="field">
+                        <label for="promo-inp-desc">Description / Timing</label>
+                        <input type="text" class="field-input" id="promo-inp-desc" placeholder="e.g. Monday – Friday before 4:00 PM" required>
+                    </div>
+                    <div class="field">
+                        <label for="promo-inp-rate">Special Promo Rate</label>
+                        <input type="text" class="field-input" id="promo-inp-rate" placeholder="e.g. 15 ETB" value="15 ETB">
+                    </div>
+                    <div class="field-checkbox">
+                        <label class="cbe-none-toggle">
+                            <input type="checkbox" id="promo-inp-active" checked>
+                            <span>Set as Active Live Banner</span>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block" style="margin-top:14px;">
+                        <span>Publish Promotion</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- EA FC 25 TOURNAMENT STANDINGS & BRACKET MODAL -->
+    <!-- ========================================== -->
+    <div class="modal-bg" id="tournament-standings-modal">
+        <div class="modal-sheet modal-tournament-sheet">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon">🏆</span>
+                    <div>
+                        <div class="modal-head-title" style="display: flex; align-items: center; gap: 8px;">
+                            <span>EA FC 25 National Tournament Standings</span>
+                            <span class="badge-featured" style="font-size: 0.65rem; background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">LIVE SEASON 1</span>
+                        </div>
+                        <div class="modal-head-sub">Presented by Harif Sport & Entertainment • Grand Final: Addis Ababa Stadium Hall</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closeTournamentModal()">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 18px 24px 24px;">
+                <!-- Prize Pool Breakdown Cards -->
+                <div class="tourn-prizes-grid">
+                    <div class="tourn-prize-card gold">
+                        <div class="tp-rank">🥇 1st Place Champion</div>
+                        <div class="tp-amount">60,000 <span class="tp-curr">ETB</span></div>
+                        <div class="tp-sub">PS5 Pro + Official Trophy</div>
+                    </div>
+                    <div class="tourn-prize-card silver">
+                        <div class="tp-rank">🥈 2nd Place Runner-Up</div>
+                        <div class="tp-amount">25,000 <span class="tp-curr">ETB</span></div>
+                        <div class="tp-sub">DualSense Edge Controller</div>
+                    </div>
+                    <div class="tourn-prize-card bronze">
+                        <div class="tp-rank">🥉 3rd Place Playoff</div>
+                        <div class="tp-amount">15,000 <span class="tp-curr">ETB</span></div>
+                        <div class="tp-sub">Harif Sport Gamer Pack</div>
+                    </div>
+                </div>
+
+                <!-- Live Standings Table -->
+                <div style="margin-top: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="font-size: 0.92rem; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px;">
+                            <span>📊 Top 8 Qualifier Leaderboard</span>
+                        </h4>
+                        <span style="font-size: 0.72rem; color: var(--text-tertiary);">Top 4 advance to Grand Finals</span>
+                    </div>
+
+                    <div style="overflow-x: auto; border-radius: var(--radius-md); border: 1px solid var(--border-subtle);">
+                        <table class="tourn-standings-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">#</th>
+                                    <th>Gamer Tag / Lounge</th>
+                                    <th style="text-align: center;">P</th>
+                                    <th style="text-align: center;">W</th>
+                                    <th style="text-align: center;">D</th>
+                                    <th style="text-align: center;">L</th>
+                                    <th style="text-align: center;">GD</th>
+                                    <th style="text-align: center;">PTS</th>
+                                    <th style="text-align: center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="qualified-row">
+                                    <td style="text-align: center; font-weight: 800; color: #f59e0b;">1</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-primary);">Dawit_Sniper99 <span style="font-size:0.7rem; color:var(--text-tertiary);">(Bole HQ)</span></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-secondary);">Real Madrid</div>
+                                    </td>
+                                    <td style="text-align: center;">7</td>
+                                    <td style="text-align: center; color: var(--emerald-400); font-weight: 700;">6</td>
+                                    <td style="text-align: center;">1</td>
+                                    <td style="text-align: center;">0</td>
+                                    <td style="text-align: center; font-weight: 600;">+14</td>
+                                    <td style="text-align: center; font-weight: 800; color: var(--blue-bright);">19</td>
+                                    <td style="text-align: center;"><span class="badge-tag status-green">Qualified</span></td>
+                                </tr>
+                                <tr class="qualified-row">
+                                    <td style="text-align: center; font-weight: 800; color: #94a3b8;">2</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-primary);">Kidus_Playmaker <span style="font-size:0.7rem; color:var(--text-tertiary);">(Kazanchis Hub)</span></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-secondary);">Manchester City</div>
+                                    </td>
+                                    <td style="text-align: center;">7</td>
+                                    <td style="text-align: center; color: var(--emerald-400); font-weight: 700;">5</td>
+                                    <td style="text-align: center;">1</td>
+                                    <td style="text-align: center;">1</td>
+                                    <td style="text-align: center; font-weight: 600;">+9</td>
+                                    <td style="text-align: center; font-weight: 800; color: var(--blue-bright);">16</td>
+                                    <td style="text-align: center;"><span class="badge-tag status-green">Qualified</span></td>
+                                </tr>
+                                <tr class="qualified-row">
+                                    <td style="text-align: center; font-weight: 800; color: #b45309;">3</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-primary);">Sami_TikiTaka <span style="font-size:0.7rem; color:var(--text-tertiary);">(Piassa Gaming)</span></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-secondary);">FC Barcelona</div>
+                                    </td>
+                                    <td style="text-align: center;">7</td>
+                                    <td style="text-align: center; color: var(--emerald-400); font-weight: 700;">4</td>
+                                    <td style="text-align: center;">2</td>
+                                    <td style="text-align: center;">1</td>
+                                    <td style="text-align: center; font-weight: 600;">+7</td>
+                                    <td style="text-align: center; font-weight: 800; color: var(--blue-bright);">14</td>
+                                    <td style="text-align: center;"><span class="badge-tag status-green">Qualified</span></td>
+                                </tr>
+                                <tr class="qualified-row">
+                                    <td style="text-align: center; font-weight: 800;">4</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-primary);">Yared_ElClasico <span style="font-size:0.7rem; color:var(--text-tertiary);">(Megenagna)</span></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-secondary);">Arsenal</div>
+                                    </td>
+                                    <td style="text-align: center;">7</td>
+                                    <td style="text-align: center; color: var(--emerald-400); font-weight: 700;">4</td>
+                                    <td style="text-align: center;">1</td>
+                                    <td style="text-align: center;">2</td>
+                                    <td style="text-align: center; font-weight: 600;">+4</td>
+                                    <td style="text-align: center; font-weight: 800; color: var(--blue-bright);">13</td>
+                                    <td style="text-align: center;"><span class="badge-tag status-green">Qualified</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center;">5</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-primary);">Henok_King <span style="font-size:0.7rem; color:var(--text-tertiary);">(Sarbet Zone)</span></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-secondary);">Bayern Munich</div>
+                                    </td>
+                                    <td style="text-align: center;">7</td>
+                                    <td style="text-align: center;">3</td>
+                                    <td style="text-align: center;">2</td>
+                                    <td style="text-align: center;">2</td>
+                                    <td style="text-align: center;">+2</td>
+                                    <td style="text-align: center; font-weight: 800;">11</td>
+                                    <td style="text-align: center;"><span class="badge-tag status-gray">Contender</span></td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center;">6</td>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--text-primary);">Abel_Pace <span style="font-size:0.7rem; color:var(--text-tertiary);">(Bole Medhanialem)</span></div>
+                                        <div style="font-size: 0.7rem; color: var(--text-secondary);">PSG</div>
+                                    </td>
+                                    <td style="text-align: center;">7</td>
+                                    <td style="text-align: center;">3</td>
+                                    <td style="text-align: center;">0</td>
+                                    <td style="text-align: center;">4</td>
+                                    <td style="text-align: center;">-1</td>
+                                    <td style="text-align: center; font-weight: 800;">9</td>
+                                    <td style="text-align: center;"><span class="badge-tag status-gray">Contender</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Upcoming Semi-Final Fixtures -->
+                <div class="tourn-fixtures-box" style="margin-top: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <span style="font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary);">⚔️ Grand Semi-Final Fixtures (Best of 3)</span>
+                        <span style="font-size: 0.72rem; color: var(--amber-400); font-weight: 600;">This Saturday 6:00 PM</span>
+                    </div>
+                    <div class="tf-grid">
+                        <div class="tf-match">
+                            <div class="tf-team">Dawit_Sniper99 (RMA)</div>
+                            <div class="tf-vs">VS</div>
+                            <div class="tf-team">Yared_ElClasico (ARS)</div>
+                            <div class="tf-time">📺 Station TV 1 • Live on Lounge Screen</div>
+                        </div>
+                        <div class="tf-match">
+                            <div class="tf-team">Kidus_Playmaker (MCI)</div>
+                            <div class="tf-vs">VS</div>
+                            <div class="tf-team">Sami_TikiTaka (FCB)</div>
+                            <div class="tf-time">📺 Station TV 2 • Live on Lounge Screen</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Footer -->
+                <div style="margin-top: 18px; display: flex; gap: 10px; justify-content: flex-end; align-items: center;">
+                    <button type="button" class="btn btn-secondary" onclick="closeTournamentModal()">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="handleRegisterTournament()" style="background: linear-gradient(135deg, #f59e0b, #d97706); border: none; font-weight: 700;">
+                        <span>Register for Season 2 Qualifier (100 ETB)</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SPONSOR / PARTNER SHOWCASE MODAL -->
+    <!-- ========================================== -->
+    <div class="modal-bg" id="modal-sponsor-partner">
+        <div class="modal-sheet" style="max-width: 500px; width: 92%;">
+            <div class="modal-handle"></div>
+            <div class="modal-head">
+                <div class="modal-head-brand">
+                    <span class="modal-icon" id="ps-modal-icon">🎮</span>
+                    <div>
+                        <div class="modal-head-title" id="ps-modal-title">Partner Showcase</div>
+                        <div class="modal-head-sub" id="ps-modal-sub">Verified Lounge Sponsor</div>
+                    </div>
+                </div>
+                <button type="button" class="modal-close" onclick="closePartnerModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 20px;">
+                <div class="partner-showcase-box">
+                    <p class="ps-desc" id="ps-modal-desc"></p>
+                    <div class="ps-perk-badge" id="ps-modal-perk"></div>
+                    <div class="ps-contact-row">
+                        <span class="ps-lbl">Direct Contact / Hotline:</span>
+                        <span class="ps-phone" id="ps-modal-phone"></span>
+                    </div>
+                    <div style="margin-top: 14px; display: flex; gap: 10px;">
+                        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="closePartnerModal()">Close</button>
+                        <a id="ps-modal-call-btn" href="#" class="btn btn-primary" style="flex:1.5; text-align: center; text-decoration: none;">
+                            <span>Call Partner Now</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATIONS -->
+    <div class="toast-box" id="toast-container"></div>
+
+    <script src="/static/js/app.js?v=14"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(reg => console.log('[GameWatch] Service Worker active, offline ready:', reg.scope))
+                    .catch(err => console.log('[GameWatch] Service Worker registration note:', err));
+            });
+        }
+    </script>
+</body>
+</html>

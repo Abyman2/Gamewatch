@@ -1,0 +1,12 @@
+{
+    "1": {
+        "active": true,
+        "start_time": "2026-08-18 23:41:00",
+        "completed_games": 2
+    },
+    "2": {
+        "active": false,
+        "start_time": null,
+        "completed_games": 0
+    }
+}
