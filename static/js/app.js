@@ -118,35 +118,109 @@ function toggleTheme() {
 
 
 // ============================================================
-// NAVIGATION — Bottom nav (mobile) + Desktop tabs
+// NAVIGATION — Mobile Drawer, Sticky Bottom Bar + Desktop Tabs
 // ============================================================
+function toggleMobileNavDrawer() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    if (!drawer) return;
+    if (drawer.classList.contains('open')) {
+        closeMobileNavDrawer();
+    } else {
+        openMobileNavDrawer();
+    }
+}
+
+function openMobileNavDrawer() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    if (drawer) drawer.classList.add('open');
+    if (backdrop) backdrop.classList.add('active');
+    document.body.classList.add('nav-drawer-open');
+
+    // Update active highlight in drawer
+    document.querySelectorAll('.mnd-nav-item').forEach(m => {
+        const v = m.getAttribute('data-view');
+        m.classList.toggle('active', v === App.currentView || (App.currentView === 'home' && v === 'stations'));
+    });
+
+    // Populate user and lounge meta if available
+    if (App.user && App.user.role) {
+        const roleEl = document.getElementById('mnd-role-badge');
+        if (roleEl) roleEl.textContent = App.user.role.toUpperCase();
+    }
+    if (App.state) {
+        const lName = document.getElementById('mnd-lounge-name');
+        const lCode = document.getElementById('mnd-lounge-code');
+        const tvsEl = document.getElementById('mnd-active-tvs');
+        if (lName && App.state.lounge_name) lName.textContent = App.state.lounge_name;
+        if (lCode && App.state.lounge_code) lCode.textContent = `${App.state.lounge_code} · ${App.state.area || 'Addis Ababa'}`;
+        if (tvsEl && App.state.active_stations !== undefined) tvsEl.textContent = `${App.state.active_stations} LIVE`;
+    }
+}
+
+function closeMobileNavDrawer() {
+    const drawer = document.getElementById('mobile-nav-drawer');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    if (drawer) drawer.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('active');
+    document.body.classList.remove('nav-drawer-open');
+}
+
+function scrollToStations() {
+    setTimeout(() => {
+        const el = document.getElementById('shift-banner') || document.querySelector('.page-header');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
 function initNavigation() {
     // Bottom nav items
-    document.querySelectorAll('.nav-item').forEach(item => {
+    document.querySelectorAll('.mbn-tab, .nav-item').forEach(item => {
         item.addEventListener('click', () => {
-            switchView(item.getAttribute('data-view'));
+            const view = item.getAttribute('data-view');
+            if (view) {
+                if (view === 'stations') {
+                    switchView('home');
+                    scrollToStations();
+                } else {
+                    switchView(view);
+                }
+            }
         });
     });
 
     // Desktop tab items
     document.querySelectorAll('.desktop-tab').forEach(tab => {
         tab.addEventListener('click', () => {
-            switchView(tab.getAttribute('data-view'));
+            const view = tab.getAttribute('data-view');
+            if (view) switchView(view);
         });
+    });
+
+    // Close mobile drawer on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeMobileNavDrawer();
     });
 }
 
 function switchView(viewId) {
     App.currentView = viewId;
 
-    // Update bottom nav
-    document.querySelectorAll('.nav-item').forEach(n => {
-        n.classList.toggle('active', n.getAttribute('data-view') === viewId);
+    // Update bottom nav (mobile)
+    document.querySelectorAll('.mbn-tab, .nav-item').forEach(n => {
+        const v = n.getAttribute('data-view');
+        n.classList.toggle('active', v === viewId || (viewId === 'home' && v === 'stations'));
     });
 
     // Update desktop tabs
     document.querySelectorAll('.desktop-tab').forEach(t => {
         t.classList.toggle('active', t.getAttribute('data-view') === viewId);
+    });
+
+    // Update mobile drawer items
+    document.querySelectorAll('.mnd-nav-item').forEach(m => {
+        const v = m.getAttribute('data-view');
+        m.classList.toggle('active', v === viewId || (viewId === 'home' && v === 'stations'));
     });
 
     // Switch views

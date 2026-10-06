@@ -192,11 +192,27 @@ In [`templates/index.html`](file:///c:/Users/25194/Desktop/work/GameWatch/templa
 
 ## 📝 Maintenance Log
 
-* **2026-10-06**:
+* **2026-10-06 (Update 1 - Step 1 Hardening & Documentation)**:
   - Implemented 4-point homography keystone rectification (`cv2.warpPerspective`) into canonical $960 \times 540$ space.
   - Implemented CLAHE specular glare suppression in LAB space.
   - Built interactive 4-point calibration UI with presets and live preview.
   - Initialized `PROGRESS.md` single-source-of-truth documentation.
-  - Verified 100% pass rate across all test suites.
+  - Revamped `README.md` with expressive architecture diagrams and guides.
+  - Verified 100% pass rate across all test suites and pushed to GitHub `main`.
+
+* **2026-10-06 (Update 2 - TSEGA Labs Branding & Mobile Phone Navigation Overhaul)**:
+  - **TSEGA Labs Branding & Global Clean Footer**:
+    - Tagline: `GameWatch — A TSEGA Labs product`
+    - Copyright: `© 2026 TSEGA Labs. All rights reserved.`
+    - Integrated clean global footer (`.app-global-footer`) docked at the bottom of `.saas-workspace` with live system telemetry status chip.
+    - Updated splash screen footer, customer lounge footer, `LICENSE`, and `README.md` to establish TSEGA Labs ownership.
+  - **Mobile & Narrow Viewport Navigation Overhaul**:
+    - *The Issue*: When viewport width was narrowed or viewed on smartphones, the desktop sidebar was hidden, causing all navigation options (Dashboard, Stations, Setup, Billing, Lounge, Analytics, Settings) to disappear.
+    - *Mobile Hamburger Menu Button*: Added `#btn-mobile-nav-toggle` (`☰` three horizontal bars) inside `.workspace-header-actions` on screens `< 1024px`.
+    - *Slide-Out Navigation Drawer (`#mobile-nav-drawer`)*: Implemented a smooth slide-over glassmorphic drawer from the left with backdrop overlay, containing all 8 primary views, active live TV counters, active lounge card, theme switcher, and logout button.
+    - *Sticky Mobile Bottom Navigation Bar (`#mobile-bottom-nav`)*: Added a thumb-friendly 5-item bottom bar for phone viewports (`< 768px`) providing 1-tap switching between Dashboard, Stations HUD, TV Setup, Analytics, and Drawer Menu.
+    - *Ultra-Compact Header Rules*: Added `@media (max-width: 520px)` adjustments to fit circular logo, search input, notifications, and menu button seamlessly without horizontal clipping.
+  - **Verification**: Syntax validated via `node -c static/js/app.js` (0 errors), end-to-end regression tests passed 100%.
 
 *(Protocol: Append every subsequent change to this section with timestamp and rationale).*
+

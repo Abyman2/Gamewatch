@@ -47,7 +47,7 @@
             </div>
         </div>
         <div class="splash-footer">
-            <span class="splash-meta">From Addis Ababa · v1.0</span>
+            <span class="splash-meta">GameWatch — A TSEGA Labs product · © 2026 TSEGA Labs. All rights reserved.</span>
         </div>
     </div>
 
@@ -155,6 +155,15 @@
                 </div>
 
                 <div class="workspace-header-actions">
+                    <!-- Mobile Hamburger Menu Button (Opens drawer for Stations, Setup, Billing, etc.) -->
+                    <button type="button" class="btn-header-round btn-mobile-menu-toggle" id="btn-mobile-nav-toggle" onclick="toggleMobileNavDrawer()" title="Menu (Stations, Setup, Billing, etc.)" aria-label="Open Navigation Menu">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+
                     <button type="button" class="btn-header-round" id="btn-notifications" onclick="showToast('🔔 All stations are online and active', 'info')" title="Notifications">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
                         <span class="notif-badge-dot"></span>
@@ -1170,6 +1179,12 @@
                         </a>
                     </div>
                 </div>
+
+                <div class="lounge-footer-credit">
+                    <span class="lfc-prod">GameWatch — A TSEGA Labs product</span>
+                    <span class="lfc-dot">·</span>
+                    <span class="lfc-copy">© 2026 TSEGA Labs. All rights reserved.</span>
+                </div>
             </footer>
         </section>
 
@@ -1646,6 +1661,28 @@
         </aside>
 
     </main>
+
+            <!-- ========== GLOBAL CLEAN FOOTER (TSEGA Labs Product) ========== -->
+            <footer class="app-global-footer" id="app-global-footer">
+                <div class="agf-container">
+                    <div class="agf-brand-block">
+                        <div class="agf-logo-badge">
+                            <img src="/static/img/logo_icon.png" alt="GameWatch Logo" class="agf-logo">
+                        </div>
+                        <div class="agf-text-block">
+                            <span class="agf-title">GameWatch — A TSEGA Labs product</span>
+                            <span class="agf-sub">AI-Powered Gaming Lounge Automation &amp; Anti-Fraud Financial System</span>
+                        </div>
+                    </div>
+                    <div class="agf-right-block">
+                        <span class="agf-copy">© 2026 TSEGA Labs. All rights reserved.</span>
+                        <div class="agf-status-pill">
+                            <span class="live-dot-green"></span>
+                            <span>Engine Operational</span>
+                        </div>
+                    </div>
+                </div>
+            </footer>
         </div><!-- /.saas-workspace -->
     </div><!-- /.saas-shell -->
 
@@ -2876,6 +2913,151 @@
             </div>
         </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- MOBILE NAVIGATION DRAWER & PERSISTENT BOTTOM NAV             -->
+    <!-- ============================================================ -->
+    <!-- Backdrop Overlay -->
+    <div class="mobile-nav-backdrop" id="mobile-nav-backdrop" onclick="closeMobileNavDrawer()"></div>
+
+    <!-- Mobile Slide-out Drawer -->
+    <aside class="mobile-nav-drawer" id="mobile-nav-drawer" aria-label="Mobile Navigation Menu">
+        <div class="mnd-head">
+            <div class="mnd-brand" onclick="switchView('home'); closeMobileNavDrawer();">
+                <div class="mnd-logo-wrap">
+                    <img src="/static/img/logo_icon.png" alt="GameWatch" class="mnd-logo">
+                </div>
+                <div class="mnd-brand-text">
+                    <span class="mnd-title">GAMEWATCH</span>
+                    <span class="mnd-sub">A TSEGA Labs product</span>
+                </div>
+            </div>
+            <button type="button" class="mnd-close-btn" onclick="closeMobileNavDrawer()" aria-label="Close Navigation" title="Close Menu">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+
+        <!-- Active Lounge Card in Drawer -->
+        <div class="mnd-lounge-card" onclick="switchView('settings'); closeMobileNavDrawer();">
+            <div class="mlc-icon">🏟️</div>
+            <div class="mlc-info">
+                <span class="mlc-name" id="mnd-lounge-name">Abyman GameZone</span>
+                <span class="mlc-code" id="mnd-lounge-code">GW-OWNER-050 · 4 Kilo</span>
+            </div>
+            <span class="mlc-badge" id="mnd-role-badge">OWNER</span>
+        </div>
+
+        <nav class="mnd-nav-list">
+            <div class="mnd-section-label">MAIN WORKSPACE</div>
+            <button type="button" class="mnd-nav-item active" data-view="home" onclick="switchView('home'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+                </span>
+                <span class="mnd-label">Dashboard</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <button type="button" class="mnd-nav-item" data-view="stations" onclick="switchView('home'); scrollToStations(); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                </span>
+                <span class="mnd-label">Stations HUD</span>
+                <span class="mnd-count-pill" id="mnd-active-tvs">2 LIVE</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <button type="button" class="mnd-nav-item" data-view="setup" onclick="switchView('setup'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </span>
+                <span class="mnd-label">TV Setup &amp; Keystone</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <button type="button" class="mnd-nav-item" data-view="billing" onclick="switchView('billing'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+                </span>
+                <span class="mnd-label">Billing &amp; Sessions</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <button type="button" class="mnd-nav-item" data-view="customer" onclick="switchView('customer'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                </span>
+                <span class="mnd-label">Lounge Community Hub</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <div class="mnd-section-label">OPERATIONS &amp; INSIGHTS</div>
+            <button type="button" class="mnd-nav-item" data-view="ai" onclick="switchView('ai'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path></svg>
+                </span>
+                <span class="mnd-label">AI Insights</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <button type="button" class="mnd-nav-item" data-view="analytics" onclick="switchView('analytics'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                </span>
+                <span class="mnd-label">Analytics &amp; Revenue</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+
+            <button type="button" class="mnd-nav-item" data-view="settings" onclick="switchView('settings'); closeMobileNavDrawer();">
+                <span class="mnd-icon-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                </span>
+                <span class="mnd-label">Lounge Settings</span>
+                <span class="mnd-arrow">›</span>
+            </button>
+        </nav>
+
+        <!-- Quick Tool Footer in Drawer -->
+        <div class="mnd-footer">
+            <div class="mnd-footer-actions">
+                <button type="button" class="mnd-tool-btn" id="mnd-btn-theme" onclick="toggleTheme();">
+                    <span id="mnd-theme-icon">🌓</span>
+                    <span id="mnd-theme-txt">Switch Theme</span>
+                </button>
+                <button type="button" class="mnd-tool-btn mnd-btn-logout" onclick="logout(); closeMobileNavDrawer();">
+                    <span>🚪</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+            <div class="mnd-footer-meta">
+                <span class="mnd-prod-title">GameWatch — A TSEGA Labs product</span>
+                <span class="mnd-copy">© 2026 TSEGA Labs. All rights reserved.</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Sticky Mobile Bottom Navigation Bar (Phone Viewports) -->
+    <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile Navigation Bar">
+        <button type="button" class="mbn-tab nav-item active" data-view="home" onclick="switchView('home')" title="Dashboard">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            <span>Dashboard</span>
+        </button>
+        <button type="button" class="mbn-tab nav-item" data-view="stations" onclick="switchView('home'); scrollToStations();" title="Stations">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            <span>Stations</span>
+        </button>
+        <button type="button" class="mbn-tab nav-item" data-view="setup" onclick="switchView('setup')" title="TV Setup">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6 1.65 1.65 0 0 0 10 3.09V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <span>Setup</span>
+        </button>
+        <button type="button" class="mbn-tab nav-item" data-view="analytics" onclick="switchView('analytics')" title="Analytics">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            <span>Analytics</span>
+        </button>
+        <button type="button" class="mbn-tab mbn-menu-trigger" id="mbn-tab-menu" onclick="toggleMobileNavDrawer()" title="More Navigation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <span>More</span>
+        </button>
+    </nav>
 
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-box" id="toast-container"></div>

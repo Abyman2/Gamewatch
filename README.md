@@ -1,7 +1,8 @@
 <div align="center">
 
 # 🎮 GAMEWATCH™
-### *AI-Powered Gaming Lounge Automation, Match Verification & Anti-Fraud Financial System*
+### *A TSEGA Labs product*
+#### *AI-Powered Gaming Lounge Automation, Match Verification & Anti-Fraud Financial System*
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![OpenCV](https://img.shields.io/badge/OpenCV-4.8%2B-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org)
@@ -252,12 +253,16 @@ GameWatch/
 
 ## 📄 License & Credits
 
-* **Author**: Abel Seleshi ([@Abyman2](https://github.com/Abyman2))
+* **Product**: **GameWatch — A TSEGA Labs product**
+* **Organization**: **TSEGA Labs**
+* **Lead Creator**: Abel Seleshi ([@Abyman2](https://github.com/Abyman2))
+* **Copyright**: © 2026 TSEGA Labs. All rights reserved.
 * **License**: Released under the **MIT License**. See [LICENSE](LICENSE) for details.
-* **Built For**: Gaming lounge owners and esports communities worldwide.
+* **Built For**: Gaming lounge owners and esports communities across Ethiopia & worldwide.
 
 ---
 
 <div align="center">
-  <sub>Built with ❤️ and crafted for gaming lounge owners in Ethiopia & worldwide.</sub>
+  <sub>GameWatch — A TSEGA Labs product · Built with ❤️ for gaming lounge owners in Ethiopia & worldwide.</sub><br/>
+  <sub>© 2026 TSEGA Labs. All rights reserved.</sub>
 </div>
