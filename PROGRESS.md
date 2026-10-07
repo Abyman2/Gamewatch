@@ -257,6 +257,12 @@ In [`templates/index.html`](file:///c:/Users/25194/Desktop/work/GameWatch/templa
     - Documented permanent zero-cost HTTPS subdomain (`https://gamewatch.onrender.com`), OpenCV container libraries (`libgl1`, `libglib2.0-0`), environment variables, and verification workflows.
   - **Verification**: Verified server HTTP 200 responses, stylesheet bundle loading (286 KB), and database API responses (`/api/events`).
 
+* **2026-10-07 (Update 6 - Production Guest Flow & Dev Auto-Login Bypass Removal)**:
+  - **Dev Auto-Login Removal**: Removed the local development fallback in `get_current_user()` (`app_server.py`) that previously defaulted anonymous visitors to the last created owner account (`Sim Operator`).
+  - **Guest Onboarding & Auth Enforcement**: Unauthenticated visitors now strictly receive HTTP 401 on `/api/auth/me`, routing all new devices and first-time lounge customers directly to the **Onboarding & Role Selection Screen** (👑 Lounge Owner / 👤 Station Clerk / 🎮 Customer) followed by the **Sign In / Registration** form.
+  - **Session Isolation**: Real account sessions are persisted via secure session cookies, ensuring owners, clerks, and players access only their authorized views.
+  - **Verification**: Verified `/api/auth/me` returns HTTP 401 `{authenticated: false}` for unauthenticated visitors.
+
 *(Protocol: Append every subsequent change to this section with timestamp and rationale).*
 
 

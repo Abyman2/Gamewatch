@@ -56,16 +56,6 @@ def get_current_user():
         user = db_manager.get_user_by_id(user_id)
         if user:
             return user
-    try:
-        conn = db_manager.get_connection()
-        c = conn.cursor()
-        c.execute("SELECT * FROM users WHERE role = 'OWNER' ORDER BY id DESC LIMIT 1")
-        row = c.fetchone()
-        conn.close()
-        if row:
-            return dict(row)
-    except Exception:
-        pass
     return None
 
 def require_auth(f):
