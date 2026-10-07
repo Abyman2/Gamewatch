@@ -240,6 +240,23 @@ In [`templates/index.html`](file:///c:/Users/25194/Desktop/work/GameWatch/templa
     - `CloudSyncManager` asynchronously mirrors records to the cloud when internet is available, allowing Lounge Owners to monitor revenue from anywhere in the world.
   - **Verification**: Verified via `scratch/test_step2_latency_and_cloud.py` (100% pass) and system regression suite `scratch/test_verification_all.py` (100% pass).
 
+* **2026-10-07 (Update 5 - UEFA Champions League 2010 Tournament Engine, Arena UI Overhaul, & Cloud Deployment Guide)**:
+  - **UEFA Champions League 2010 Tournament Engine & Architecture**:
+    - Modeled the authentic 32-player UEFA 2010 format: 8 Groups of 4 (Groups A–H) leading into a 16-team knockout bracket (R16, Quarterfinals, Semifinals, Grand Final; 125 total matches).
+    - Integrated glass tumbler 3D lottery physics simulation with centrifugal swirling, glossy spheres, and random draw allocation.
+    - Owner match scheduling, agreed date locking with players, and live match score recording with automated points table updates (W/D/L, GF/GA/GD, PTS) and top-2 R16 qualification.
+    - Automated tournament cash ledger tracking: entrance fees (e.g. 200 ETB/player = 6,400 ETB) and loser match charges (25 ETB/loss across 125 matches = 3,125 ETB), delivering 9,525 ETB gross and 7,025 ETB net owner margin per event.
+  - **Tournament Arena UI & Visual Styling Enhancements**:
+    - *2-Column Group Standings Grid*: Configured `.champions-groups-grid` with `grid-template-columns: repeat(2, minmax(0, 1fr))` and 28px/32px spacing, displaying Group A & B, C & D side by side with clean table alignment and qualification badges (`Q`).
+    - *Lottery Ball Draw Light-Blue Player Typography*: Updated `.lgp-name` to vibrant light blue (`#38BDF8`) and `.lgp-club` to soft sky blue (`#BAE6FD`), ensuring crystal-clear readability against the dark glassmorphic pods beneath the tumbler.
+    - *Knockout Bracket Tree Cyber-Arena Design*: Replaced generic unstyled lists with a futuristic esports bracket layout featuring radial gradient dark backdrop, round column cards (R16 -> QF -> SF -> Grand Final), glowing borders, winner highlights, and a prestigious golden champion podium card.
+    - *Centered Match Fixtures with "VS" Tag*: Styled `.tourn-fixture-card` with a centered `.tfc-matchup` layout (`max-width: 820px`), placing Player 1 and Player 2 evenly around a prominent score box and `VS` badge, preventing text stretching across wide viewports.
+    - *Shining Blue Tournament Cards with Electric Glow*: Transformed `.tourn-card` from plain white boxes into deep sapphire/cyber-blue gradient cards (`linear-gradient(145deg, #0d214a, #081735, #040d21)`) with glowing cyan borders and electric blue hover elevation.
+  - **Production Cloud Deployment Documentation (`DEPLOYMENT_STEPS.md`)**:
+    - Created comprehensive, step-by-step deployment guide for 100% free hosting on Render.com using Docker.
+    - Documented permanent zero-cost HTTPS subdomain (`https://gamewatch.onrender.com`), OpenCV container libraries (`libgl1`, `libglib2.0-0`), environment variables, and verification workflows.
+  - **Verification**: Verified server HTTP 200 responses, stylesheet bundle loading (286 KB), and database API responses (`/api/events`).
+
 *(Protocol: Append every subsequent change to this section with timestamp and rationale).*
 
 

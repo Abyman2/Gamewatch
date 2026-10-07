@@ -275,6 +275,8 @@ function switchView(viewId) {
     } else if (viewId === 'settings') {
         loadSettingsView();
         loadPromotions();
+    } else if (viewId === 'tournaments') {
+        loadTournamentsHub();
     }
 }
 
@@ -1245,11 +1247,11 @@ function initCheckoutModal() {
 
 function openCheckoutModal(tvId) {
     if (!App.state || !App.state.tvs) return;
-    const tv = App.state.tvs.find(t => t.id === tvId);
+    const tv = App.state.tvs.find(t => String(t.id) === String(tvId));
     if (!tv) return;
 
-    App.activeCheckoutTvId = tvId;
-    App.activePaymentMethod = 'TELEBIRR';
+    App.activeCheckoutTvId = tv.id;
+    App.activePaymentMethod = 'CASH'; // Fast, seamless 1-tap checkout default for Owner & Clerk
 
     const stationEl = document.getElementById('modal-station-title');
     const custEl = document.getElementById('modal-customer-name');
@@ -1276,12 +1278,12 @@ function openCheckoutModal(tvId) {
 
     calculateCashChange();
 
-    // Reset payment proof
-    clearPaymentProof();
-    stopWebcamProofStream();
+    // Reset payment proof safely
+    try { clearPaymentProof(); } catch (e) {}
+    try { stopWebcamProofStream(); } catch (e) {}
 
     document.querySelectorAll('.pay-tab').forEach(t => {
-        t.classList.toggle('active', t.getAttribute('data-method') === 'TELEBIRR');
+        t.classList.toggle('active', t.getAttribute('data-method') === App.activePaymentMethod);
     });
     updateModalQrView();
 
@@ -1385,7 +1387,7 @@ function setPaymentProof(dataUrl, label) {
     showToast('📸 Client payment proof photo attached!');
 }
 
-window.clearPaymentProof = function() {
+function clearPaymentProof() {
     App.activePaymentProof = null;
     const card = document.getElementById('proof-preview-card');
     const btns = document.getElementById('proof-input-buttons');
@@ -1400,7 +1402,18 @@ window.clearPaymentProof = function() {
         badge.textContent = 'Photo or SMS Code';
         badge.className = 'proof-badge-pending';
     }
-};
+}
+window.clearPaymentProof = clearPaymentProof;
+
+function stopWebcamProofStream() {
+    if (webcamProofStream) {
+        webcamProofStream.getTracks().forEach(t => t.stop());
+        webcamProofStream = null;
+    }
+    const view = document.getElementById('webcam-proof-view');
+    if (view) view.style.display = 'none';
+}
+window.stopWebcamProofStream = stopWebcamProofStream;
 
 window.toggleWebcamProofSnapshot = async function() {
     const view = document.getElementById('webcam-proof-view');
@@ -1420,15 +1433,6 @@ window.toggleWebcamProofSnapshot = async function() {
         showToast('Camera access denied or unavailable. Please use "Take Photo" button.', 'info');
         view.style.display = 'none';
     }
-};
-
-window.stopWebcamProofStream = function() {
-    if (webcamProofStream) {
-        webcamProofStream.getTracks().forEach(t => t.stop());
-        webcamProofStream = null;
-    }
-    const view = document.getElementById('webcam-proof-view');
-    if (view) view.style.display = 'none';
 };
 
 window.captureWebcamSnapshot = function() {
@@ -1470,12 +1474,7 @@ async function confirmCheckoutPayment() {
         const ref = (document.getElementById('checkout-digital-ref')?.value || '').trim();
         const hasPhoto = Boolean(App.activePaymentProof);
 
-        if (!hasPhoto && !ref) {
-            showToast('Please take a photo of the client\'s phone payment screen or enter the SMS reference', 'error');
-            return;
-        }
-
-        payload.payment_reference = ref || (hasPhoto ? 'PHOTO_VERIFIED' : '');
+        payload.payment_reference = ref || (hasPhoto ? 'PHOTO_VERIFIED' : 'DIGITAL_VERIFIED');
         if (hasPhoto) {
             payload.payment_proof_base64 = App.activePaymentProof;
         }
@@ -4735,14 +4734,14 @@ const FOOTER_SLIDES = [
         title: "Harif Sport & Entertainment",
         desc: "Official EA FC 25 National Tournament Series • 100,000 ETB Grand Final Cash Prize Pool",
         btnText: "Tournament Standings →",
-        action: () => openTournamentStandingsModal()
+        action: () => switchView('tournaments')
     },
     {
         tag: "EXHIBITION SHOWCASE & PRIZE POOL",
         title: "Addis Masters Cup 2026",
         desc: "32 Elite Lounges Competing Live across Bole & Kazanchis • Grand Finals Broadcast",
         btnText: "Register Squad →",
-        action: () => handleRegisterTournament()
+        action: () => switchView('tournaments')
     },
     {
         tag: "COMMERCIAL HARDWARE PARTNER",
@@ -4820,4 +4819,1528 @@ function initSponsorCarousels() {
 }
 
 
+
+
+
+// ============================================================================
+// GAMEWATCH TOURNAMENTS & CHAMPIONS LEAGUE HUB MODULE (125-Match Engine)
+// UEFA 2010 Style (Groups of 4 -> Knockouts), Glass Tumbler Draw, Owner Analytics
+// ============================================================================
+
+let currentTournamentData = null;
+let activeArenaTab = 'roster';
+let currentTournFilter = 'ALL';
+let currentFixtureStage = 'ALL';
+let lotteryAnimationId = null;
+let lotteryBalls = [];
+let lotterySpinning = false;
+let lotteryDrawnIndices = [];
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+window.escapeHtml = escapeHtml;
+
+// Club Badges mapping for authentic European Champions League styling
+const CLUB_BADGES = {
+    'Real Madrid': '🇪🇸 Real Madrid',
+    'Manchester City': '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Man City',
+    'Arsenal': '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Arsenal',
+    'Barcelona': '🇪🇸 FC Barcelona',
+    'Bayern Munich': '🇩🇪 Bayern Munich',
+    'Liverpool': '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Liverpool',
+    'Paris Saint-Germain': '🇫🇷 PSG',
+    'Inter Milan': '🇮🇹 Inter Milan',
+    'Chelsea': '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Chelsea',
+    'AC Milan': '🇮🇹 AC Milan',
+    'Atletico Madrid': '🇪🇸 Atl. Madrid',
+    'Bayer Leverkusen': '🇩🇪 Leverkusen',
+    'Juventus': '🇮🇹 Juventus',
+    'Borussia Dortmund': '🇩🇪 Dortmund',
+    'Aston Villa': '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Aston Villa',
+    'Napoli': '🇮🇹 Napoli'
+};
+
+function formatClubName(club) {
+    if (!club) return '⚽ Gamer Club';
+    return CLUB_BADGES[club] || `⚽ ${club}`;
+}
+
+// ----------------------------------------------------------------------------
+// 1. CREATE TOURNAMENT MODAL & LIVE PROFIT CALCULATOR
+// ----------------------------------------------------------------------------
+window.openCreateTournamentModal = function() {
+    const modal = document.getElementById('modal-create-event');
+    if (!modal) return;
+    const form = document.getElementById('form-create-event');
+    if (form) form.reset();
+    
+    // Set realistic defaults matching user specs
+    const fmt = document.getElementById('event-format');
+    if (fmt) fmt.value = 'CHAMPIONS_LEAGUE';
+    const dur = document.getElementById('event-duration');
+    if (dur) dur.value = '1_MONTH';
+    const maxP = document.getElementById('event-max');
+    if (maxP) maxP.value = '32';
+    const fee = document.getElementById('event-fee');
+    if (fee) fee.value = '200';
+    const loser = document.getElementById('event-loser-fee');
+    if (loser) loser.value = '25';
+    const titleInput = document.getElementById('event-title');
+    if (titleInput) titleInput.value = 'Addis Ababa EA FC 25 Champions League';
+    const prize = document.getElementById('event-prize-amount');
+    if (prize) prize.value = '2500';
+    const prizeLabel = document.getElementById('event-prize');
+    if (prizeLabel) prizeLabel.value = '2,500 ETB (1st: 2,000, 2nd: 500)';
+
+    updateTournModalCalc();
+    modal.classList.add('open');
+};
+
+window.closeCreateEventModal = function() {
+    const modal = document.getElementById('modal-create-event');
+    if (modal) modal.classList.remove('open');
+};
+
+window.updateTournModalCalc = function() {
+    const fmt = document.getElementById('event-format')?.value || 'CHAMPIONS_LEAGUE';
+    const maxP = parseInt(document.getElementById('event-max')?.value, 10) || 32;
+    const fee = parseFloat(document.getElementById('event-fee')?.value) || 200;
+    const loserFee = parseFloat(document.getElementById('event-loser-fee')?.value) || 25;
+    const prizeAmount = parseFloat(document.getElementById('event-prize-amount')?.value) || 2500;
+
+    // Total games calculation based on format:
+    // 32-player Champions League 2010: 8 groups * 12 games = 96 group stage games
+    // Knockout: R16 (16 games) + QF (8 games) + SF (4 games) + Final (1 game) = 29 games. Total = 125 games.
+    let totalGames = 125;
+    let groupGames = 96;
+    let koGames = 29;
+    if (fmt === 'CHAMPIONS_LEAGUE') {
+        if (maxP >= 32) {
+            totalGames = 125;
+            groupGames = 96;
+            koGames = 29;
+        } else {
+            totalGames = 61;
+            groupGames = 48;
+            koGames = 13;
+        }
+    } else {
+        totalGames = Math.max(1, maxP - 1);
+        groupGames = 0;
+        koGames = totalGames;
+    }
+
+    const entryRev = maxP * fee;
+    const matchRev = totalGames * loserFee;
+    const grossRev = entryRev + matchRev;
+    const netProfit = grossRev - prizeAmount;
+    const margin = grossRev > 0 ? ((netProfit / grossRev) * 100).toFixed(1) : 0;
+
+    const elMargin = document.getElementById('tcc-margin-badge');
+    const elEntry = document.getElementById('tcc-entry-rev');
+    const elMatch = document.getElementById('tcc-match-rev');
+    const elGross = document.getElementById('tcc-gross-rev');
+    const elNet = document.getElementById('tcc-net-profit');
+
+    if (elMargin) elMargin.textContent = `Owner Margin: ~${margin}%`;
+    if (elEntry) elEntry.textContent = `${entryRev.toLocaleString()} ETB`;
+    if (elMatch) elMatch.textContent = `${matchRev.toLocaleString()} ETB (${totalGames} games × ${loserFee} ETB)`;
+    if (elGross) elGross.textContent = `${grossRev.toLocaleString()} ETB`;
+    if (elNet) elNet.textContent = `${netProfit.toLocaleString()} ETB`;
+};
+
+window.handleSaveEvent = async function(e) {
+    if (e) e.preventDefault();
+    const title = (document.getElementById('event-title')?.value || '').trim();
+    if (!title) {
+        showToast('Please enter a tournament title', 'error');
+        return;
+    }
+
+    const payload = {
+        title: title,
+        game: document.getElementById('event-game')?.value || 'EA FC 25',
+        tournament_format: document.getElementById('event-format')?.value || 'CHAMPIONS_LEAGUE',
+        tournament_duration: document.getElementById('event-duration')?.value || '1_MONTH',
+        max_participants: parseInt(document.getElementById('event-max')?.value, 10) || 32,
+        entry_fee: parseFloat(document.getElementById('event-fee')?.value) || 200,
+        loser_match_fee: parseFloat(document.getElementById('event-loser-fee')?.value) || 25,
+        prize_pool: document.getElementById('event-prize')?.value || '2,500 ETB',
+        total_prize_amount: parseFloat(document.getElementById('event-prize-amount')?.value) || 2500,
+        rules: document.getElementById('event-rules')?.value || ''
+    };
+
+    try {
+        const res = await fetch('/api/events', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            showToast(data.message || 'Failed to create tournament', 'error');
+            return;
+        }
+
+        showToast('🏆 Tournament Created Successfully!', 'success');
+        closeCreateEventModal();
+        const newId = data.event_id || (data.event && data.event.id);
+        if (newId) {
+            openTournamentDetail(newId, 'roster');
+        }
+    } catch (err) {
+        console.error('Error creating tournament:', err);
+        showToast('Network error creating tournament', 'error');
+    }
+};
+
+// ----------------------------------------------------------------------------
+// 2. TOURNAMENTS LIST & FILTERING
+// ----------------------------------------------------------------------------
+window.loadTournamentsHub = async function() {
+    try {
+        const res = await fetch('/api/events');
+        const data = await res.json();
+        const events = data.events || [];
+
+        const badge = document.getElementById('thub-active-count-badge');
+        if (badge) badge.textContent = `${events.length} Tournament${events.length === 1 ? '' : 's'}`;
+
+        renderTournamentsCards(events);
+    } catch (err) {
+        console.error('Error loading tournaments:', err);
+        showToast('Failed to load tournaments list', 'error');
+    }
+};
+
+window.filterTournaments = function(filter) {
+    currentTournFilter = filter;
+    document.querySelectorAll('.thub-ftab').forEach(t => {
+        t.classList.toggle('active', t.getAttribute('data-filter') === filter);
+    });
+    loadTournamentsHub();
+};
+
+function renderTournamentsCards(events) {
+    const grid = document.getElementById('thub-cards-grid');
+    if (!grid) return;
+
+    let filtered = events;
+    if (currentTournFilter === 'IN_PROGRESS') {
+        filtered = events.filter(e => e.draw_completed === 1 && !e.winner_id);
+    } else if (currentTournFilter === 'UPCOMING') {
+        filtered = events.filter(e => !e.draw_completed);
+    } else if (currentTournFilter === 'COMPLETED') {
+        filtered = events.filter(e => !!e.winner_id);
+    }
+
+    if (!filtered || filtered.length === 0) {
+        grid.innerHTML = `
+            <div class="thub-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: rgba(15,23,42,0.6); border: 1px dashed rgba(255,255,255,0.1); border-radius: 16px;">
+                <div style="font-size: 3rem; margin-bottom: 12px;">🏆</div>
+                <h3 style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 6px;">No Tournaments Found</h3>
+                <p style="color: var(--text-secondary); max-width: 440px; margin: 0 auto 20px; font-size: 0.9rem;">
+                    Launch an authentic 32-player Champions League 2010 tournament with glass tumbler ball draw & verified owner profit ledger.
+                </p>
+                <button type="button" class="btn btn-primary" onclick="openCreateTournamentModal()">
+                    + Create First Tournament
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = filtered.map(t => {
+        const isCL = (t.tournament_format || 'CHAMPIONS_LEAGUE') === 'CHAMPIONS_LEAGUE';
+        const formatLabel = isCL ? 'UEFA Champions League 2010 Style' : 'Single Elimination Knockout';
+        const durationMap = { '1_MONTH': '1 Month', '2_WEEKS': '2 Weeks', '2_MONTHS': '2 Months' };
+        const durLabel = durationMap[t.tournament_duration] || '1 Month';
+        const maxSlots = t.max_participants || 32;
+        const currentCount = t.participant_count || 0;
+        const pct = Math.min(100, Math.round((currentCount / maxSlots) * 100));
+
+        let statusBadge = '<span class="thub-badge-cyan">⏳ Open Registration</span>';
+        if (t.winner_id) {
+            statusBadge = `<span class="thub-badge-gold">👑 Champion: ${escapeHtml(t.winner_name || 'Champion')}</span>`;
+        } else if (t.draw_completed === 1) {
+            statusBadge = '<span class="thub-badge-live">🔥 Live Tournament In Progress</span>';
+        } else if (t.roster_locked === 1) {
+            statusBadge = '<span class="thub-badge-gold">🔒 Roster Locked • Ready For Draw</span>';
+        }
+
+        const isOwner = (App.currentRole || '').toUpperCase() === 'OWNER';
+
+        return `
+            <div class="tourn-card" onclick="openTournamentDetail(${t.id})">
+                <div class="tourn-card-head">
+                    <span class="tourn-badge">${escapeHtml(durLabel)} &bull; ${isCL ? 'Groups of 4' : 'Knockout'}</span>
+                    ${statusBadge}
+                </div>
+                <h3 class="tourn-card-title">${escapeHtml(t.title)}</h3>
+                <div class="tourn-card-game">🎮 ${escapeHtml(t.game || 'EA FC 25')} &bull; PS5</div>
+                
+                <div class="tourn-card-body">
+                    <div class="tourn-card-metas">
+                        <div class="tcm-item">
+                            <span class="tcm-label">Entry Fee</span>
+                            <span class="tcm-val text-cyan">${t.entry_fee || 200} ETB</span>
+                        </div>
+                        <div class="tcm-item">
+                            <span class="tcm-label">Loser / Game</span>
+                            <span class="tcm-val text-rose">${t.loser_match_fee || 25} ETB</span>
+                        </div>
+                        <div class="tcm-item">
+                            <span class="tcm-label">Prize Pool</span>
+                            <span class="tcm-val text-gold">${escapeHtml(t.prize_pool || '2,500 ETB')}</span>
+                        </div>
+                    </div>
+
+                    <div class="tourn-progress-bar-wrap">
+                        <div class="tourn-prog-labels">
+                            <span>Players: ${currentCount} / ${maxSlots}</span>
+                            <span>${pct}% Full</span>
+                        </div>
+                        <div class="tourn-prog-track">
+                            <div class="tourn-prog-fill" style="width: ${pct}%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tourn-card-foot">
+                    <button type="button" class="btn-enter-arena" onclick="event.stopPropagation(); openTournamentDetail(${t.id});">
+                        <span>Enter Arena Hub &rarr;</span>
+                    </button>
+                    ${isOwner ? `
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); deleteTournament(${t.id});" title="Delete tournament">
+                            🗑️
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+window.deleteTournament = async function(id) {
+    if (!confirm('Are you sure you want to delete this tournament? All rosters, matches, and ledger data will be deleted.')) return;
+    try {
+        const res = await fetch(`/api/events/${id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('Tournament deleted successfully', 'success');
+            loadTournamentsHub();
+        } else {
+            showToast(data.message || 'Failed to delete tournament', 'error');
+        }
+    } catch (e) {
+        showToast('Error deleting tournament', 'error');
+    }
+};
+
+// ----------------------------------------------------------------------------
+// 3. TOURNAMENT ARENA HUB & NAVIGATION
+// ----------------------------------------------------------------------------
+window.openTournamentDetail = async function(eventId, initialTab = 'roster') {
+    App.activeTournamentId = eventId;
+
+    const listView = document.getElementById('thub-list-view');
+    const arenaView = document.getElementById('thub-detail-arena');
+    if (listView) listView.style.display = 'none';
+    if (arenaView) arenaView.style.display = 'block';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    await fetchAndRenderArena(eventId, initialTab);
+};
+
+window.closeTournamentDetail = function() {
+    stopLotterySimulation();
+    App.activeTournamentId = null;
+    currentTournamentData = null;
+
+    const listView = document.getElementById('thub-list-view');
+    const arenaView = document.getElementById('thub-detail-arena');
+    if (listView) listView.style.display = 'block';
+    if (arenaView) arenaView.style.display = 'none';
+
+    loadTournamentsHub();
+};
+
+async function fetchAndRenderArena(eventId, preferredTab = null) {
+    try {
+        const res = await fetch(`/api/events/${eventId}`);
+        const data = await res.json();
+        if (!data || !data.success) {
+            showToast(data.message || 'Failed to load tournament arena', 'error');
+            closeTournamentDetail();
+            return;
+        }
+
+        currentTournamentData = data;
+        const e = data.event;
+        const isOwner = (App.currentRole || '').toUpperCase() === 'OWNER';
+
+        // Update chips & hero
+        const isCL = (e.tournament_format || 'CHAMPIONS_LEAGUE') === 'CHAMPIONS_LEAGUE';
+        const durationMap = { '1_MONTH': '⏱ 1 Month', '2_WEEKS': '⏱ 2 Weeks', '2_MONTHS': '⏱ 2 Months' };
+
+        const formatChip = document.getElementById('tarena-format-chip');
+        if (formatChip) formatChip.textContent = isCL ? 'UEFA Champions League 2010 (32 Players)' : 'Single Elimination Knockout';
+
+        const durChip = document.getElementById('tarena-duration-chip');
+        if (durChip) durChip.textContent = durationMap[e.tournament_duration] || '⏱ 1 Month';
+
+        const statusChip = document.getElementById('tarena-status-chip');
+        if (statusChip) {
+            if (e.winner_id) statusChip.textContent = `👑 Champion: ${e.winner_name}`;
+            else if (e.draw_completed === 1) statusChip.textContent = '🔥 Tournament In Progress';
+            else if (e.roster_locked === 1) statusChip.textContent = '🔒 Ready For Ball Draw';
+            else statusChip.textContent = '⏳ Registration Open';
+        }
+
+        const titleEl = document.getElementById('tarena-title');
+        if (titleEl) titleEl.textContent = e.title;
+
+        const gameLabel = document.getElementById('tarena-game-label');
+        if (gameLabel) gameLabel.textContent = `${e.game || 'EA FC 25'} • PS5`;
+
+        const entryLabel = document.getElementById('tarena-entry-label');
+        if (entryLabel) entryLabel.textContent = `${e.entry_fee || 200} ETB Entry`;
+
+        const prizeLabel = document.getElementById('tarena-prize-label');
+        if (prizeLabel) prizeLabel.textContent = `${e.prize_pool || '2,500 ETB'} Prize Pool`;
+
+        const rosterCount = document.getElementById('tarena-roster-count');
+        if (rosterCount) rosterCount.textContent = (data.participants || []).length;
+
+        // Owner action controls
+        const ownerBar = document.getElementById('tarena-owner-actions-bar');
+        const analyticsTab = document.getElementById('tarena-tab-analytics');
+        if (ownerBar) ownerBar.style.display = isOwner ? 'flex' : 'none';
+        if (analyticsTab) analyticsTab.style.display = isOwner ? 'flex' : 'none';
+
+        const btnLock = document.getElementById('btn-lock-roster');
+        if (btnLock) {
+            btnLock.innerHTML = e.roster_locked === 1 ? '<span>✓ Roster Locked</span>' : '<span>🔒 Lock Roster</span>';
+            btnLock.classList.toggle('btn-secondary', e.roster_locked !== 1);
+            btnLock.classList.toggle('btn-outline-gold', e.roster_locked === 1);
+        }
+
+        // Determine which tab to show
+        let targetTab = preferredTab || activeArenaTab || 'roster';
+        if (!preferredTab && e.draw_completed === 1 && activeArenaTab === 'roster') {
+            targetTab = 'groups';
+        }
+        switchArenaTab(targetTab);
+    } catch (err) {
+        console.error('Error fetching arena data:', err);
+        showToast('Error loading arena data', 'error');
+    }
+}
+
+window.switchArenaTab = function(tabName) {
+    activeArenaTab = tabName;
+
+    // Update tab buttons
+    document.querySelectorAll('.tarena-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('data-arena-tab') === tabName);
+    });
+
+    // Update tab panels
+    document.querySelectorAll('.tarena-panel').forEach(p => {
+        p.classList.toggle('active', p.id === `tarena-panel-${tabName}`);
+    });
+
+    if (!currentTournamentData) return;
+
+    if (tabName === 'roster') {
+        renderTournamentRoster(currentTournamentData.participants || []);
+    } else if (tabName === 'draw') {
+        initLotteryBallsCanvas();
+    } else if (tabName === 'groups') {
+        renderTournamentGroups(currentTournamentData.groups || {});
+    } else if (tabName === 'fixtures') {
+        renderTournamentFixtures(currentTournamentData.matches || []);
+    } else if (tabName === 'bracket') {
+        renderKnockoutTree(currentTournamentData.matches || [], currentTournamentData.event?.winner_name);
+    } else if (tabName === 'analytics') {
+        renderTournamentAnalytics(currentTournamentData.business_analytics, currentTournamentData.event);
+    }
+};
+
+// ----------------------------------------------------------------------------
+// 4. ROSTER & PARTICIPANT REGISTRATION
+// ----------------------------------------------------------------------------
+function renderTournamentRoster(participants) {
+    const tbody = document.getElementById('tarena-roster-tbody');
+    if (!tbody) return;
+
+    const countEl = document.getElementById('tarena-roster-count');
+    if (countEl) countEl.textContent = participants.length;
+
+    if (!participants || participants.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" style="text-align: center; padding: 32px 16px; color: var(--text-secondary);">
+                    No players registered yet. Click <strong>+ Register Player</strong> or Lounge Owner can tap <strong>⚡ Fill 32 Gamers</strong> for instant demo roster.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const isOwner = (App.currentRole || '').toUpperCase() === 'OWNER';
+
+    tbody.innerHTML = participants.map((p, idx) => {
+        const clubBadge = formatClubName(p.chosen_club);
+        const groupBadge = p.group_letter && p.group_letter !== 'UNASSIGNED' 
+            ? `<span class="badge badge-cyan">Group ${p.group_letter}</span>` 
+            : `<span class="badge badge-muted">Unassigned</span>`;
+        const feeBadge = p.fee_paid === 1 
+            ? `<span class="text-emerald" style="font-weight:600;">✓ Paid</span>` 
+            : `<span class="text-amber" style="font-weight:600;">Pending</span>`;
+
+        return `
+            <tr>
+                <td style="font-weight:700; color:var(--text-secondary); width:40px;">${idx + 1}</td>
+                <td>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">👤</span>
+                        <strong style="color:var(--text-primary);">${escapeHtml(p.customer_name)}</strong>
+                    </div>
+                </td>
+                <td style="color:var(--text-secondary);">${escapeHtml(p.customer_phone || '—')}</td>
+                <td>
+                    <span class="roster-club-pill">${clubBadge}</span>
+                </td>
+                <td>${groupBadge}</td>
+                <td>${feeBadge}</td>
+                <td style="font-size:0.8rem; color:var(--text-muted);">${escapeHtml((p.registered_at || '').split('T')[0] || 'Today')}</td>
+                <td>
+                    ${isOwner ? `
+                        <button type="button" class="btn btn-xs btn-outline-cyan" onclick="togglePlayerPaid(${p.id}, ${p.fee_paid === 1 ? 0 : 1})" title="Toggle payment status">
+                            ${p.fee_paid === 1 ? 'Mark Unpaid' : 'Mark Paid'}
+                        </button>
+                    ` : '—'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+window.openRegisterPlayerModal = function() {
+    const modal = document.getElementById('modal-register-tourn-player');
+    if (!modal) return;
+    const form = document.getElementById('form-register-tourn-player');
+    if (form) form.reset();
+    modal.classList.add('open');
+};
+
+window.closeRegisterPlayerModal = function() {
+    const modal = document.getElementById('modal-register-tourn-player');
+    if (modal) modal.classList.remove('open');
+};
+
+window.handleSavePlayerRegistration = async function(e) {
+    if (e) e.preventDefault();
+    if (!App.activeTournamentId) return;
+
+    const name = (document.getElementById('reg-player-name')?.value || '').trim();
+    if (!name) {
+        showToast('Please enter player name', 'error');
+        return;
+    }
+    const phone = (document.getElementById('reg-player-phone')?.value || '').trim();
+    let club = document.getElementById('reg-player-club')?.value || 'Real Madrid';
+    if (club === 'Other / Custom') {
+        club = (document.getElementById('reg-player-custom-club')?.value || '').trim() || 'Custom FC';
+    }
+    const pm = document.getElementById('reg-payment-method')?.value || 'CASH';
+
+    try {
+        const res = await fetch(`/api/events/${App.activeTournamentId}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customer_name: name,
+                customer_phone: phone,
+                chosen_club: club,
+                payment_method: pm
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`⚽ ${name} registered with ${club}!`, 'success');
+            closeRegisterPlayerModal();
+            fetchAndRenderArena(App.activeTournamentId, 'roster');
+        } else {
+            showToast(data.message || 'Registration failed', 'error');
+        }
+    } catch (err) {
+        showToast('Network error during registration', 'error');
+    }
+};
+
+window.handleSeedDemoRoster = async function() {
+    if (!App.activeTournamentId) return;
+    try {
+        showToast('⚡ Seeding 32 realistic Addis Ababa gamers & European clubs...', 'info');
+        const res = await fetch(`/api/events/${App.activeTournamentId}/seed_demo`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ 32 Addis Gamers & European Clubs Loaded!', 'success');
+            fetchAndRenderArena(App.activeTournamentId, 'roster');
+        } else {
+            showToast(data.message || 'Failed to seed gamers', 'error');
+        }
+    } catch (e) {
+        showToast('Error seeding demo gamers', 'error');
+    }
+};
+
+window.handleLockRoster = async function() {
+    if (!App.activeTournamentId) return;
+    try {
+        const res = await fetch(`/api/events/${App.activeTournamentId}/lock_roster`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('🔒 Roster Locked! Launching Official Glass Sphere Ball Draw...', 'success');
+            await fetchAndRenderArena(App.activeTournamentId, 'draw');
+        } else {
+            showToast(data.message || 'Failed to lock roster', 'error');
+        }
+    } catch (e) {
+        showToast('Error locking roster', 'error');
+    }
+};
+
+window.togglePlayerPaid = async function(regId, newStatus) {
+    if (!App.activeTournamentId) return;
+    try {
+        const res = await fetch(`/api/events/participants/${regId}/pay`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fee_paid: newStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast(newStatus === 1 ? 'Player fee marked as PAID' : 'Player fee marked as UNPAID', 'success');
+            fetchAndRenderArena(App.activeTournamentId, 'roster');
+        }
+    } catch (e) {}
+};
+
+// ----------------------------------------------------------------------------
+// 5. GLASS SPHERE LOTTERY BALL TUMBLER DRAW (Physical Canvas Simulation)
+// Realistic glossy bouncing balls in crystal dome matching user's uploaded image
+// ----------------------------------------------------------------------------
+const BALL_PALETTE = [
+    { bg: '#3B82F6', text: '#FFFFFF', name: 'Blue' },
+    { bg: '#EF4444', text: '#FFFFFF', name: 'Red' },
+    { bg: '#10B981', text: '#FFFFFF', name: 'Green' },
+    { bg: '#F59E0B', text: '#111827', name: 'Yellow' },
+    { bg: '#8B5CF6', text: '#FFFFFF', name: 'Purple' },
+    { bg: '#EC4899', text: '#FFFFFF', name: 'Magenta' },
+    { bg: '#06B6D4', text: '#FFFFFF', name: 'Cyan' },
+    { bg: '#F97316', text: '#FFFFFF', name: 'Orange' },
+    { bg: '#F8FAFC', text: '#0F172A', name: 'White' },
+    { bg: '#1E293B', text: '#F8FAFC', name: 'Slate' }
+];
+
+window.initLotteryBallsCanvas = function() {
+    stopLotterySimulation();
+    const canvas = document.getElementById('lottery-balls-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    const participants = (currentTournamentData?.participants || []);
+    const count = Math.max(32, participants.length);
+
+    // Initial sphere center and radius
+    const cx = canvas.width / 2;
+    const cy = 205;
+    const sphereRadius = 175;
+
+    lotteryBalls = [];
+    for (let i = 0; i < count; i++) {
+        const pal = BALL_PALETTE[i % BALL_PALETTE.length];
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * (sphereRadius - 35);
+        lotteryBalls.push({
+            id: i + 1,
+            num: i + 1,
+            x: cx + Math.cos(angle) * dist,
+            y: cy + Math.sin(angle) * dist,
+            vx: (Math.random() - 0.5) * 3,
+            vy: (Math.random() - 0.5) * 3,
+            radius: 17,
+            color: pal.bg,
+            textColor: pal.text,
+            isDrawn: false,
+            rotation: Math.random() * Math.PI * 2,
+            vRot: (Math.random() - 0.5) * 0.1
+        });
+    }
+
+    renderLotteryGroupsGrid(currentTournamentData?.groups || {});
+    updateLotterySpotlight(null);
+
+    // Start physics animation loop
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 1. Draw outer glass container glow
+        const glowGrad = ctx.createRadialGradient(cx, cy, sphereRadius * 0.4, cx, cy, sphereRadius + 15);
+        glowGrad.addColorStop(0, 'rgba(30, 58, 138, 0.1)');
+        glowGrad.addColorStop(0.8, 'rgba(56, 189, 248, 0.15)');
+        glowGrad.addColorStop(1, 'rgba(56, 189, 248, 0.35)');
+        ctx.fillStyle = glowGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, sphereRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 2. Physics update for balls
+        const gravity = 0.18;
+        const friction = 0.985;
+        const spinForce = lotterySpinning ? 1.8 : 0;
+
+        for (let b of lotteryBalls) {
+            if (b.isDrawn) continue;
+
+            // Swirling centrifugal whirlwind force when spinning
+            if (lotterySpinning) {
+                const dx = b.x - cx;
+                const dy = b.y - cy;
+                const dist = Math.hypot(dx, dy) || 1;
+                // Tangential force
+                b.vx += (-dy / dist) * spinForce + (Math.random() - 0.5) * 1.5;
+                b.vy += (dx / dist) * spinForce + (Math.random() - 0.5) * 1.5;
+            } else {
+                b.vy += gravity;
+            }
+
+            b.vx *= friction;
+            b.vy *= friction;
+            b.x += b.vx;
+            b.y += b.vy;
+            b.rotation += b.vRot;
+
+            // Collision with spherical container boundary
+            const dx = b.x - cx;
+            const dy = b.y - cy;
+            const dist = Math.hypot(dx, dy);
+            if (dist + b.radius > sphereRadius) {
+                const nx = dx / dist;
+                const ny = dy / dist;
+                // Reflect velocity
+                const dot = b.vx * nx + b.vy * ny;
+                b.vx -= 1.8 * dot * nx;
+                b.vy -= 1.8 * dot * ny;
+                // Push back inside
+                b.x = cx + nx * (sphereRadius - b.radius);
+                b.y = cy + ny * (sphereRadius - b.radius);
+            }
+
+            // Draw glossy ball with 3D spherical gradient
+            drawLotterySphere(ctx, b);
+        }
+
+        // 3. Draw glass rim and specular shine overlays
+        drawGlassDomeOverlay(ctx, cx, cy, sphereRadius);
+
+        lotteryAnimationId = requestAnimationFrame(animate);
+    }
+
+    animate();
+};
+
+function drawLotterySphere(ctx, b) {
+    ctx.save();
+    ctx.translate(b.x, b.y);
+    ctx.rotate(b.rotation);
+
+    // Ball 3D Radial Sphere Gradient
+    const grad = ctx.createRadialGradient(-5, -5, 2, 0, 0, b.radius);
+    grad.addColorStop(0, '#FFFFFF');
+    grad.addColorStop(0.35, b.color);
+    grad.addColorStop(1, '#020617');
+
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, b.radius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Subtle edge rim shadow
+    ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Central White Circular Badge for Number (Matching reference photo)
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(0, 0, 8.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ball Number text
+    ctx.fillStyle = '#0F172A';
+    ctx.font = 'bold 9px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(String(b.num), 0, 0.5);
+
+    ctx.restore();
+}
+
+function drawGlassDomeOverlay(ctx, cx, cy, radius) {
+    ctx.save();
+
+    // Glass rim ring with cyan glow
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Specular curved glare crescent at top-left
+    ctx.beginPath();
+    ctx.arc(cx - 30, cy - 30, radius * 0.75, Math.PI * 1.05, Math.PI * 1.45);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+    ctx.lineWidth = 6;
+    ctx.stroke();
+
+    // Subtle inner refraction highlight
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius - 6, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.restore();
+}
+
+function stopLotterySimulation() {
+    if (lotteryAnimationId) {
+        cancelAnimationFrame(lotteryAnimationId);
+        lotteryAnimationId = null;
+    }
+    lotterySpinning = false;
+}
+
+window.renderLotteryGroupsGrid = function(groups, newlyAssignedId = null) {
+    const grid = document.getElementById('lottery-draw-groups-grid');
+    if (!grid) return;
+
+    const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    grid.innerHTML = groupLetters.map(letter => {
+        const members = groups[letter] || [];
+        return `
+            <div class="lottery-group-pod" id="lottery-pod-${letter}">
+                <div class="lgp-head">
+                    <span class="lgp-letter">Group ${letter}</span>
+                    <span class="lgp-count">${members.length} / 4</span>
+                </div>
+                <div class="lgp-members-list">
+                    ${members.map((m, mIdx) => `
+                        <div class="lgp-member-row ${m.id === newlyAssignedId ? 'just-drawn' : ''}">
+                            <span class="lgp-slot">${mIdx + 1}</span>
+                            <div class="lgp-member-info">
+                                <span class="lgp-name">${escapeHtml(m.customer_name)}</span>
+                                <span class="lgp-club">${formatClubName(m.chosen_club)}</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                    ${Array.from({ length: Math.max(0, 4 - members.length) }).map((_, i) => `
+                        <div class="lgp-member-row empty">
+                            <span class="lgp-slot">${members.length + i + 1}</span>
+                            <span class="lgp-empty-label">Slot Open</span>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }).join('');
+};
+
+function updateLotterySpotlight(ballData, participant = null, slotLabel = '') {
+    const ballSphere = document.getElementById('spotlight-ball-sphere');
+    const numEl = document.getElementById('spc-ball-num');
+    const nameEl = document.getElementById('spc-player-name');
+    const clubEl = document.getElementById('spc-club-badge');
+    const groupEl = document.getElementById('spc-group-assignment');
+    const progressEl = document.getElementById('spotlight-progress-text');
+
+    if (!ballData || !participant) {
+        if (ballSphere) {
+            ballSphere.textContent = '?';
+            ballSphere.style.background = 'radial-gradient(circle at 30% 30%, #3B82F6, #1E3A8A)';
+        }
+        if (numEl) numEl.textContent = 'Ball #--';
+        if (nameEl) nameEl.textContent = 'Ready to Draw...';
+        if (clubEl) clubEl.textContent = '⚽ Glass Tumbler Armed';
+        if (groupEl) groupEl.textContent = 'Tap "Spin & Draw Next Ball"';
+        return;
+    }
+
+    if (ballSphere) {
+        ballSphere.textContent = String(ballData.num);
+        ballSphere.style.background = `radial-gradient(circle at 30% 30%, #FFFFFF, ${ballData.color} 40%, #020617 95%)`;
+        ballSphere.classList.remove('pulse-reveal');
+        void ballSphere.offsetWidth; // trigger reflow
+        ballSphere.classList.add('pulse-reveal');
+    }
+    if (numEl) numEl.textContent = `Ball #${ballData.num}`;
+    if (nameEl) nameEl.textContent = participant.customer_name;
+    if (clubEl) clubEl.textContent = formatClubName(participant.chosen_club);
+    if (groupEl) groupEl.textContent = slotLabel;
+
+    const drawnCount = lotteryBalls.filter(b => b.isDrawn).length;
+    if (progressEl) progressEl.textContent = `${drawnCount} / 32 Balls Drawn`;
+}
+
+window.drawNextLotteryBall = async function() {
+    if (!currentTournamentData || !App.activeTournamentId) return;
+
+    if (currentTournamentData.event?.draw_completed === 1) {
+        showToast('Official Draw is already completed! Check Group Standings tab.', 'info');
+        return;
+    }
+
+    const unassigned = (currentTournamentData.participants || []).filter(p => !p.group_letter || p.group_letter === 'UNASSIGNED');
+    if (unassigned.length === 0) {
+        showToast('All players have been grouped! Finalizing draw...', 'info');
+        autoCompleteLotteryDraw();
+        return;
+    }
+
+    // Spin tumbler vigorously for 1.1s
+    lotterySpinning = true;
+    const btn = document.getElementById('btn-draw-next-ball');
+    if (btn) btn.disabled = true;
+
+    setTimeout(async () => {
+        lotterySpinning = false;
+        if (btn) btn.disabled = false;
+
+        // Pick next random undrawn ball from canvas
+        const undrawnBalls = lotteryBalls.filter(b => !b.isDrawn);
+        const ball = undrawnBalls.length > 0 ? undrawnBalls[Math.floor(Math.random() * undrawnBalls.length)] : { num: 1, color: '#3B82F6' };
+        ball.isDrawn = true;
+
+        // Pick next participant and assign to next group slot (A to H in order)
+        const p = unassigned[0];
+        const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        const groups = currentTournamentData.groups || {};
+        
+        let targetLetter = 'A';
+        for (let l of groupLetters) {
+            if ((groups[l] || []).length < 4) {
+                targetLetter = l;
+                break;
+            }
+        }
+
+        if (!groups[targetLetter]) groups[targetLetter] = [];
+        p.group_letter = targetLetter;
+        p.seed_number = groups[targetLetter].length + 1;
+        groups[targetLetter].push(p);
+
+        // Update UI
+        updateLotterySpotlight(ball, p, `Assigned to Group ${targetLetter} (Slot #${p.seed_number})`);
+        renderLotteryGroupsGrid(groups, p.id);
+
+        showToast(`🎲 Ball #${ball.num}: ${p.customer_name} -> Group ${targetLetter}!`, 'success');
+
+        // If that was the last participant, persist to backend
+        const remaining = (currentTournamentData.participants || []).filter(item => !item.group_letter || item.group_letter === 'UNASSIGNED');
+        if (remaining.length === 0) {
+            await autoCompleteLotteryDraw();
+        }
+    }, 1100);
+};
+
+window.autoCompleteLotteryDraw = async function() {
+    if (!App.activeTournamentId) return;
+    try {
+        showToast('⚡ Finalizing official lottery draw & generating 125 fixtures...', 'info');
+        const res = await fetch(`/api/events/${App.activeTournamentId}/draw`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast('🎉 Official Champions League Draw Complete! 125 Fixtures Generated.', 'success');
+            await fetchAndRenderArena(App.activeTournamentId, 'groups');
+        } else {
+            showToast(data.message || 'Draw execution failed', 'error');
+        }
+    } catch (e) {
+        showToast('Error completing lottery draw', 'error');
+    }
+};
+
+window.resetLotteryDraw = function() {
+    initLotteryBallsCanvas();
+    showToast('Lottery tumbler reset. Ready to draw.', 'info');
+};
+
+// ----------------------------------------------------------------------------
+// 6. UEFA CHAMPIONS LEAGUE 2010 GROUP STANDINGS (8 Groups of 4)
+// ----------------------------------------------------------------------------
+function renderTournamentGroups(groups) {
+    const grid = document.getElementById('tarena-groups-standings-grid');
+    if (!grid) return;
+
+    const groupLetters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+    const hasAnyGroups = groupLetters.some(l => (groups[l] || []).length > 0);
+
+    if (!hasAnyGroups) {
+        grid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 48px 20px; background: rgba(15,23,42,0.6); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 12px;">📊</div>
+                <h3 style="color:var(--text-primary); margin-bottom: 6px;">Groups Not Yet Drawn</h3>
+                <p style="color:var(--text-secondary); max-width: 440px; margin: 0 auto 20px; font-size: 0.9rem;">
+                    Once the 32 gamers are locked, launch the <strong>Glass Tumbler Ball Draw</strong> to randomize teams into Groups A through H.
+                </p>
+                <button type="button" class="btn btn-gold" onclick="switchArenaTab('draw')">
+                    🎲 Go to Live Ball Draw
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    grid.innerHTML = groupLetters.map(letter => {
+        const teams = groups[letter] || [];
+        return `
+            <div class="champions-group-box">
+                <div class="cgb-head">
+                    <span class="cgb-title">GROUP ${letter}</span>
+                    <span class="cgb-sub">Top 2 Qualify for Round of 16</span>
+                </div>
+                <table class="tourn-standings-table">
+                    <thead>
+                        <tr>
+                            <th style="width:30px;">#</th>
+                            <th>Team / Gamer</th>
+                            <th title="Matches Played">P</th>
+                            <th title="Won">W</th>
+                            <th title="Drawn">D</th>
+                            <th title="Lost">L</th>
+                            <th title="Goals For">GF</th>
+                            <th title="Goals Against">GA</th>
+                            <th title="Goal Difference">GD</th>
+                            <th title="Points" style="color:var(--electric);">PTS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${teams.map((t, idx) => {
+                            const isTop2 = (idx < 2);
+                            return `
+                                <tr class="${isTop2 ? 'qualified-row' : ''}">
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:4px;">
+                                            <span style="font-weight:700;">${idx + 1}</span>
+                                            ${isTop2 ? '<span class="q-badge" title="Qualified for R16">Q</span>' : ''}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex; flex-direction:column;">
+                                            <strong style="color:var(--text-primary); font-size:0.85rem;">${escapeHtml(t.customer_name)}</strong>
+                                            <span style="color:var(--text-secondary); font-size:0.75rem;">${formatClubName(t.chosen_club)}</span>
+                                        </div>
+                                    </td>
+                                    <td>${t.matches_played || 0}</td>
+                                    <td>${t.won || 0}</td>
+                                    <td>${t.drawn || 0}</td>
+                                    <td>${t.lost || 0}</td>
+                                    <td>${t.goals_for || 0}</td>
+                                    <td>${t.goals_against || 0}</td>
+                                    <td style="font-weight:600; color:${(t.goal_diff || 0) >= 0 ? 'var(--emerald)' : 'var(--rose)'};">
+                                        ${(t.goal_diff || 0) > 0 ? '+' : ''}${t.goal_diff || 0}
+                                    </td>
+                                    <td style="font-weight:800; font-size:0.95rem; color:var(--electric);">${t.points || 0}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            </div>
+        `;
+    }).join('');
+}
+
+// ----------------------------------------------------------------------------
+// 7. FIXTURES, LIVE SCORE RECORDING & AGREED SCHEDULE LOCK
+// ----------------------------------------------------------------------------
+window.filterFixturesByStage = function(stage) {
+    currentFixtureStage = stage;
+    document.querySelectorAll('.ff-pill').forEach(btn => {
+        btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(stage));
+    });
+    if (currentTournamentData) {
+        renderTournamentFixtures(currentTournamentData.matches || []);
+    }
+};
+
+function renderTournamentFixtures(matches) {
+    const container = document.getElementById('tarena-fixtures-list');
+    if (!container) return;
+
+    if (!matches || matches.length === 0) {
+        container.innerHTML = `
+            <div style="text-align: center; padding: 48px 20px; background: rgba(15,23,42,0.6); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 12px;">⚔️</div>
+                <h3 style="color:var(--text-primary); margin-bottom: 6px;">Fixtures Generated After Draw</h3>
+                <p style="color:var(--text-secondary); max-width: 440px; margin: 0 auto; font-size: 0.9rem;">
+                    Once the groups are drawn, all 125 official tournament fixtures will be scheduled here.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    let filtered = matches;
+    if (currentFixtureStage !== 'ALL') {
+        filtered = matches.filter(m => m.stage === currentFixtureStage);
+    }
+
+    const isOwnerOrClerk = ['OWNER', 'CLERK'].includes((App.currentRole || '').toUpperCase());
+
+    container.innerHTML = filtered.map(m => {
+        const isCompleted = m.status === 'COMPLETED';
+        const p1Score = isCompleted ? (m.score1 ?? '-') : '-';
+        const p2Score = isCompleted ? (m.score2 ?? '-') : '-';
+
+        let winnerBadge = '';
+        if (isCompleted && m.winner_name) {
+            winnerBadge = `<span class="badge badge-gold">Winner: ${escapeHtml(m.winner_name)}</span>`;
+        }
+
+        const schedDate = m.scheduled_date || 'Date TBD';
+        const schedTime = m.scheduled_time || 'Time TBD';
+        const tvName = `TV ${m.tv_station_id || 1}`;
+
+        return `
+            <div class="tourn-fixture-card ${isCompleted ? 'completed' : ''}">
+                <div class="tfc-head">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span class="tfc-stage-pill">${escapeHtml(m.round_name || m.stage)}</span>
+                        ${m.group_letter ? `<span class="badge badge-cyan">Group ${m.group_letter}</span>` : ''}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        ${winnerBadge}
+                        <span class="badge ${isCompleted ? 'badge-muted' : 'badge-live'}">
+                            ${isCompleted ? '✓ Completed' : '⏳ Scheduled'}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="tfc-matchup">
+                    <!-- Player 1 -->
+                    <div class="tfc-team tfc-left ${m.winner_id === m.player1_id && isCompleted ? 'winner' : ''}">
+                        <div class="tfc-team-text">
+                            <span class="tfc-team-name">${escapeHtml(m.player1_name || 'TBD')}</span>
+                            <span class="tfc-team-club">${formatClubName(m.player1_club)}</span>
+                        </div>
+                    </div>
+
+                    <!-- Score Center -->
+                    <div class="tfc-score-box">
+                        <span class="tfc-score-digit">${p1Score}</span>
+                        <span class="tfc-vs-tag">VS</span>
+                        <span class="tfc-score-digit">${p2Score}</span>
+                    </div>
+
+                    <!-- Player 2 -->
+                    <div class="tfc-team tfc-right ${m.winner_id === m.player2_id && isCompleted ? 'winner' : ''}">
+                        <div class="tfc-team-text">
+                            <span class="tfc-team-name">${escapeHtml(m.player2_name || 'TBD')}</span>
+                            <span class="tfc-team-club">${formatClubName(m.player2_club)}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tfc-foot">
+                    <div class="tfc-schedule-info">
+                        <span>📅 ${escapeHtml(schedDate)} &bull; ${escapeHtml(schedTime)} &bull; 📺 ${tvName}</span>
+                    </div>
+
+                    <div class="tfc-actions">
+                        ${isOwnerOrClerk ? `
+                            <button type="button" class="btn btn-xs btn-secondary" onclick="openMatchScheduleModal(${m.id})" title="Lock in mutually agreed match schedule with players">
+                                📅 Agreed Date
+                            </button>
+                            <button type="button" class="btn btn-xs btn-primary" onclick="openMatchScoreModal(${m.id})" title="Input match score">
+                                ${isCompleted ? 'Edit Score' : '⚡ Enter Result'}
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${isCompleted && m.loser_name ? `
+                    <div class="tfc-loser-notice">
+                        💰 Loser Fee Collected: <strong>25 ETB</strong> (${escapeHtml(m.loser_name)}) logged to tournament cash ledger.
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+window.openMatchScoreModal = function(matchId) {
+    if (!currentTournamentData) return;
+    const match = (currentTournamentData.matches || []).find(m => m.id === matchId);
+    if (!match) return;
+
+    const modal = document.getElementById('modal-match-score-entry');
+    if (!modal) return;
+
+    document.getElementById('ms-match-id').value = match.id;
+    document.getElementById('ms-p1-name').textContent = match.player1_name || 'Player 1';
+    document.getElementById('ms-p1-club').textContent = formatClubName(match.player1_club);
+    document.getElementById('ms-p2-name').textContent = match.player2_name || 'Player 2';
+    document.getElementById('ms-p2-club').textContent = formatClubName(match.player2_club);
+    
+    document.getElementById('ms-score1').value = match.score1 ?? 0;
+    document.getElementById('ms-score2').value = match.score2 ?? 0;
+    document.getElementById('ms-stage-meta').textContent = `${match.round_name || match.stage} • TV ${match.tv_station_id || 1}`;
+    document.getElementById('ms-notes').value = match.notes || '';
+
+    modal.classList.add('open');
+};
+
+window.closeMatchScoreModal = function() {
+    const modal = document.getElementById('modal-match-score-entry');
+    if (modal) modal.classList.remove('open');
+};
+
+window.handleSaveMatchScore = async function(e) {
+    if (e) e.preventDefault();
+    if (!App.activeTournamentId) return;
+
+    const matchId = document.getElementById('ms-match-id')?.value;
+    const score1 = parseInt(document.getElementById('ms-score1')?.value, 10);
+    const score2 = parseInt(document.getElementById('ms-score2')?.value, 10);
+    const notes = document.getElementById('ms-notes')?.value || '';
+
+    if (isNaN(score1) || isNaN(score2)) {
+        showToast('Please enter valid numeric scores', 'error');
+        return;
+    }
+
+    try {
+        const res = await fetch(`/api/events/${App.activeTournamentId}/matches/${matchId}/result`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ score1, score2, notes })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Match result confirmed! Standings & Loser fee logged.', 'success');
+            closeMatchScoreModal();
+            fetchAndRenderArena(App.activeTournamentId, 'fixtures');
+        } else {
+            showToast(data.message || 'Failed to record score', 'error');
+        }
+    } catch (err) {
+        showToast('Error recording match result', 'error');
+    }
+};
+
+window.openMatchScheduleModal = function(matchId) {
+    if (!currentTournamentData) return;
+    const match = (currentTournamentData.matches || []).find(m => m.id === matchId);
+    if (!match) return;
+
+    const modal = document.getElementById('modal-match-schedule-lock');
+    if (!modal) return;
+
+    document.getElementById('sched-match-id').value = match.id;
+    document.getElementById('sched-match-players').textContent = `${match.player1_name || 'Player 1'} vs ${match.player2_name || 'Player 2'} (${match.round_name || match.stage})`;
+    document.getElementById('sched-date').value = match.scheduled_date || 'Saturday, Oct 12';
+    document.getElementById('sched-time').value = match.scheduled_time || '04:30 PM';
+    document.getElementById('sched-station').value = String(match.tv_station_id || 1);
+
+    modal.classList.add('open');
+};
+
+window.closeMatchScheduleModal = function() {
+    const modal = document.getElementById('modal-match-schedule-lock');
+    if (modal) modal.classList.remove('open');
+};
+
+window.handleSaveMatchSchedule = async function(e) {
+    if (e) e.preventDefault();
+    if (!App.activeTournamentId) return;
+
+    const matchId = document.getElementById('sched-match-id')?.value;
+    const schedDate = (document.getElementById('sched-date')?.value || '').trim();
+    const schedTime = (document.getElementById('sched-time')?.value || '').trim();
+    const tvId = parseInt(document.getElementById('sched-station')?.value, 10) || 1;
+
+    try {
+        const res = await fetch(`/api/events/${App.activeTournamentId}/matches/${matchId}/schedule`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ scheduled_date: schedDate, scheduled_time: schedTime, tv_station_id: tvId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('🔒 Mutually agreed match schedule locked!', 'success');
+            closeMatchScheduleModal();
+            fetchAndRenderArena(App.activeTournamentId, 'fixtures');
+        } else {
+            showToast(data.message || 'Failed to lock schedule', 'error');
+        }
+    } catch (err) {
+        showToast('Error locking match schedule', 'error');
+    }
+};
+
+// ----------------------------------------------------------------------------
+// 8. KNOCKOUT BRACKET TREE
+// ----------------------------------------------------------------------------
+function renderKnockoutTree(matches, winnerName) {
+    const treeWrap = document.getElementById('tarena-knockout-tree');
+    if (!treeWrap) return;
+
+    const koMatches = (matches || []).filter(m => m.stage !== 'GROUPS');
+
+    if (koMatches.length === 0) {
+        treeWrap.innerHTML = `
+            <div style="text-align: center; padding: 48px 20px; background: rgba(15,23,42,0.6); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.1);">
+                <div style="font-size: 3rem; margin-bottom: 12px;">🌳</div>
+                <h3 style="color:var(--text-primary); margin-bottom: 6px;">Knockout Tree Unlocks After Group Stage</h3>
+                <p style="color:var(--text-secondary); max-width: 440px; margin: 0 auto; font-size: 0.9rem;">
+                    Top 2 teams from each of Groups A through H advance to the official Round of 16 bracket.
+                </p>
+            </div>
+        `;
+        return;
+    }
+
+    const r16 = koMatches.filter(m => m.stage === 'ROUND_OF_16');
+    const qf = koMatches.filter(m => m.stage === 'QUARTER_FINAL');
+    const sf = koMatches.filter(m => m.stage === 'SEMI_FINAL');
+    const finalMatch = koMatches.find(m => m.stage === 'GRAND_FINAL');
+
+    function renderBracketMatch(m) {
+        if (!m) return `<div class="kb-match empty"><span class="kb-tbd">Awaiting Qualifier</span></div>`;
+        const isDone = m.status === 'COMPLETED';
+        return `
+            <div class="kb-match ${isDone ? 'done' : ''}" onclick="openMatchScoreModal(${m.id})">
+                <div class="kb-team ${isDone && m.winner_id === m.player1_id ? 'win' : ''}">
+                    <span class="kb-name">${escapeHtml(m.player1_name || 'TBD')}</span>
+                    <span class="kb-score">${isDone ? (m.score1 ?? '-') : '-'}</span>
+                </div>
+                <div class="kb-team ${isDone && m.winner_id === m.player2_id ? 'win' : ''}">
+                    <span class="kb-name">${escapeHtml(m.player2_name || 'TBD')}</span>
+                    <span class="kb-score">${isDone ? (m.score2 ?? '-') : '-'}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    treeWrap.innerHTML = `
+        <div class="knockout-tree-columns">
+            <!-- Round of 16 -->
+            <div class="kt-col">
+                <div class="kt-col-title">Round of 16 (16 Teams)</div>
+                <div class="kt-col-matches">
+                    ${r16.length > 0 ? r16.map(renderBracketMatch).join('') : '<p class="kb-tbd">Awaiting Group Winners</p>'}
+                </div>
+            </div>
+
+            <!-- Quarterfinals -->
+            <div class="kt-col">
+                <div class="kt-col-title">Quarterfinals (8 Teams)</div>
+                <div class="kt-col-matches">
+                    ${qf.length > 0 ? qf.map(renderBracketMatch).join('') : '<p class="kb-tbd">Awaiting R16 Winners</p>'}
+                </div>
+            </div>
+
+            <!-- Semifinals -->
+            <div class="kt-col">
+                <div class="kt-col-title">Semifinals (4 Teams)</div>
+                <div class="kt-col-matches">
+                    ${sf.length > 0 ? sf.map(renderBracketMatch).join('') : '<p class="kb-tbd">Awaiting QF Winners</p>'}
+                </div>
+            </div>
+
+            <!-- Grand Final -->
+            <div class="kt-col kt-col-final">
+                <div class="kt-col-title">Grand Final 🏆</div>
+                <div class="kt-col-matches">
+                    ${renderBracketMatch(finalMatch)}
+                    ${winnerName ? `
+                        <div class="champion-podium-card">
+                            <span class="podium-trophy">🏆</span>
+                            <div class="podium-tag">CHAMPION</div>
+                            <div class="podium-winner">${escapeHtml(winnerName)}</div>
+                            <div class="podium-prize">2,000 ETB Cash Prize + Trophy</div>
+                        </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// ----------------------------------------------------------------------------
+// 9. OWNER BUSINESS ANALYTICS & PROFIT LEDGER (Owner-Only)
+// ----------------------------------------------------------------------------
+function renderTournamentAnalytics(analytics, event) {
+    if (!analytics || !event) return;
+
+    const isOwner = (App.currentRole || '').toUpperCase() === 'OWNER';
+    if (!isOwner) return;
+
+    // Top 5 KPI Summary Cards
+    const elEntry = document.getElementById('tana-entry-rev');
+    const elEntrySub = document.getElementById('tana-entry-sub');
+    const elMatch = document.getElementById('tana-match-rev');
+    const elMatchSub = document.getElementById('tana-match-sub');
+    const elGross = document.getElementById('tana-gross-rev');
+    const elGrossSub = document.getElementById('tana-gross-sub');
+    const elPrize = document.getElementById('tana-prize-cost');
+    const elNet = document.getElementById('tana-net-profit');
+    const elMargin = document.getElementById('tana-net-margin');
+
+    if (elEntry) elEntry.innerHTML = `${(analytics.entry_revenue_projected || 6400).toLocaleString()} <span class="tak-curr">ETB</span>`;
+    if (elEntrySub) elEntrySub.textContent = `${analytics.max_players || 32} players × ${analytics.entry_fee_etb || 200} ETB`;
+
+    if (elMatch) elMatch.innerHTML = `${(analytics.match_revenue_projected || 3125).toLocaleString()} <span class="tak-curr">ETB</span>`;
+    if (elMatchSub) elMatchSub.textContent = `${analytics.total_matches_projected || 125} games × ${analytics.loser_match_fee_etb || 25} ETB (loser pays)`;
+
+    if (elGross) elGross.innerHTML = `${(analytics.gross_revenue_projected || 9525).toLocaleString()} <span class="tak-curr">ETB</span>`;
+    if (elGrossSub) elGrossSub.textContent = `Entrance + Match loser fees`;
+
+    if (elPrize) elPrize.innerHTML = `${(analytics.prize_pool_expense || 2500).toLocaleString()} <span class="tak-curr">ETB</span>`;
+
+    if (elNet) elNet.innerHTML = `${(analytics.net_owner_profit_projected || 7025).toLocaleString()} <span class="tak-curr">ETB</span>`;
+    if (elMargin) elMargin.textContent = `${analytics.profit_margin_percent || 73.8}% Net Lounge Profit Margin`;
+
+    // Detailed Ledger Table Breakdown
+    const tbody = document.getElementById('t-ledger-tbody');
+    if (!tbody) return;
+
+    const loserFee = analytics.loser_match_fee_etb || 25;
+    const groupMatchesCount = analytics.group_stage_games || 96;
+    const koMatchesCount = analytics.knockout_stage_games || 29;
+
+    const groupMatchRev = groupMatchesCount * loserFee;
+    const koMatchRev = koMatchesCount * loserFee;
+
+    const ledgerRows = [
+        {
+            item: '1. Player Registration Entrance Fees',
+            rate: `${analytics.entry_fee_etb || 200} ETB / player`,
+            volume: `${analytics.max_players || 32} Players`,
+            proj: `${(analytics.entry_revenue_projected || 6400).toLocaleString()} ETB`,
+            collected: `${(analytics.entry_revenue_collected || 0).toLocaleString()} ETB`,
+            status: analytics.entry_revenue_collected >= analytics.entry_revenue_projected ? '✓ FULLY COLLECTED' : 'ACCUMULATING'
+        },
+        {
+            item: '2. Champions League Group Stage Matches (Loser Pays)',
+            rate: `${loserFee} ETB / match`,
+            volume: `${groupMatchesCount} Games`,
+            proj: `${groupMatchRev.toLocaleString()} ETB`,
+            collected: `${Math.min(groupMatchRev, (analytics.match_revenue_collected || 0)).toLocaleString()} ETB`,
+            status: 'PER-MATCH CASH'
+        },
+        {
+            item: '3. Knockout Stage Matches (Loser Pays)',
+            rate: `${loserFee} ETB / match`,
+            volume: `${koMatchesCount} Games`,
+            proj: `${koMatchRev.toLocaleString()} ETB`,
+            collected: `${Math.max(0, (analytics.match_revenue_collected || 0) - groupMatchRev).toLocaleString()} ETB`,
+            status: 'PER-MATCH CASH'
+        },
+        {
+            item: '4. Gross Tournament Revenue Pool',
+            rate: 'Entrance + Matches',
+            volume: '125 Total Games',
+            proj: `${(analytics.gross_revenue_projected || 9525).toLocaleString()} ETB`,
+            collected: `${(analytics.gross_revenue_collected || 0).toLocaleString()} ETB`,
+            status: 'GROSS CASH'
+        },
+        {
+            item: '5. 1st Place Champion Cash Prize (Lounge Expense)',
+            rate: 'Guaranteed 1st',
+            volume: '1 Champion',
+            proj: '-2,000 ETB',
+            collected: '-2,000 ETB',
+            status: 'PRIZE ESCROW'
+        },
+        {
+            item: '6. 2nd Place Runner-Up Cash Prize (Lounge Expense)',
+            rate: 'Guaranteed 2nd',
+            volume: '1 Finalist',
+            proj: '-500 ETB',
+            collected: '-500 ETB',
+            status: 'PRIZE ESCROW'
+        },
+        {
+            item: '7. NET LOUNGE OWNER PROFIT POCKETED',
+            rate: '~73.8% Margin',
+            volume: 'Net Take-Home',
+            proj: `+${(analytics.net_owner_profit_projected || 7025).toLocaleString()} ETB`,
+            collected: `+${(analytics.net_owner_profit_collected || 0).toLocaleString()} ETB`,
+            status: '★ OWNER POCKET'
+        }
+    ];
+
+    tbody.innerHTML = ledgerRows.map((row, idx) => {
+        const isHighlight = idx === 6;
+        const isExpense = row.proj.startsWith('-');
+        return `
+            <tr style="${isHighlight ? 'background: rgba(16,185,129,0.12); font-weight:700;' : ''}">
+                <td style="color:${isHighlight ? 'var(--emerald)' : 'var(--text-primary)'};">${escapeHtml(row.item)}</td>
+                <td style="color:var(--text-secondary);">${escapeHtml(row.rate)}</td>
+                <td style="color:var(--text-secondary);">${escapeHtml(row.volume)}</td>
+                <td style="color:${isHighlight ? 'var(--emerald)' : (isExpense ? 'var(--rose)' : 'var(--electric)')}; font-weight:700;">${escapeHtml(row.proj)}</td>
+                <td style="color:var(--text-primary); font-weight:600;">${escapeHtml(row.collected)}</td>
+                <td>
+                    <span class="badge ${isHighlight ? 'badge-gold' : (isExpense ? 'badge-rose' : 'badge-cyan')}">${escapeHtml(row.status)}</span>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// ----------------------------------------------------------------------------
+// 10. DOM EVENT INITIALIZATION & MODAL BINDINGS
+// ----------------------------------------------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
+    // Custom club toggle
+    const clubSelect = document.getElementById('reg-player-club');
+    const customClubField = document.getElementById('reg-custom-club-field');
+    if (clubSelect && customClubField) {
+        clubSelect.addEventListener('change', () => {
+            customClubField.style.display = clubSelect.value === 'Other / Custom' ? 'block' : 'none';
+        });
+    }
+
+    // Close tournament modals on backdrop click
+    const tourModals = [
+        'modal-create-event',
+        'modal-register-tourn-player',
+        'modal-match-score-entry',
+        'modal-match-schedule-lock'
+    ];
+    tourModals.forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.remove('open');
+            });
+        }
+    });
+
+    // Update calc on init
+    try { updateTournModalCalc(); } catch (e) {}
+});
 

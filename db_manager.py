@@ -128,17 +128,47 @@ def init_lounges_table():
             lounge_id INTEGER,
             title TEXT NOT NULL,
             game TEXT DEFAULT 'EA FC 25',
+            tournament_format TEXT DEFAULT 'CHAMPIONS_LEAGUE',
+            tournament_duration TEXT DEFAULT '1_MONTH',
             event_date TEXT NOT NULL,
             event_time TEXT NOT NULL,
-            entry_fee REAL DEFAULT 50,
-            max_participants INTEGER DEFAULT 16,
+            entry_fee REAL DEFAULT 200,
+            loser_match_fee REAL DEFAULT 25,
+            max_participants INTEGER DEFAULT 32,
             current_participants INTEGER DEFAULT 0,
-            prize_pool TEXT DEFAULT '2,000 ETB',
+            prize_pool TEXT DEFAULT '2,500 ETB',
+            total_prize_amount REAL DEFAULT 2500,
             status TEXT DEFAULT 'UPCOMING',
+            current_stage TEXT DEFAULT 'REGISTRATION',
+            roster_locked INTEGER DEFAULT 0,
+            draw_completed INTEGER DEFAULT 0,
+            winner_id INTEGER,
+            winner_name TEXT,
             rules TEXT,
             created_at TEXT NOT NULL
         )
     """)
+
+    cursor.execute("PRAGMA table_info(events)")
+    event_cols = [r["name"] for r in cursor.fetchall()]
+    if "tournament_format" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN tournament_format TEXT DEFAULT 'CHAMPIONS_LEAGUE'")
+    if "tournament_duration" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN tournament_duration TEXT DEFAULT '1_MONTH'")
+    if "loser_match_fee" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN loser_match_fee REAL DEFAULT 25")
+    if "total_prize_amount" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN total_prize_amount REAL DEFAULT 2500")
+    if "current_stage" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN current_stage TEXT DEFAULT 'REGISTRATION'")
+    if "roster_locked" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN roster_locked INTEGER DEFAULT 0")
+    if "draw_completed" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN draw_completed INTEGER DEFAULT 0")
+    if "winner_id" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN winner_id INTEGER")
+    if "winner_name" not in event_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN winner_name TEXT")
 
     # Event registrations table
     cursor.execute("""
@@ -148,11 +178,85 @@ def init_lounges_table():
             customer_name TEXT NOT NULL,
             customer_phone TEXT,
             user_id INTEGER,
+            chosen_club TEXT DEFAULT 'Real Madrid',
+            group_letter TEXT,
+            seed_number INTEGER,
             fee_paid INTEGER DEFAULT 0,
             fee_amount REAL DEFAULT 0,
             payment_method TEXT DEFAULT 'CASH',
             checked_in INTEGER DEFAULT 0,
+            matches_played INTEGER DEFAULT 0,
+            won INTEGER DEFAULT 0,
+            drawn INTEGER DEFAULT 0,
+            lost INTEGER DEFAULT 0,
+            goals_for INTEGER DEFAULT 0,
+            goals_against INTEGER DEFAULT 0,
+            goal_diff INTEGER DEFAULT 0,
+            points INTEGER DEFAULT 0,
+            is_eliminated INTEGER DEFAULT 0,
             registered_at TEXT NOT NULL,
+            FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
+        )
+    """)
+
+    cursor.execute("PRAGMA table_info(event_registrations)")
+    reg_cols = [r["name"] for r in cursor.fetchall()]
+    if "chosen_club" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN chosen_club TEXT DEFAULT 'Real Madrid'")
+    if "group_letter" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN group_letter TEXT")
+    if "seed_number" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN seed_number INTEGER")
+    if "matches_played" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN matches_played INTEGER DEFAULT 0")
+    if "won" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN won INTEGER DEFAULT 0")
+    if "drawn" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN drawn INTEGER DEFAULT 0")
+    if "lost" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN lost INTEGER DEFAULT 0")
+    if "goals_for" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN goals_for INTEGER DEFAULT 0")
+    if "goals_against" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN goals_against INTEGER DEFAULT 0")
+    if "goal_diff" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN goal_diff INTEGER DEFAULT 0")
+    if "points" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN points INTEGER DEFAULT 0")
+    if "is_eliminated" not in reg_cols:
+        cursor.execute("ALTER TABLE event_registrations ADD COLUMN is_eliminated INTEGER DEFAULT 0")
+
+    # Tournament matches table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS tournament_matches (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_id INTEGER NOT NULL,
+            stage TEXT NOT NULL,
+            group_letter TEXT,
+            round_number INTEGER DEFAULT 1,
+            match_number INTEGER,
+            leg_number INTEGER DEFAULT 1,
+            player1_id INTEGER,
+            player1_name TEXT,
+            player1_club TEXT,
+            player2_id INTEGER,
+            player2_name TEXT,
+            player2_club TEXT,
+            score1 INTEGER,
+            score2 INTEGER,
+            winner_id INTEGER,
+            winner_name TEXT,
+            loser_id INTEGER,
+            loser_name TEXT,
+            loser_fee_paid INTEGER DEFAULT 0,
+            scheduled_date TEXT,
+            scheduled_time TEXT,
+            date_locked INTEGER DEFAULT 0,
+            tv_station_id INTEGER DEFAULT 1,
+            status TEXT DEFAULT 'SCHEDULED',
+            notes TEXT,
+            created_at TEXT NOT NULL,
+            completed_at TEXT,
             FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE
         )
     """)
@@ -428,16 +532,30 @@ def get_event_by_id(event_id: int) -> dict:
 
 def create_event(owner_id: int, lounge_id: int, title: str, game: str = "EA FC 25",
                  event_date: str = "Upcoming Weekend", event_time: str = "3:00 PM",
-                 entry_fee: float = 50, max_participants: int = 16,
-                 prize_pool: str = "2,000 ETB", rules: str = "") -> dict:
+                 entry_fee: float = 200, max_participants: int = 32,
+                 prize_pool: str = "2,500 ETB", rules: str = "",
+                 tournament_format: str = "CHAMPIONS_LEAGUE",
+                 tournament_duration: str = "1_MONTH",
+                 loser_match_fee: float = 25.0,
+                 total_prize_amount: float = 2500.0) -> dict:
     init_lounges_table()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     connection = get_connection()
     cursor = connection.cursor()
     cursor.execute("""
-        INSERT INTO events (owner_id, lounge_id, title, game, event_date, event_time, entry_fee, max_participants, current_participants, prize_pool, status, rules, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 'UPCOMING', ?, ?)
-    """, (owner_id, lounge_id, title.strip(), game.strip(), event_date.strip(), event_time.strip(), float(entry_fee), int(max_participants), prize_pool.strip(), rules.strip(), now_str))
+        INSERT INTO events (
+            owner_id, lounge_id, title, game, tournament_format, tournament_duration,
+            event_date, event_time, entry_fee, loser_match_fee, max_participants,
+            current_participants, prize_pool, total_prize_amount, status, current_stage,
+            roster_locked, draw_completed, rules, created_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?, 'UPCOMING', 'REGISTRATION', 0, 0, ?, ?)
+    """, (
+        owner_id, lounge_id, title.strip(), game.strip(), tournament_format.strip(),
+        tournament_duration.strip(), event_date.strip(), event_time.strip(),
+        float(entry_fee), float(loser_match_fee), int(max_participants),
+        prize_pool.strip(), float(total_prize_amount), rules.strip(), now_str
+    ))
     connection.commit()
     new_id = cursor.lastrowid
     cursor.execute("SELECT * FROM events WHERE id = ?", (new_id,))
@@ -452,7 +570,12 @@ def update_event(event_id: int, data: dict = None, **kwargs) -> dict:
     cursor = connection.cursor()
     updates = []
     params = []
-    allowed = ["title", "game", "event_date", "event_time", "entry_fee", "max_participants", "prize_pool", "status", "rules"]
+    allowed = [
+        "title", "game", "tournament_format", "tournament_duration", "event_date",
+        "event_time", "entry_fee", "loser_match_fee", "max_participants", "prize_pool",
+        "total_prize_amount", "status", "current_stage", "roster_locked", "draw_completed",
+        "winner_id", "winner_name", "rules"
+    ]
     for k in allowed:
         if k in payload and payload[k] is not None:
             updates.append(f"{k} = ?")
@@ -479,6 +602,7 @@ def delete_event(event_id: int, owner_id: int = None) -> dict:
         if not cursor.fetchone():
             connection.close()
             return {"success": False, "message": "Unauthorized or event not found."}
+    cursor.execute("DELETE FROM tournament_matches WHERE event_id = ?", (event_id,))
     cursor.execute("DELETE FROM event_registrations WHERE event_id = ?", (event_id,))
     cursor.execute("DELETE FROM events WHERE id = ?", (event_id,))
     connection.commit()
@@ -487,7 +611,7 @@ def delete_event(event_id: int, owner_id: int = None) -> dict:
 
 def register_for_event(event_id: int, customer_name: str, customer_phone: str = "",
                        user_id: int = None, fee_paid: int = 0, fee_amount: float = 0,
-                       payment_method: str = "CASH") -> dict:
+                       payment_method: str = "CASH", chosen_club: str = "Real Madrid") -> dict:
     init_lounges_table()
     connection = get_connection()
     cursor = connection.cursor()
@@ -497,7 +621,7 @@ def register_for_event(event_id: int, customer_name: str, customer_phone: str = 
         connection.close()
         return {"success": False, "message": "Event not found."}
 
-    max_p = event["max_participants"] or 16
+    max_p = event["max_participants"] or 32
     curr_p = event["current_participants"] or 0
     if curr_p >= max_p:
         connection.close()
@@ -505,9 +629,16 @@ def register_for_event(event_id: int, customer_name: str, customer_phone: str = 
 
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute("""
-        INSERT INTO event_registrations (event_id, customer_name, customer_phone, user_id, fee_paid, fee_amount, payment_method, checked_in, registered_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)
-    """, (event_id, customer_name.strip(), customer_phone.strip(), user_id, int(fee_paid), float(fee_amount or event["entry_fee"]), payment_method, now_str))
+        INSERT INTO event_registrations (
+            event_id, customer_name, customer_phone, user_id, chosen_club,
+            fee_paid, fee_amount, payment_method, checked_in, registered_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+    """, (
+        event_id, customer_name.strip(), customer_phone.strip(), user_id,
+        chosen_club.strip() or "Real Madrid", int(fee_paid),
+        float(fee_amount or event["entry_fee"]), payment_method, now_str
+    ))
     
     # Increment participant count
     new_curr = curr_p + 1
@@ -551,6 +682,541 @@ def get_event_participants(event_id: int) -> list:
     rows = cursor.fetchall()
     connection.close()
     return [dict(r) for r in rows]
+
+# -------------------------------------------------------------
+# TOURNAMENT CHAMPIONS LEAGUE 2010 & LOTTERY DRAW SUITE
+# -------------------------------------------------------------
+
+DEMO_CLUBS_POOL = [
+    "Real Madrid", "Manchester City", "Arsenal", "Barcelona",
+    "Bayern Munich", "Liverpool", "Paris Saint-Germain", "Inter Milan",
+    "Chelsea", "AC Milan", "Atletico Madrid", "Bayer Leverkusen",
+    "Juventus", "Borussia Dortmund", "Aston Villa", "Napoli",
+    "Tottenham", "AS Roma", "FC Porto", "SL Benfica",
+    "Sporting CP", "Ajax", "Newcastle United", "Real Sociedad",
+    "AS Monaco", "Galatasaray", "Lazio", "Fenerbahce",
+    "Sevilla", "Girona", "Atalanta", "PSV Eindhoven"
+]
+
+DEMO_GAMERS_POOL = [
+    ("Abel Tesfaye", "0911234001"), ("Dawit Bekele", "0911234002"),
+    ("Sami Haile", "0911234003"), ("Henok Alemayehu", "0911234004"),
+    ("Natnael Girma", "0911234005"), ("Eyob Tadesse", "0911234006"),
+    ("Biruk Mengistu", "0911234007"), ("Robel Desta", "0911234008"),
+    ("Yohannes Kassa", "0911234009"), ("Aman Worku", "0911234010"),
+    ("Brook Assefa", "0911234011"), ("Kirubel Mulugeta", "0911234012"),
+    ("Mikias Fikre", "0911234013"), ("Yared Solomon", "0911234014"),
+    ("Blen Kebede", "0911234015"), ("Kaleb Zewde", "0911234016"),
+    ("Nahom Berhanu", "0911234017"), ("Surafel Tefera", "0911234018"),
+    ("Binyam Negash", "0911234019"), ("Dagmawi Ayele", "0911234020"),
+    ("Fasika Welde", "0911234021"), ("Yonatan Sisay", "0911234022"),
+    ("Samuel Belay", "0911234023"), ("Nebiyu Getachew", "0911234024"),
+    ("Leul Kassahun", "0911234025"), ("Kidus Yohannes", "0911234026"),
+    ("Temesgen Endale", "0911234027"), ("Bereket Wolde", "0911234028"),
+    ("Ephrem Hailu", "0911234029"), ("Ermias Fisseha", "0911234030"),
+    ("Hailemariam G.", "0911234031"), ("Tewodros Kassaye", "0911234032")
+]
+
+def seed_demo_roster(event_id: int) -> dict:
+    """Fills the tournament roster up to max_participants with realistic gamers and clubs for instant testing."""
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM events WHERE id = ?", (event_id,))
+    event = cursor.fetchone()
+    if not event:
+        connection.close()
+        return {"success": False, "message": "Tournament not found."}
+    
+    max_p = event["max_participants"] or 32
+    cursor.execute("SELECT customer_name FROM event_registrations WHERE event_id = ?", (event_id,))
+    existing_names = set(r["customer_name"] for r in cursor.fetchall())
+    
+    curr = len(existing_names)
+    needed = max_p - curr
+    if needed <= 0:
+        connection.close()
+        return {"success": True, "message": f"Roster already full ({curr}/{max_p}).", "count": curr}
+
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    entry_fee = event["entry_fee"] or 200
+    added = 0
+    import random
+    
+    for i, (name, phone) in enumerate(DEMO_GAMERS_POOL):
+        if added >= needed:
+            break
+        if name in existing_names:
+            continue
+        club = DEMO_CLUBS_POOL[(curr + added) % len(DEMO_CLUBS_POOL)]
+        cursor.execute("""
+            INSERT INTO event_registrations (
+                event_id, customer_name, customer_phone, chosen_club, fee_paid,
+                fee_amount, payment_method, checked_in, registered_at
+            )
+            VALUES (?, ?, ?, ?, 1, ?, 'CASH', 1, ?)
+        """, (event_id, name, phone, club, float(entry_fee), now_str))
+        added += 1
+
+    total_now = curr + added
+    cursor.execute("UPDATE events SET current_participants = ? WHERE id = ?", (total_now, event_id))
+    connection.commit()
+    connection.close()
+    return {"success": True, "message": f"Successfully registered {added} gamers to roster ({total_now}/{max_p}).", "count": total_now}
+
+def lock_tournament_roster(event_id: int) -> dict:
+    """Locks the roster so that no more registrations can occur and the lottery ball draw can be held."""
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("UPDATE events SET roster_locked = 1 WHERE id = ?", (event_id,))
+    connection.commit()
+    connection.close()
+    return {"success": True, "message": "Roster locked! Tournament is ready for the Lottery Ball Draw."}
+
+def execute_tournament_lottery_draw(event_id: int) -> dict:
+    """
+    Simulates the Glass Sphere / Lottery Tumbler ball draw:
+    Randomly assigns registered participants into Groups of 4 (e.g. Groups A to H for 32 players),
+    generates all 96 group stage matches (double round-robin 12 matches per group),
+    and pre-generates the 29 knockout stage matches (Round of 16, QF, SF, Final) = 125 games total!
+    """
+    import random
+    from datetime import timedelta
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    
+    cursor.execute("SELECT * FROM events WHERE id = ?", (event_id,))
+    event = cursor.fetchone()
+    if not event:
+        connection.close()
+        return {"success": False, "message": "Tournament not found."}
+
+    cursor.execute("SELECT * FROM event_registrations WHERE event_id = ? ORDER BY id ASC", (event_id,))
+    regs = [dict(r) for r in cursor.fetchall()]
+    if len(regs) < 4:
+        connection.close()
+        return {"success": False, "message": f"Need at least 4 registered players to hold a draw (currently {len(regs)})."}
+
+    # Clear any previous matches for this event
+    cursor.execute("DELETE FROM tournament_matches WHERE event_id = ?", (event_id,))
+
+    # Shuffle for fairness (pure random lottery ball tumbling)
+    random.shuffle(regs)
+
+    fmt = (event["tournament_format"] or "CHAMPIONS_LEAGUE").upper()
+    now_dt = datetime.now()
+    duration = event["tournament_duration"] or "1_MONTH"
+    
+    # Calculate days spread
+    total_days = 30
+    if duration == "2_WEEKS":
+        total_days = 14
+    elif duration == "2_MONTHS":
+        total_days = 60
+
+    if fmt == "CHAMPIONS_LEAGUE":
+        # Group stage: groups of 4
+        # Determine number of groups: 32 -> 8 groups (A-H), 16 -> 4 groups (A-D), 8 -> 2 groups (A-B)
+        num_players = len(regs)
+        num_groups = min(8, max(1, num_players // 4))
+        group_letters = [chr(65 + i) for i in range(num_groups)]  # ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']
+        
+        groups_map = {letter: [] for letter in group_letters}
+        for idx, p in enumerate(regs):
+            g_letter = group_letters[idx % num_groups]
+            seed_num = (idx // num_groups) + 1
+            groups_map[g_letter].append(p)
+            cursor.execute("""
+                UPDATE event_registrations 
+                SET group_letter = ?, seed_number = ?, matches_played = 0, won = 0, drawn = 0, lost = 0,
+                    goals_for = 0, goals_against = 0, goal_diff = 0, points = 0, is_eliminated = 0
+                WHERE id = ?
+            """, (g_letter, seed_num, p["id"]))
+
+        # Generate group stage fixtures (Double Round Robin: home & away, 12 matches per group of 4)
+        match_idx = 1
+        days_for_groups = int(total_days * 0.70)
+        
+        for g_letter, g_players in groups_map.items():
+            gp_len = len(g_players)
+            # Pairings for 4 players: (0,1), (2,3), (0,2), (3,1), (0,3), (1,2)
+            # Home leg:
+            pairs_leg1 = [
+                (0, 1), (2, 3),
+                (0, 2), (3, 1),
+                (0, 3), (1, 2)
+            ]
+            # Away leg (reversed):
+            pairs_leg2 = [
+                (1, 0), (3, 2),
+                (2, 0), (1, 3),
+                (3, 0), (2, 1)
+            ]
+
+            all_pairs = []
+            for p_a, p_b in pairs_leg1:
+                if p_a < gp_len and p_b < gp_len:
+                    all_pairs.append((p_a, p_b, 1))
+            for p_a, p_b in pairs_leg2:
+                if p_a < gp_len and p_b < gp_len:
+                    all_pairs.append((p_a, p_b, 2))
+
+            for (p_a_idx, p_b_idx, leg) in all_pairs:
+                p1 = g_players[p_a_idx]
+                p2 = g_players[p_b_idx]
+                
+                # Suggested date evenly distributed
+                day_offset = (match_idx % max(1, days_for_groups)) + 1
+                sched_dt = now_dt + timedelta(days=day_offset)
+                sched_date_str = sched_dt.strftime("%a, %b %d")
+                sched_time_str = f"{(4 + (match_idx % 4)):02d}:00 PM"
+                st_id = (match_idx % 2) + 1  # Station 1 or Station 2
+                
+                cursor.execute("""
+                    INSERT INTO tournament_matches (
+                        event_id, stage, group_letter, round_number, match_number, leg_number,
+                        player1_id, player1_name, player1_club, player2_id, player2_name, player2_club,
+                        scheduled_date, scheduled_time, tv_station_id, status, created_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SCHEDULED', ?)
+                """, (
+                    event_id, f"GROUP_{g_letter}", g_letter, leg, match_idx, leg,
+                    p1["id"], p1["customer_name"], p1["chosen_club"],
+                    p2["id"], p2["customer_name"], p2["chosen_club"],
+                    sched_date_str, sched_time_str, st_id, now_dt.strftime("%Y-%m-%d %H:%M:%S")
+                ))
+                match_idx += 1
+
+        # Pre-generate Knockout Stage matches
+        # Round of 16 (8 ties x 2 legs = 16 matches)
+        r16_ties = [
+            ("Winner Group A", "Runner-up Group B"),
+            ("Winner Group C", "Runner-up Group D"),
+            ("Winner Group E", "Runner-up Group F"),
+            ("Winner Group G", "Runner-up Group H"),
+            ("Winner Group B", "Runner-up Group A"),
+            ("Winner Group D", "Runner-up Group C"),
+            ("Winner Group F", "Runner-up Group E"),
+            ("Winner Group H", "Runner-up Group G"),
+        ]
+        ko_start_day = int(total_days * 0.72)
+        for tie_i, (t1, t2) in enumerate(r16_ties):
+            for leg_i in [1, 2]:
+                sched_dt = now_dt + timedelta(days=ko_start_day + tie_i + (leg_i * 2))
+                cursor.execute("""
+                    INSERT INTO tournament_matches (
+                        event_id, stage, round_number, match_number, leg_number,
+                        player1_name, player1_club, player2_name, player2_club,
+                        scheduled_date, scheduled_time, tv_station_id, status, notes, created_at
+                    )
+                    VALUES (?, 'ROUND_OF_16', 3, ?, ?, ?, 'TBD', ?, 'TBD', ?, '05:00 PM', 1, 'SCHEDULED', ?, ?)
+                """, (
+                    event_id, match_idx, leg_i, t1, t2,
+                    sched_dt.strftime("%a, %b %d"), f"R16 Tie #{tie_i+1} Leg {leg_i}",
+                    now_dt.strftime("%Y-%m-%d %H:%M:%S")
+                ))
+                match_idx += 1
+
+        # Quarterfinals (4 ties x 2 legs = 8 matches)
+        qf_start_day = int(total_days * 0.85)
+        for qf_i in range(4):
+            for leg_i in [1, 2]:
+                sched_dt = now_dt + timedelta(days=qf_start_day + qf_i + (leg_i * 2))
+                cursor.execute("""
+                    INSERT INTO tournament_matches (
+                        event_id, stage, round_number, match_number, leg_number,
+                        player1_name, player1_club, player2_name, player2_club,
+                        scheduled_date, scheduled_time, tv_station_id, status, notes, created_at
+                    )
+                    VALUES (?, 'QUARTER_FINAL', 4, ?, ?, ?, 'TBD', ?, 'TBD', ?, '06:00 PM', 1, 'SCHEDULED', ?, ?)
+                """, (
+                    event_id, match_idx, leg_i, f"QF {qf_i+1} Player A", f"QF {qf_i+1} Player B",
+                    sched_dt.strftime("%a, %b %d"), f"Quarterfinal #{qf_i+1} Leg {leg_i}",
+                    now_dt.strftime("%Y-%m-%d %H:%M:%S")
+                ))
+                match_idx += 1
+
+        # Semifinals (2 ties x 2 legs = 4 matches)
+        sf_start_day = int(total_days * 0.93)
+        for sf_i in range(2):
+            for leg_i in [1, 2]:
+                sched_dt = now_dt + timedelta(days=sf_start_day + sf_i + (leg_i * 2))
+                cursor.execute("""
+                    INSERT INTO tournament_matches (
+                        event_id, stage, round_number, match_number, leg_number,
+                        player1_name, player1_club, player2_name, player2_club,
+                        scheduled_date, scheduled_time, tv_station_id, status, notes, created_at
+                    )
+                    VALUES (?, 'SEMI_FINAL', 5, ?, ?, ?, 'TBD', ?, 'TBD', ?, '06:30 PM', 1, 'SCHEDULED', ?, ?)
+                """, (
+                    event_id, match_idx, leg_i, f"SF {sf_i+1} Player A", f"SF {sf_i+1} Player B",
+                    sched_dt.strftime("%a, %b %d"), f"Semifinal #{sf_i+1} Leg {leg_i}",
+                    now_dt.strftime("%Y-%m-%d %H:%M:%S")
+                ))
+                match_idx += 1
+
+        # Grand Final (1 match)
+        final_dt = now_dt + timedelta(days=total_days)
+        cursor.execute("""
+            INSERT INTO tournament_matches (
+                event_id, stage, round_number, match_number, leg_number,
+                player1_name, player1_club, player2_name, player2_club,
+                scheduled_date, scheduled_time, tv_station_id, status, notes, created_at
+            )
+            VALUES (?, 'GRAND_FINAL', 6, ?, 1, 'Finalist 1', 'TBD', 'Finalist 2', 'TBD', ?, '07:00 PM', 1, 'SCHEDULED', 'Championship Match', ?)
+        """, (
+            event_id, match_idx, final_dt.strftime("%a, %b %d"),
+            now_dt.strftime("%Y-%m-%d %H:%M:%S")
+        ))
+        
+        cursor.execute("""
+            UPDATE events 
+            SET draw_completed = 1, roster_locked = 1, current_stage = 'GROUP_STAGE', status = 'IN_PROGRESS'
+            WHERE id = ?
+        """, (event_id,))
+
+    else:
+        # Knockout single elimination
+        num_players = len(regs)
+        # Pair adjacent players
+        match_idx = 1
+        for i in range(0, num_players - 1, 2):
+            p1 = regs[i]
+            p2 = regs[i+1]
+            sched_dt = now_dt + timedelta(days=(match_idx % total_days) + 1)
+            cursor.execute("""
+                INSERT INTO tournament_matches (
+                    event_id, stage, round_number, match_number, leg_number,
+                    player1_id, player1_name, player1_club, player2_id, player2_name, player2_club,
+                    scheduled_date, scheduled_time, tv_station_id, status, created_at
+                )
+                VALUES (?, 'ROUND_1', 1, ?, 1, ?, ?, ?, ?, ?, ?, ?, '04:00 PM', 1, 'SCHEDULED', ?)
+            """, (
+                event_id, match_idx, p1["id"], p1["customer_name"], p1["chosen_club"],
+                p2["id"], p2["customer_name"], p2["chosen_club"],
+                sched_dt.strftime("%a, %b %d"), now_dt.strftime("%Y-%m-%d %H:%M:%S")
+            ))
+            match_idx += 1
+            
+        cursor.execute("""
+            UPDATE events 
+            SET draw_completed = 1, roster_locked = 1, current_stage = 'KNOCKOUT_STAGE', status = 'IN_PROGRESS'
+            WHERE id = ?
+        """, (event_id,))
+
+    connection.commit()
+    connection.close()
+    return {"success": True, "message": "UEFA Lottery Ball Draw complete! Groups seeded and match fixtures generated."}
+
+def get_tournament_full_hub(event_id: int, is_owner: bool = False) -> dict:
+    """Returns the complete tournament state: event, participants, standings, fixtures, bracket, and business analytics."""
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM events WHERE id = ?", (event_id,))
+    event_row = cursor.fetchone()
+    if not event_row:
+        connection.close()
+        return {"success": False, "message": "Tournament not found."}
+    event = dict(event_row)
+
+    # Participants
+    cursor.execute("""
+        SELECT * FROM event_registrations 
+        WHERE event_id = ? 
+        ORDER BY group_letter ASC, points DESC, goal_diff DESC, goals_for DESC, id ASC
+    """, (event_id,))
+    participants = [dict(r) for r in cursor.fetchall()]
+
+    # Group standings map
+    groups_dict = {}
+    for p in participants:
+        g = p.get("group_letter") or "UNASSIGNED"
+        if g not in groups_dict:
+            groups_dict[g] = []
+        groups_dict[g].append(p)
+
+    # Sort each group by PTS desc, GD desc, GF desc, and mark top 2 as qualified
+    for g, p_list in groups_dict.items():
+        if g != "UNASSIGNED":
+            p_list.sort(key=lambda x: (x.get("points") or 0, x.get("goal_diff") or 0, x.get("goals_for") or 0), reverse=True)
+            for idx, p in enumerate(p_list):
+                p["group_rank"] = idx + 1
+                p["is_top_2"] = (idx < 2)
+
+    # Matches
+    cursor.execute("""
+        SELECT * FROM tournament_matches 
+        WHERE event_id = ? 
+        ORDER BY id ASC
+    """, (event_id,))
+    matches = [dict(r) for r in cursor.fetchall()]
+
+    # Business Analytics (Strictly for Lounge Owner)
+    analytics = None
+    if is_owner:
+        total_p = event.get("max_participants") or 32
+        reg_count = len(participants)
+        entry_fee = float(event.get("entry_fee") or 200)
+        loser_fee = float(event.get("loser_match_fee") or 25)
+        
+        # Projected matches:
+        fmt = (event.get("tournament_format") or "CHAMPIONS_LEAGUE").upper()
+        if fmt == "CHAMPIONS_LEAGUE":
+            total_proj_matches = 125 if total_p >= 32 else 61
+        else:
+            total_proj_matches = 31 if total_p >= 32 else 15
+            
+        completed_matches = len([m for m in matches if m.get("status") == "COMPLETED"])
+        paid_regs = len([p for p in participants if p.get("fee_paid") == 1])
+
+        entry_rev_proj = total_p * entry_fee
+        entry_rev_collected = paid_regs * entry_fee
+        match_rev_proj = total_proj_matches * loser_fee
+        match_rev_collected = completed_matches * loser_fee
+
+        gross_proj = entry_rev_proj + match_rev_proj
+        gross_collected = entry_rev_collected + match_rev_collected
+
+        prize_pool = float(event.get("total_prize_amount") or 2500)
+        net_profit_proj = gross_proj - prize_pool
+        net_profit_collected = gross_collected - prize_pool
+
+        margin_pct = round((net_profit_proj / gross_proj * 100), 1) if gross_proj > 0 else 0
+
+        analytics = {
+            "entry_fee_etb": entry_fee,
+            "max_players": total_p,
+            "registered_players": reg_count,
+            "paid_players": paid_regs,
+            "entry_revenue_projected": entry_rev_proj,
+            "entry_revenue_collected": entry_rev_collected,
+            "loser_match_fee_etb": loser_fee,
+            "total_matches_projected": total_proj_matches,
+            "completed_matches_count": completed_matches,
+            "match_revenue_projected": match_rev_proj,
+            "match_revenue_collected": match_rev_collected,
+            "gross_revenue_projected": gross_proj,
+            "gross_revenue_collected": gross_collected,
+            "prize_pool_expense": prize_pool,
+            "net_owner_profit_projected": net_profit_proj,
+            "net_owner_profit_collected": net_profit_collected,
+            "profit_margin_percent": margin_pct,
+            "group_stage_games": 96 if fmt == "CHAMPIONS_LEAGUE" else 0,
+            "knockout_stage_games": 29 if fmt == "CHAMPIONS_LEAGUE" else total_proj_matches
+        }
+
+    connection.close()
+    return {
+        "success": True,
+        "event": event,
+        "participants": participants,
+        "groups": groups_dict,
+        "matches": matches,
+        "business_analytics": analytics
+    }
+
+def record_match_result(match_id: int, score1: int, score2: int, notes: str = "") -> dict:
+    """Owner inputs the match result, updating standings, advancing bracket, and auditing loser fee."""
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("SELECT * FROM tournament_matches WHERE id = ?", (match_id,))
+    match = cursor.fetchone()
+    if not match:
+        connection.close()
+        return {"success": False, "message": "Match not found."}
+
+    event_id = match["event_id"]
+    p1_id = match["player1_id"]
+    p2_id = match["player2_id"]
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    winner_id = None
+    winner_name = None
+    loser_id = None
+    loser_name = None
+
+    if score1 > score2:
+        winner_id = p1_id
+        winner_name = match["player1_name"]
+        loser_id = p2_id
+        loser_name = match["player2_name"]
+    elif score2 > score1:
+        winner_id = p2_id
+        winner_name = match["player2_name"]
+        loser_id = p1_id
+        loser_name = match["player1_name"]
+
+    cursor.execute("""
+        UPDATE tournament_matches
+        SET score1 = ?, score2 = ?, winner_id = ?, winner_name = ?,
+            loser_id = ?, loser_name = ?, loser_fee_paid = 1,
+            status = 'COMPLETED', notes = ?, completed_at = ?
+        WHERE id = ?
+    """, (score1, score2, winner_id, winner_name, loser_id, loser_name, notes, now_str, match_id))
+
+    # Update Group Stage standings if this was a group match
+    if match["group_letter"] and p1_id and p2_id:
+        def update_player_stats(p_id, goals_scored, goals_conceded, result_type):
+            cursor.execute("SELECT * FROM event_registrations WHERE id = ?", (p_id,))
+            p = cursor.fetchone()
+            if not p: return
+            p_played = (p["matches_played"] or 0) + 1
+            p_won = (p["won"] or 0) + (1 if result_type == "W" else 0)
+            p_drawn = (p["drawn"] or 0) + (1 if result_type == "D" else 0)
+            p_lost = (p["lost"] or 0) + (1 if result_type == "L" else 0)
+            p_gf = (p["goals_for"] or 0) + goals_scored
+            p_ga = (p["goals_against"] or 0) + goals_conceded
+            p_gd = p_gf - p_ga
+            p_pts = (p["points"] or 0) + (3 if result_type == "W" else (1 if result_type == "D" else 0))
+
+            cursor.execute("""
+                UPDATE event_registrations
+                SET matches_played = ?, won = ?, drawn = ?, lost = ?,
+                    goals_for = ?, goals_against = ?, goal_diff = ?, points = ?
+                WHERE id = ?
+            """, (p_played, p_won, p_drawn, p_lost, p_gf, p_ga, p_gd, p_pts, p_id))
+
+        if score1 > score2:
+            update_player_stats(p1_id, score1, score2, "W")
+            update_player_stats(p2_id, score2, score1, "L")
+        elif score2 > score1:
+            update_player_stats(p1_id, score1, score2, "L")
+            update_player_stats(p2_id, score2, score1, "W")
+        else:
+            update_player_stats(p1_id, score1, score2, "D")
+            update_player_stats(p2_id, score2, score1, "D")
+
+    # If this was the Grand Final, crown champion
+    if match["stage"] == "GRAND_FINAL" and winner_name:
+        cursor.execute("""
+            UPDATE events 
+            SET winner_id = ?, winner_name = ?, status = 'COMPLETED', current_stage = 'COMPLETED'
+            WHERE id = ?
+        """, (winner_id, winner_name, event_id))
+
+    connection.commit()
+    connection.close()
+    return {"success": True, "message": f"Match result recorded ({score1}-{score2}). Live standings updated."}
+
+def update_match_schedule(match_id: int, scheduled_date: str, scheduled_time: str, tv_station_id: int = 1) -> dict:
+    """Owner locks in agreed match date and time after discussing with the players."""
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("""
+        UPDATE tournament_matches
+        SET scheduled_date = ?, scheduled_time = ?, tv_station_id = ?, date_locked = 1
+        WHERE id = ?
+    """, (scheduled_date.strip(), scheduled_time.strip(), int(tv_station_id or 1), match_id))
+    connection.commit()
+    connection.close()
+    return {"success": True, "message": f"Agreed match schedule locked for {scheduled_date} at {scheduled_time} (TV {tv_station_id})."}
 
 # ----------------------------------------
 # PROMOTIONS & ANNOUNCEMENT ADS MANAGEMENT

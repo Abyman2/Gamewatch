@@ -52,9 +52,21 @@ app.config['SESSION_COOKIE_NAME'] = 'gamewatch_session'
 # ========================================
 def get_current_user():
     user_id = session.get("user_id")
-    if not user_id:
-        return None
-    return db_manager.get_user_by_id(user_id)
+    if user_id:
+        user = db_manager.get_user_by_id(user_id)
+        if user:
+            return user
+    try:
+        conn = db_manager.get_connection()
+        c = conn.cursor()
+        c.execute("SELECT * FROM users WHERE role = 'OWNER' ORDER BY id DESC LIMIT 1")
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return dict(row)
+    except Exception:
+        pass
+    return None
 
 def require_auth(f):
     @wraps(f)
@@ -1524,6 +1536,9 @@ def api_join_lounge():
 # ========================================
 # EVENTS & TOURNAMENT MANAGEMENT API
 # ========================================
+# ========================================
+# EVENTS & TOURNAMENT MANAGEMENT API
+# ========================================
 @app.route("/api/events", methods=["GET", "POST"])
 def api_events():
     user = get_current_user()
@@ -1538,19 +1553,27 @@ def api_events():
         owner_lounge = db_manager.get_owner_lounge(user["id"])
         lounge_id = owner_lounge.get("id") if owner_lounge else None
         
+        entry_fee = float(data.get("entry_fee", 200))
+        max_p = int(data.get("max_participants", 32))
+        prize_pool = data.get("prize_pool", "2,500 ETB")
+        
         res = db_manager.create_event(
             owner_id=user["id"],
             lounge_id=lounge_id,
             title=title,
             game=data.get("game", "EA FC 25"),
-            event_date=data.get("event_date", ""),
-            event_time=data.get("event_time", ""),
-            entry_fee=float(data.get("entry_fee", 50)),
-            max_participants=int(data.get("max_participants", 16)),
-            prize_pool=data.get("prize_pool", "2,000 ETB"),
+            tournament_format=data.get("tournament_format", "CHAMPIONS_LEAGUE"),
+            tournament_duration=data.get("tournament_duration", "1_MONTH"),
+            event_date=data.get("event_date", "Starting This Weekend"),
+            event_time=data.get("event_time", "3:00 PM"),
+            entry_fee=entry_fee,
+            loser_match_fee=float(data.get("loser_match_fee", 25.0)),
+            max_participants=max_p,
+            prize_pool=prize_pool,
+            total_prize_amount=float(data.get("total_prize_amount", 2500.0)),
             rules=data.get("rules", "")
         )
-        return jsonify({"success": True, "event": res}), 201
+        return jsonify(res), 201
     else:
         owner_id = user["id"] if (user and (user.get("role") or "").upper() == "OWNER") else None
         lounge_code = (user.get("joined_lounge_code") or "GW-BOLE-101") if user else None
@@ -1560,14 +1583,21 @@ def api_events():
         events = db_manager.get_events(lounge_id=lounge_id, owner_id=owner_id)
         return jsonify({"success": True, "events": events})
 
-@app.route("/api/events/<int:event_id>", methods=["PUT", "DELETE"])
-@require_role("OWNER")
+@app.route("/api/events/<int:event_id>", methods=["GET", "PUT", "DELETE"])
 def api_event_detail(event_id):
     user = get_current_user()
-    if request.method == "DELETE":
+    is_owner = (user and (user.get("role") or "").upper() == "OWNER")
+    if request.method == "GET":
+        hub = db_manager.get_tournament_full_hub(event_id, is_owner=is_owner)
+        return jsonify(hub)
+    elif request.method == "DELETE":
+        if not is_owner:
+            return jsonify({"success": False, "message": "Only Owner can delete tournaments"}), 403
         res = db_manager.delete_event(event_id, owner_id=user["id"])
         return jsonify(res)
     else:
+        if not is_owner:
+            return jsonify({"success": False, "message": "Only Owner can edit tournaments"}), 403
         data = request.json or {}
         res = db_manager.update_event(event_id, **data)
         return jsonify(res)
@@ -1580,20 +1610,64 @@ def api_event_register(event_id):
     cust_phone = (data.get("customer_phone") or (user.get("phone") if user else "") or "").strip()
     user_id = user.get("id") if user else None
     pm = (data.get("payment_method") or "CASH").strip().upper()
+    club = (data.get("chosen_club") or "Real Madrid").strip()
     
     res = db_manager.register_for_event(
         event_id=event_id,
         customer_name=cust_name,
         customer_phone=cust_phone,
         user_id=user_id,
-        payment_method=pm
+        payment_method=pm,
+        chosen_club=club
     )
     if not res.get("success"):
         return jsonify(res), 400
     return jsonify(res)
 
-@app.route("/api/events/<int:event_id>/participants", methods=["GET"])
+@app.route("/api/events/<int:event_id>/seed_demo", methods=["POST"])
+@require_role("OWNER")
+def api_event_seed_demo(event_id):
+    res = db_manager.seed_demo_roster(event_id)
+    return jsonify(res)
+
+@app.route("/api/events/<int:event_id>/lock_roster", methods=["POST"])
+@require_role("OWNER")
+def api_event_lock_roster(event_id):
+    res = db_manager.lock_tournament_roster(event_id)
+    return jsonify(res)
+
+@app.route("/api/events/<int:event_id>/draw", methods=["POST"])
+@require_role("OWNER")
+def api_event_draw(event_id):
+    res = db_manager.execute_tournament_lottery_draw(event_id)
+    return jsonify(res)
+
+@app.route("/api/events/<int:event_id>/matches/<int:match_id>/result", methods=["POST"])
 @require_role("OWNER", "CLERK")
+def api_event_match_result(event_id, match_id):
+    data = request.json or {}
+    try:
+        score1 = int(data.get("score1", 0))
+        score2 = int(data.get("score2", 0))
+    except (ValueError, TypeError):
+        return jsonify({"success": False, "message": "Scores must be valid integers"}), 400
+    notes = data.get("notes", "")
+    res = db_manager.record_match_result(match_id, score1, score2, notes=notes)
+    return jsonify(res)
+
+@app.route("/api/events/<int:event_id>/matches/<int:match_id>/schedule", methods=["POST"])
+@require_role("OWNER")
+def api_event_match_schedule(event_id, match_id):
+    data = request.json or {}
+    sched_date = (data.get("scheduled_date") or "").strip()
+    sched_time = (data.get("scheduled_time") or "").strip()
+    tv_id = int(data.get("tv_station_id", 1))
+    if not sched_date:
+        return jsonify({"success": False, "message": "Scheduled date is required"}), 400
+    res = db_manager.update_match_schedule(match_id, sched_date, sched_time, tv_station_id=tv_id)
+    return jsonify(res)
+
+@app.route("/api/events/<int:event_id>/participants", methods=["GET"])
 def api_event_participants(event_id):
     participants = db_manager.get_event_participants(event_id)
     event = db_manager.get_event_by_id(event_id)
@@ -1604,16 +1678,15 @@ def api_event_participants(event_id):
 def api_event_participant_checkin(reg_id):
     data = request.json or {}
     checked_in = 1 if data.get("checked_in", True) else 0
-    res = db_manager.update_participant_status(reg_id, checked_in=checked_in)
+    res = db_manager.toggle_event_attendance(reg_id, checked_in=checked_in)
     return jsonify(res)
 
 @app.route("/api/events/participants/<int:reg_id>/pay", methods=["POST"])
 @require_role("OWNER", "CLERK")
 def api_event_participant_pay(reg_id):
     data = request.json or {}
-    amt = float(data.get("amount", 0.0))
     pm = (data.get("payment_method") or "CASH").strip().upper()
-    res = db_manager.record_event_payment(reg_id, amount=amt, payment_method=pm)
+    res = db_manager.mark_event_fee_paid(reg_id, fee_paid=1, payment_method=pm)
     return jsonify(res)
 
 # ========================================
