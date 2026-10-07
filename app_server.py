@@ -655,16 +655,24 @@ class LoungeManager:
                 active_rate = 25.0
 
             user_role = (user.get("role") or "").upper() if user else ""
-            user_lounge_code = user.get("lounge_code") if user_role == "OWNER" else (user.get("joined_lounge_code") or "GW-BOLE-101") if user else "GW-BOLE-101"
+            if user_role == "OWNER" and user:
+                owner_lounge = db_manager.get_owner_lounge(user["id"])
+                if not owner_lounge:
+                    owner_lounge = db_manager.create_or_ensure_owner_lounge(user["id"], lounge_name=f"{user.get('full_name', 'My')}'s Lounge")
+                user_lounge_code = owner_lounge.get("lounge_code", f"GW-OWNER-{user['id']:03d}")
+                active_lounge = owner_lounge
+            else:
+                user_lounge_code = (user.get("joined_lounge_code") or "GW-BOLE-101") if user else "GW-BOLE-101"
+                active_lounge = db_manager.get_lounge_by_code(user_lounge_code)
             
             # Fetch lounge details
-            active_lounge = db_manager.get_lounge_by_code(user_lounge_code)
             lounge_name = active_lounge.get("name") if active_lounge else lounge_cfg.get("lounge_name", "GameWatch Lounge")
             if active_lounge and "rate_per_game" in active_lounge:
                 try:
                     active_rate = float(active_lounge["rate_per_game"])
                 except Exception:
                     pass
+
 
             tvs_data = []
             total_active = 0
@@ -1175,7 +1183,7 @@ def api_lounge_config():
 
         db_manager.update_lounge_configs(data)
         
-        db_manager.update_owner_lounge(
+        updated_lounge = db_manager.update_owner_lounge(
             owner_id=user["id"],
             name=data.get("lounge_name"),
             address=data.get("contact_address"),
@@ -1184,9 +1192,27 @@ def api_lounge_config():
             email=data.get("contact_email"),
             rate_per_game=data.get("price_per_game")
         )
-        return jsonify({"success": True, "message": "Lounge settings saved.", "config": db_manager.get_lounge_config()})
+        return jsonify({
+            "success": True,
+            "message": "Lounge settings saved successfully.",
+            "lounge": updated_lounge,
+            "config": db_manager.get_lounge_config()
+        })
     else:
-        return jsonify({"success": True, "config": db_manager.get_lounge_config()})
+        user = get_current_user()
+        cfg = db_manager.get_lounge_config()
+        if user and (user.get("role") or "").upper() == "OWNER":
+            owner_lounge = db_manager.get_owner_lounge(user["id"])
+            if owner_lounge:
+                cfg["lounge_name"] = owner_lounge.get("name") or cfg.get("lounge_name")
+                cfg["lounge_code"] = owner_lounge.get("lounge_code") or cfg.get("lounge_code")
+                cfg["lounge_area"] = owner_lounge.get("area") or cfg.get("lounge_area")
+                cfg["contact_address"] = owner_lounge.get("address") or cfg.get("contact_address")
+                cfg["contact_phone"] = owner_lounge.get("phone") or cfg.get("contact_phone")
+                cfg["contact_email"] = owner_lounge.get("email") or cfg.get("contact_email")
+                cfg["price_per_game"] = str(owner_lounge.get("rate_per_game", cfg.get("price_per_game", 25)))
+        return jsonify({"success": True, "config": cfg})
+
 
 @app.route("/api/users", methods=["GET"])
 @require_role("OWNER")
@@ -1311,8 +1337,19 @@ def api_auth_register():
         return jsonify({"success": False, "message": msg, "error": msg}), 400
 
     user = res["user"]
+    if role_to_set == "OWNER":
+        lounge_name = (data.get("lounge_name") or f"{full_name}'s GameZone").strip()
+        lounge = db_manager.create_or_ensure_owner_lounge(user["id"], lounge_name=lounge_name)
+        if lounge and lounge.get("lounge_code"):
+            conn = db_manager.get_connection()
+            conn.cursor().execute("UPDATE users SET lounge_code = ? WHERE id = ?", (lounge["lounge_code"], user["id"]))
+            conn.commit()
+            conn.close()
+            user["lounge_code"] = lounge["lounge_code"]
+
     session["user_id"] = user["id"]
     safe_user = {k: v for k, v in user.items() if k != "password_hash"}
+
     return jsonify({
         "success": True,
         "message": f"Welcome, {full_name}!",
@@ -1783,6 +1820,18 @@ def api_auth_me():
     if not user:
         return jsonify({"authenticated": False}), 401
     safe_user = {k: v for k, v in user.items() if k != "password_hash"}
+    user_id = user.get("id")
+    lounge = None
+    if (user.get("role") or "").upper() == "OWNER" and user_id:
+        lounge = db_manager.get_owner_lounge(user_id)
+        if not lounge:
+            lounge = db_manager.create_or_ensure_owner_lounge(user_id, lounge_name=f"{user.get('full_name', 'My')}'s Lounge")
+    elif user.get("joined_lounge_code"):
+        lounge = db_manager.get_lounge_by_code(user.get("joined_lounge_code"))
+    if lounge:
+        safe_user["lounge_name"] = lounge.get("name")
+        safe_user["lounge_code"] = lounge.get("lounge_code") or lounge.get("code")
+        safe_user["lounge_area"] = lounge.get("area")
     return jsonify({
         "authenticated": True,
         "user": safe_user,
@@ -1890,6 +1939,17 @@ def api_test_camera_source(source_id):
     try:
         if addr.isdigit():
             cap_idx = int(addr)
+            # Safe non-blocking check on Linux / cloud containers
+            if sys.platform.startswith("linux") and not os.path.exists(f"/dev/video{cap_idx}"):
+                db_manager.update_camera_source(source_id, status="READY", resolution="1280x720")
+                return jsonify({
+                    "success": True,
+                    "connected": False,
+                    "status": "READY",
+                    "resolution": "1280x720",
+                    "message": f"Cloud Mode: Camera {cap_idx} standby. Connects to hardware video on local lounge PC or phone."
+                })
+
             temp_cap = cv2.VideoCapture(cap_idx)
             opened = temp_cap.isOpened()
             if opened:
@@ -1922,10 +1982,24 @@ def api_test_camera_source(source_id):
             parsed = urlparse(addr)
             host = parsed.hostname or addr.split("://")[-1].split(":")[0].split("/")[0]
             port = parsed.port or (554 if "rtsp" in addr.lower() else (4747 if "4747" in addr else 8080))
+            
+            # Check for local private IPs on cloud host
+            is_private_ip = host.startswith("192.168.") or host.startswith("10.") or host.startswith("172.16.")
+            is_cloud = os.environ.get("FLASK_ENV") == "production" or bool(os.environ.get("RENDER"))
+            if is_private_ip and is_cloud:
+                db_manager.update_camera_source(source_id, status="READY", resolution="1920x1080")
+                return jsonify({
+                    "success": True,
+                    "connected": False,
+                    "status": "READY",
+                    "resolution": "1920x1080",
+                    "message": f"Local LAN stream ({host}) configured. Active when phone & PC connect on lounge Wi-Fi hotspot!"
+                })
+
             is_reachable = False
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.settimeout(1.2)
+                s.settimeout(1.0)
                 s.connect((host, port))
                 s.close()
                 is_reachable = True
@@ -1945,11 +2019,12 @@ def api_test_camera_source(source_id):
                 db_manager.update_camera_source(source_id, status="READY", resolution="1920x1080")
                 return jsonify({
                     "success": True,
-                    "connected": True,
+                    "connected": False,
                     "status": "READY",
                     "resolution": "1920x1080",
-                    "message": f"Configured for {target['source_type']} stream. Connect device to WiFi to begin broadcast."
+                    "message": f"Configured for {target['source_type']} stream at {host}. Connect phone to lounge Wi-Fi to broadcast."
                 })
+
     except Exception as e:
         db_manager.update_camera_source(source_id, status="OFFLINE")
         return jsonify({"success": False, "connected": False, "status": "OFFLINE", "message": str(e)}), 400

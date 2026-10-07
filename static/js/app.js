@@ -350,6 +350,22 @@ function renderHeader(data) {
     if (qsTot) qsTot.textContent = data.total_stations;
     if (qsR) qsR.textContent = data.daily_revenue || data.current_lounge_revenue || 0;
     if (qsG) qsG.textContent = data.daily_completed_games || data.total_games || 0;
+
+    // Mobile nav drawer lounge sync
+    const mndName = document.getElementById('mnd-lounge-name');
+    const mndCode = document.getElementById('mnd-lounge-code');
+    const mndRole = document.getElementById('mnd-role-badge');
+    if (mndName && (data.lounge_name || (App.currentUser && App.currentUser.lounge_name))) {
+        mndName.textContent = data.lounge_name || App.currentUser.lounge_name;
+    }
+    if (mndCode && (data.lounge_code || (App.currentUser && App.currentUser.lounge_code))) {
+        const code = data.lounge_code || App.currentUser.lounge_code;
+        const area = data.lounge_area || (App.currentUser && App.currentUser.lounge_area) || 'Addis Ababa';
+        mndCode.textContent = `${code} · ${area}`;
+    }
+    if (mndRole && (App.currentRole || (App.currentUser && App.currentUser.role))) {
+        mndRole.textContent = (App.currentRole || App.currentUser.role).toUpperCase();
+    }
 }
 
 // ============================================================
@@ -2243,6 +2259,22 @@ function updateHeaderUserBadge(user, role) {
     if (setOpEmail) {
         setOpEmail.textContent = (user && user.email) ? user.email : (effectiveRole ? `${roleLower}@gamewatch.et` : 'operator@gamewatch.et');
     }
+
+    // 5. Update Mobile Nav Drawer
+    const mndName = document.getElementById('mnd-lounge-name');
+    const mndCode = document.getElementById('mnd-lounge-code');
+    const mndRole = document.getElementById('mnd-role-badge');
+    if (mndName && (user?.lounge_name || App.state?.lounge_name)) {
+        mndName.textContent = user?.lounge_name || App.state?.lounge_name;
+    }
+    if (mndCode && (user?.lounge_code || App.state?.lounge_code)) {
+        const code = user?.lounge_code || App.state?.lounge_code;
+        const area = user?.lounge_area || App.state?.lounge_area || 'Bole';
+        mndCode.textContent = `${code} · ${area}`;
+    }
+    if (mndRole && effectiveRole) {
+        mndRole.textContent = effectiveRole;
+    }
 }
 
 // User Profile Dropdown & Testing Persona Actions
@@ -2884,10 +2916,14 @@ function loadSettingsView() {
     const emailEl = document.getElementById('lpc-email-display');
     const cbeEl = document.getElementById('lpc-cbe-display');
 
-    if (nameEl) nameEl.textContent = s.lounge_name || 'GameWatch Lounge';
-    if (areaEl) areaEl.textContent = `📍 ${s.lounge_area || '4 Kilo'}`;
+    const currentLoungeName = s.lounge_name || App.currentUser?.lounge_name || 'GameWatch Lounge';
+    const currentLoungeCode = s.lounge_code || App.currentUser?.lounge_code || 'GW-BOLE-101';
+    const currentLoungeArea = s.lounge_area || App.currentUser?.lounge_area || '4 Kilo';
+
+    if (nameEl) nameEl.textContent = currentLoungeName;
+    if (areaEl) areaEl.textContent = `📍 ${currentLoungeArea}`;
     if (addrEl) addrEl.textContent = s.contact_address || 'Addis Ababa, Ethiopia';
-    if (codeEl) codeEl.textContent = s.lounge_code || 'GW-BOLE-101';
+    if (codeEl) codeEl.textContent = currentLoungeCode;
     if (rateEl) rateEl.textContent = s.price_per_game || '25';
     if (phoneEl) phoneEl.textContent = s.contact_phone || '+251 900 000000';
     if (emailEl) emailEl.textContent = s.contact_email || 'support@gamewatch.et';
@@ -2906,8 +2942,8 @@ function loadSettingsView() {
     const fPhone = document.getElementById('cfg-phone');
     const fEmail = document.getElementById('cfg-email');
 
-    if (fName) fName.value = s.lounge_name || '';
-    if (fArea && s.lounge_area) fArea.value = s.lounge_area;
+    if (fName) fName.value = s.lounge_name || App.currentUser?.lounge_name || '';
+    if (fArea) fArea.value = currentLoungeArea;
     if (fRate) fRate.value = s.price_per_game || 25;
     if (fAddr) fAddr.value = s.contact_address || '';
     if (fTbName) fTbName.value = s.telebirr_recipient || '';
@@ -2955,7 +2991,37 @@ window.handleSaveSettings = async function(e) {
         }
         showToast('Lounge location & configuration saved successfully!');
         toggleLoungeSettingsEdit(false);
-        fetchState();
+        if (data.lounge) {
+            App.state.lounge_name = data.lounge.name;
+            App.state.lounge_code = data.lounge.lounge_code;
+            App.state.lounge_area = data.lounge.area;
+            App.state.contact_address = data.lounge.address;
+            App.state.contact_phone = data.lounge.phone;
+            App.state.contact_email = data.lounge.email;
+            App.state.price_per_game = data.lounge.rate_per_game;
+            if (App.currentUser) {
+                App.currentUser.lounge_name = data.lounge.name;
+                App.currentUser.lounge_code = data.lounge.lounge_code;
+                App.currentUser.lounge_area = data.lounge.area;
+            }
+        } else {
+            App.state.lounge_name = payload.lounge_name;
+            App.state.lounge_area = payload.lounge_area;
+            App.state.contact_address = payload.contact_address;
+            App.state.contact_phone = payload.contact_phone;
+            App.state.contact_email = payload.contact_email;
+            App.state.price_per_game = payload.price_per_game;
+            if (App.currentUser) {
+                App.currentUser.lounge_name = payload.lounge_name;
+                App.currentUser.lounge_area = payload.lounge_area;
+            }
+        }
+        loadSettingsView();
+        const mndName = document.getElementById('mnd-lounge-name');
+        const mndCode = document.getElementById('mnd-lounge-code');
+        if (mndName) mndName.textContent = App.state.lounge_name;
+        if (mndCode) mndCode.textContent = `${App.state.lounge_code || 'GW'} · ${App.state.lounge_area || 'Bole'}`;
+        await fetchState();
     } catch (err) {
         showToast('Error saving settings', 'error');
     }
@@ -5820,53 +5886,55 @@ function renderTournamentGroups(groups) {
                     <span class="cgb-title">GROUP ${letter}</span>
                     <span class="cgb-sub">Top 2 Qualify for Round of 16</span>
                 </div>
-                <table class="tourn-standings-table">
-                    <thead>
-                        <tr>
-                            <th style="width:30px;">#</th>
-                            <th>Team / Gamer</th>
-                            <th title="Matches Played">P</th>
-                            <th title="Won">W</th>
-                            <th title="Drawn">D</th>
-                            <th title="Lost">L</th>
-                            <th title="Goals For">GF</th>
-                            <th title="Goals Against">GA</th>
-                            <th title="Goal Difference">GD</th>
-                            <th title="Points" style="color:var(--electric);">PTS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${teams.map((t, idx) => {
-                            const isTop2 = (idx < 2);
-                            return `
-                                <tr class="${isTop2 ? 'qualified-row' : ''}">
-                                    <td>
-                                        <div style="display:flex; align-items:center; gap:4px;">
-                                            <span style="font-weight:700;">${idx + 1}</span>
-                                            ${isTop2 ? '<span class="q-badge" title="Qualified for R16">Q</span>' : ''}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div style="display:flex; flex-direction:column;">
-                                            <strong style="color:var(--text-primary); font-size:0.85rem;">${escapeHtml(t.customer_name)}</strong>
-                                            <span style="color:var(--text-secondary); font-size:0.75rem;">${formatClubName(t.chosen_club)}</span>
-                                        </div>
-                                    </td>
-                                    <td>${t.matches_played || 0}</td>
-                                    <td>${t.won || 0}</td>
-                                    <td>${t.drawn || 0}</td>
-                                    <td>${t.lost || 0}</td>
-                                    <td>${t.goals_for || 0}</td>
-                                    <td>${t.goals_against || 0}</td>
-                                    <td style="font-weight:600; color:${(t.goal_diff || 0) >= 0 ? 'var(--emerald)' : 'var(--rose)'};">
-                                        ${(t.goal_diff || 0) > 0 ? '+' : ''}${t.goal_diff || 0}
-                                    </td>
-                                    <td style="font-weight:800; font-size:0.95rem; color:var(--electric);">${t.points || 0}</td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
+                <div class="tourn-table-responsive">
+                    <table class="tourn-standings-table">
+                        <thead>
+                            <tr>
+                                <th style="width:26px;">#</th>
+                                <th style="text-align:left;">Team / Gamer</th>
+                                <th title="Matches Played">P</th>
+                                <th title="Won">W</th>
+                                <th title="Drawn">D</th>
+                                <th title="Lost">L</th>
+                                <th title="Goals For">GF</th>
+                                <th title="Goals Against">GA</th>
+                                <th title="Goal Difference" class="col-gd">GD</th>
+                                <th title="Points" class="col-pts">PTS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${teams.map((t, idx) => {
+                                const isTop2 = (idx < 2);
+                                return `
+                                    <tr class="${isTop2 ? 'qualified-row' : ''}">
+                                        <td>
+                                            <div style="display:flex; align-items:center; gap:3px; justify-content:center;">
+                                                <span style="font-weight:700;">${idx + 1}</span>
+                                                ${isTop2 ? '<span class="q-badge" title="Qualified for R16">Q</span>' : ''}
+                                            </div>
+                                        </td>
+                                        <td style="text-align:left;">
+                                            <div class="gamer-cell-info">
+                                                <strong class="gamer-cell-name">${escapeHtml(t.customer_name)}</strong>
+                                                <span class="gamer-cell-club">${formatClubName(t.chosen_club)}</span>
+                                            </div>
+                                        </td>
+                                        <td>${t.matches_played || 0}</td>
+                                        <td>${t.won || 0}</td>
+                                        <td>${t.drawn || 0}</td>
+                                        <td>${t.lost || 0}</td>
+                                        <td>${t.goals_for || 0}</td>
+                                        <td>${t.goals_against || 0}</td>
+                                        <td class="col-gd" style="font-weight:700; color:${(t.goal_diff || 0) >= 0 ? 'var(--emerald)' : 'var(--rose)'};">
+                                            ${(t.goal_diff || 0) > 0 ? '+' : ''}${t.goal_diff || 0}
+                                        </td>
+                                        <td class="col-pts" style="font-weight:900; font-size:0.95rem; color:var(--electric);">${t.points || 0}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         `;
     }).join('');
@@ -5926,11 +5994,11 @@ function renderTournamentFixtures(matches) {
         return `
             <div class="tourn-fixture-card ${isCompleted ? 'completed' : ''}">
                 <div class="tfc-head">
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="tfc-head-tags">
                         <span class="tfc-stage-pill">${escapeHtml(m.round_name || m.stage)}</span>
                         ${m.group_letter ? `<span class="badge badge-cyan">Group ${m.group_letter}</span>` : ''}
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div class="tfc-head-status">
                         ${winnerBadge}
                         <span class="badge ${isCompleted ? 'badge-muted' : 'badge-live'}">
                             ${isCompleted ? '✓ Completed' : '⏳ Scheduled'}
@@ -5945,9 +6013,10 @@ function renderTournamentFixtures(matches) {
                             <span class="tfc-team-name">${escapeHtml(m.player1_name || 'TBD')}</span>
                             <span class="tfc-team-club">${formatClubName(m.player1_club)}</span>
                         </div>
+                        <span class="tfc-mobile-score-val">${p1Score}</span>
                     </div>
 
-                    <!-- Score Center -->
+                    <!-- Score Center (Desktop VS) -->
                     <div class="tfc-score-box">
                         <span class="tfc-score-digit">${p1Score}</span>
                         <span class="tfc-vs-tag">VS</span>
@@ -5960,6 +6029,7 @@ function renderTournamentFixtures(matches) {
                             <span class="tfc-team-name">${escapeHtml(m.player2_name || 'TBD')}</span>
                             <span class="tfc-team-club">${formatClubName(m.player2_club)}</span>
                         </div>
+                        <span class="tfc-mobile-score-val">${p2Score}</span>
                     </div>
                 </div>
 

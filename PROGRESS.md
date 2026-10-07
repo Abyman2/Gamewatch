@@ -281,6 +281,26 @@ In [`templates/index.html`](file:///c:/Users/25194/Desktop/work/GameWatch/templa
     - Updated `DEPLOYMENT_STEPS.md` with complete step-by-step visual guide for creating the D1 database and generating API tokens.
   - **Verification**: Verified via `scratch/test_cloudflare_d1.py` (5/5 tests passed 100% across configuration checks, schema DDL execution, telemetry, and response envelope parsing).
 
+* **2026-10-07 (Update 8 - Mobile Full-Screen Layout, Fixture Card Responsiveness, & Lounge Owner Multi-Tenancy)**:
+  - **Mobile Full-Screen Edge-to-Edge Optimization**:
+    - Eliminated excessive lateral gutters and margins (`padding: 10px 8px 76px !important;` on `.saas-workspace` for `<= 768px`, down to `8px 6px` for `<= 480px`).
+    - Stretched primary cards (`.tourn-card`, `.tourn-fixture-card`, `.champions-group-box`, `.connector-card`, `.config-card`, `.lounge-profile-card`) to 100% full phone screen width with sleek 12px-14px border radii, removing the narrow floating card aesthetic.
+  - **Tournament Fixture Card Responsiveness (UEFA / SofaScore Mobile Pattern)**:
+    - Fixed text overflow in `.tfc-matchup` where player names previously exploded off card borders on 360px-400px viewports.
+    - Switched mobile fixtures (`<= 640px`) to a vertical stacked two-row layout: Team 1 with name and club on left and score on right; Team 2 with name and club on left and score on right; hidden desktop central VS box; and full-width side-by-side action buttons.
+  - **UEFA Group Standings Table Mobile Scroll & Column Protection**:
+    - Wrapped `.tourn-standings-table` in `<div class="tourn-table-responsive">` with smooth `-webkit-overflow-scrolling: touch;` and custom thin scrollbars.
+    - Compacted table cell padding and truncated player names gracefully so all columns including Goal Difference (`GD`) and Points (`PTS`) remain visible and legible without cutoff.
+  - **Camera Hub High-Contrast Light Mode & Cloud Feed Testing Protection**:
+    - Overhauled `.connector-address-box` from murky gray (`rgba(0,0,0,0.3)`) to crisp, high-contrast `#F1F5F9` surface with `#CBD5E1` border and dark legible monospace font `#0F172A`.
+    - Styled `.btn-test-cam` with vibrant blue accents (`#EFF6FF`, border `#93C5FD`, text `#1D4ED8`) and `.btn-del-cam` with soft rose accents.
+    - Protected camera testing in cloud environments: `/api/camera/sources/<id>/test` now detects headless cloud hosting and private LAN IPs (`192.168.x.x`), returning clear diagnostics without timeouts or `Failed to fetch` errors.
+  - **Lounge Owner Multi-Tenancy & Instant Settings Customization**:
+    - Automatically provisions an owner lounge on registration with the owner's chosen name (e.g. `[Name]'s GameZone`).
+    - Enriched `/api/auth/me` and `/api/state` with owner lounge data, resolving the owner's own lounge rather than hardcoded defaults.
+    - Synchronized mobile drawer header (`#mnd-lounge-name`, `#mnd-lounge-code`, `#mnd-role-badge`) across authentication, header rendering, and live settings saves.
+  - **Verification**: Validated JavaScript syntax (`node -c static/js/app.js`), Python compilation (`py_compile`), and state resolution endpoints.
+
 *(Protocol: Append every subsequent change to this section with timestamp and rationale).*
 
 

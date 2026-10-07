@@ -4214,8 +4214,8 @@ select.field-input {
 }
 
 .connector-card {
-    background: rgba(255, 255, 255, 0.025);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: var(--bg-card);
+    border: 1px solid var(--border-default);
     border-radius: var(--radius-xl);
     padding: 16px;
     display: flex;
@@ -4223,12 +4223,12 @@ select.field-input {
     gap: 12px;
     transition: all 0.25s var(--ease);
     position: relative;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
 .connector-card:hover {
-    background: rgba(26, 143, 255, 0.04);
-    border-color: rgba(26, 143, 255, 0.28);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-color: var(--blue-electric);
+    box-shadow: 0 8px 24px rgba(26, 143, 255, 0.12);
     transform: translateY(-2px);
 }
 
@@ -4246,11 +4246,11 @@ select.field-input {
 }
 
 .connector-icon-badge {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: var(--radius-md);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid var(--border-subtle);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -4300,17 +4300,24 @@ select.field-input {
 }
 
 .connector-address-box {
-    background: rgba(0, 0, 0, 0.3);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: #F1F5F9;
+    border: 1px solid #CBD5E1;
     border-radius: var(--radius-md);
     padding: 8px 10px;
     font-family: var(--font-mono);
-    font-size: 0.72rem;
-    color: #93c5fd;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #0F172A;
     word-break: break-all;
     display: flex;
     align-items: center;
     gap: 6px;
+}
+
+[data-theme="dark"] .connector-address-box {
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #93c5fd;
 }
 
 .connector-specs-row {
@@ -4334,35 +4341,58 @@ select.field-input {
     align-items: center;
     justify-content: center;
     gap: 6px;
-    padding: 7px 12px;
+    padding: 8px 12px;
     border-radius: var(--radius-md);
-    font-size: 0.74rem;
-    font-weight: 600;
-    background: rgba(26, 143, 255, 0.1);
-    border: 1px solid rgba(26, 143, 255, 0.3);
-    color: var(--blue-bright);
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: #EFF6FF;
+    border: 1px solid #93C5FD;
+    color: #1D4ED8;
     cursor: pointer;
     transition: all 0.2s var(--ease);
 }
 
 .btn-test-cam:hover {
-    background: rgba(26, 143, 255, 0.2);
-    border-color: var(--blue-bright);
+    background: #DBEAFE;
+    border-color: #3B82F6;
+    color: #1E40AF;
+}
+
+[data-theme="dark"] .btn-test-cam {
+    background: rgba(26, 143, 255, 0.15);
+    border: 1px solid rgba(26, 143, 255, 0.35);
+    color: #38BDF8;
+}
+
+[data-theme="dark"] .btn-test-cam:hover {
+    background: rgba(26, 143, 255, 0.25);
+    border-color: #38BDF8;
     color: #ffffff;
 }
 
 .btn-del-cam {
-    padding: 7px 10px;
+    padding: 8px 10px;
     border-radius: var(--radius-md);
     font-size: 0.74rem;
-    background: rgba(244, 63, 94, 0.08);
-    border: 1px solid rgba(244, 63, 94, 0.22);
-    color: #fb7185;
+    background: #FEF2F2;
+    border: 1px solid #FECACA;
+    color: #DC2626;
     cursor: pointer;
     transition: all 0.2s var(--ease);
 }
 
 .btn-del-cam:hover {
+    background: #FEE2E2;
+    border-color: #F87171;
+}
+
+[data-theme="dark"] .btn-del-cam {
+    background: rgba(244, 63, 94, 0.08);
+    border: 1px solid rgba(244, 63, 94, 0.22);
+    color: #fb7185;
+}
+
+[data-theme="dark"] .btn-del-cam:hover {
     background: rgba(244, 63, 94, 0.2);
     border-color: #f43f5e;
 }
@@ -12548,6 +12578,335 @@ body.auth-view-active .app-view.active {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+/* ============================================================ */
+/* MOBILE FULL-SCREEN RESPONSIVENESS & HIGH DENSITY STYLING     */
+/* ============================================================ */
+
+/* Desktop defaults for tournament elements */
+.tfc-mobile-score-val {
+    display: none;
+}
+
+.tourn-table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+}
+
+.tourn-table-responsive::-webkit-scrollbar {
+    height: 4px;
+}
+
+.tourn-table-responsive::-webkit-scrollbar-thumb {
+    background: rgba(22, 135, 255, 0.35);
+    border-radius: 4px;
+}
+
+/* Tablet & Mobile Screens (<= 768px) */
+@media (max-width: 768px) {
+    .saas-workspace {
+        padding: 10px 8px 76px !important;
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .workspace-header {
+        margin-bottom: 12px !important;
+        gap: 8px !important;
+    }
+
+    .hero-sponsor-card {
+        margin-bottom: 12px !important;
+        border-radius: 14px !important;
+    }
+
+    .discovery-strip-wrapper {
+        margin-bottom: 14px !important;
+    }
+}
+
+/* Smartphone screens (<= 640px) */
+@media (max-width: 640px) {
+    /* Edge-to-edge layout: optimize cards to use full phone screen */
+    .tourn-card,
+    .tourn-fixture-card,
+    .champions-group-box,
+    .connector-card,
+    .config-card,
+    .lounge-profile-card,
+    .tx-card,
+    .stat-block,
+    .ai-card-main,
+    .rules-card,
+    .tak-card,
+    .t-analytics-breakdown-card {
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-top: 8px !important;
+        margin-bottom: 8px !important;
+        border-radius: 14px !important;
+        padding: 12px 10px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Fixtures Card: Stacked Team Rows (UEFA / SofaScore mobile pattern) */
+    .tourn-fixture-card {
+        padding: 12px 10px !important;
+    }
+
+    .tfc-head {
+        padding-bottom: 8px !important;
+        margin-bottom: 8px !important;
+        font-size: 0.74rem !important;
+    }
+
+    .tfc-matchup {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        align-items: stretch !important;
+        margin: 8px 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .tfc-score-box {
+        display: none !important;
+    }
+
+    .tfc-team {
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 8px 10px !important;
+        background: rgba(0, 0, 0, 0.03) !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        border-radius: 10px !important;
+        box-sizing: border-box !important;
+        text-align: left !important;
+    }
+
+    [data-theme="dark"] .tfc-team {
+        background: rgba(255, 255, 255, 0.04) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+    }
+
+    .tfc-team.tfc-left,
+    .tfc-team.tfc-right {
+        justify-content: space-between !important;
+        text-align: left !important;
+    }
+
+    .tfc-team-text {
+        max-width: calc(100% - 44px) !important;
+        text-align: left !important;
+        min-width: 0 !important;
+    }
+
+    .tfc-team-name {
+        font-size: 0.92rem !important;
+        font-weight: 800 !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        line-height: 1.25 !important;
+        display: block !important;
+    }
+
+    .tfc-team-club {
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        color: var(--text-secondary) !important;
+        display: block !important;
+    }
+
+    .tfc-mobile-score-val {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-family: 'JetBrains Mono', monospace !important;
+        font-size: 1.25rem !important;
+        font-weight: 900 !important;
+        min-width: 32px !important;
+        color: var(--text-primary) !important;
+        flex-shrink: 0 !important;
+        padding-left: 8px !important;
+    }
+
+    .tfc-team.winner .tfc-mobile-score-val {
+        color: #10B981 !important;
+    }
+
+    .tfc-team.winner {
+        border-color: rgba(16, 185, 129, 0.3) !important;
+        background: rgba(16, 185, 129, 0.06) !important;
+    }
+
+    .tfc-foot {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 8px !important;
+        padding-top: 8px !important;
+        margin-top: 8px !important;
+    }
+
+    .tfc-schedule-info {
+        font-size: 0.72rem !important;
+        color: var(--text-secondary) !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+
+    .tfc-actions {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .tfc-actions .btn {
+        width: 100% !important;
+        padding: 9px 8px !important;
+        font-size: 0.76rem !important;
+        justify-content: center !important;
+    }
+
+    .tfc-loser-notice {
+        font-size: 0.72rem !important;
+        padding: 7px 10px !important;
+        margin-top: 8px !important;
+    }
+
+    /* Standings Table: Compact & fully viewable with smooth touch scrolling */
+    .cgb-head {
+        padding: 10px 12px !important;
+    }
+
+    .cgb-title {
+        font-size: 0.92rem !important;
+    }
+
+    .cgb-sub {
+        font-size: 0.68rem !important;
+        padding: 2px 7px !important;
+    }
+
+    .tourn-standings-table {
+        font-size: 0.75rem !important;
+        min-width: 380px !important;
+        width: 100% !important;
+    }
+
+    .tourn-standings-table th,
+    .tourn-standings-table td {
+        padding: 7px 3px !important;
+    }
+
+    .tourn-standings-table th:nth-child(2),
+    .tourn-standings-table td:nth-child(2) {
+        padding-left: 6px !important;
+        max-width: 120px !important;
+    }
+
+    .gamer-cell-name {
+        font-size: 0.78rem !important;
+        display: block !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        max-width: 110px !important;
+    }
+
+    .gamer-cell-club {
+        font-size: 0.65rem !important;
+        display: block !important;
+    }
+
+    .col-gd {
+        font-weight: 700 !important;
+        font-size: 0.76rem !important;
+    }
+
+    .col-pts {
+        font-weight: 900 !important;
+        font-size: 0.88rem !important;
+        color: #1687FF !important;
+    }
+
+    [data-theme="dark"] .col-pts {
+        color: #38BDF8 !important;
+    }
+
+    /* Mobile Drawer Lounge Card */
+    .mnd-lounge-card {
+        padding: 12px 14px !important;
+        border-radius: 14px !important;
+        margin: 12px 14px 18px !important;
+        background: rgba(22, 135, 255, 0.08) !important;
+        border: 1px solid rgba(22, 135, 255, 0.2) !important;
+    }
+
+    .mlc-name {
+        font-size: 0.95rem !important;
+        font-weight: 800 !important;
+        color: var(--text-primary) !important;
+    }
+
+    .mlc-code {
+        font-size: 0.74rem !important;
+        font-weight: 600 !important;
+        color: var(--cyan-accent) !important;
+    }
+
+    .mlc-badge {
+        font-size: 0.65rem !important;
+        font-weight: 800 !important;
+    }
+
+    /* Settings & Forms */
+    .lpc-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+
+    .field-row {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+}
+
+/* Compact phones (<= 480px) */
+@media (max-width: 480px) {
+    .saas-workspace {
+        padding: 8px 6px 76px !important;
+    }
+
+    .tourn-card,
+    .tourn-fixture-card,
+    .champions-group-box,
+    .connector-card,
+    .config-card,
+    .lounge-profile-card {
+        padding: 10px 8px !important;
+        border-radius: 12px !important;
+    }
+
+    .tfc-team-name {
+        font-size: 0.88rem !important;
+    }
+
+    .tfc-mobile-score-val {
+        font-size: 1.15rem !important;
+    }
 }
 
 
