@@ -26,3 +26,9 @@ desktop.ini
 # Temporary scratch media & logs
 .tempmediaStorage/
 *.log
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+

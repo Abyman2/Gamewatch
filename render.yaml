@@ -17,3 +17,11 @@ services:
         generateValue: true
       - key: OPENCV_FFMPEG_CAPTURE_OPTIONS
         value: "rtsp_transport;tcp|fflags;nobuffer|max_delay;0"
+      # Cloudflare D1 Permanent Cloud Database ($0/mo Forever)
+      - key: CLOUDFLARE_ACCOUNT_ID
+        sync: false
+      - key: CLOUDFLARE_D1_DATABASE_ID
+        sync: false
+      - key: CLOUDFLARE_API_TOKEN
+        sync: false
+

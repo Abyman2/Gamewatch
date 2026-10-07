@@ -872,6 +872,26 @@ def api_system_cloud_sync():
     else:
         return jsonify(cloud_sync_manager.get_sync_telemetry())
 
+@app.route("/api/system/d1_status", methods=["GET"])
+def api_system_d1_status():
+    import cloudflare_d1
+    d1 = cloudflare_d1.get_d1_client()
+    return jsonify(d1.get_cloud_telemetry())
+
+@app.route("/api/system/d1_sync", methods=["POST"])
+def api_system_d1_sync():
+    import cloudflare_d1
+    d1 = cloudflare_d1.get_d1_client()
+    if not d1.is_configured():
+        return jsonify({"success": False, "message": "Cloudflare D1 credentials missing. Set CLOUDFLARE_D1_DATABASE_ID in environment."}), 400
+    action = (request.json or {}).get("action", "push") if request.is_json else "push"
+    if action == "pull":
+        res = d1.pull_d1_to_local()
+    else:
+        res = d1.push_local_to_d1()
+    return jsonify(res)
+
+
 @app.route("/api/state")
 def api_state():
     user = get_current_user()

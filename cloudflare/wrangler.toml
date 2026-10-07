@@ -1,0 +1,9 @@
+﻿name = "gamewatch-d1-proxy"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# Cloudflare D1 Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "gamewatch-db"
+database_id = "YOUR_CLOUDFLARE_D1_DATABASE_ID"

@@ -239,6 +239,38 @@ def initialize_database():
     connection.close()
     print("[OK] GameWatch database initialized with hardened schema!")
 
+    # --------------------------------
+    # CLOUDFLARE D1 AUTOMATIC HYDRATION / MIRROR
+    # --------------------------------
+    try:
+        import cloudflare_d1
+        d1 = cloudflare_d1.get_d1_client()
+        if d1.is_configured():
+            print("[Cloudflare D1] Cloud credentials detected. Checking Cloudflare D1 connection...")
+            test_conn = d1.test_connection()
+            if test_conn.get("success"):
+                print(f"[Cloudflare D1] Connected to edge DB ({d1.database_id}). Cloud time: {test_conn.get('cloud_time')}")
+                d1.init_schema()
+                # Hydrate local database if local has few/no records, or push local records if cloud is fresh
+                conn_check = sqlite3.connect(DATABASE_NAME)
+                cur_check = conn_check.cursor()
+                cur_check.execute("SELECT count(*) FROM users")
+                local_user_count = cur_check.fetchone()[0]
+                conn_check.close()
+                if local_user_count <= 1:
+                    print("[Cloudflare D1] Local database is fresh. Hydrating records from Cloudflare D1...")
+                    d1.pull_d1_to_local(DATABASE_NAME)
+                else:
+                    print("[Cloudflare D1] Local records present. Syncing records to Cloudflare D1...")
+                    d1.push_local_to_d1(DATABASE_NAME)
+            else:
+                print(f"[Cloudflare D1] Notice: Cloud connection test failed: {test_conn.get('error')}. Operating locally.")
+        else:
+            print("[Cloudflare D1] Standby mode: No Cloudflare D1 credentials set. Operating in local SQLite mode.")
+    except Exception as d1_err:
+        print(f"[Cloudflare D1] Notice: {d1_err}")
+
 
 if __name__ == "__main__":
-    initialize_database()
+    initialize_database()
+
