@@ -277,6 +277,8 @@ function switchView(viewId) {
         loadPromotions();
     } else if (viewId === 'tournaments') {
         loadTournamentsHub();
+    } else if (viewId === 'admin') {
+        loadPlatformAdminStats();
     }
 }
 
@@ -4027,7 +4029,21 @@ function quickFillCamPreset(preset) {
     const guideTitle = document.getElementById('cgb-title');
     const guideList = document.getElementById('cgb-list');
 
-    if (preset === 'DROIDCAM') {
+    if (preset === 'DEVICE_CAM') {
+        if (nameInput) nameInput.value = 'Direct Phone Camera (Browser Stream)';
+        if (typeSelect) typeSelect.value = 'PHONE';
+        if (addrInput) addrInput.value = 'browser:getusermedia';
+        if (hintSpan) hintSpan.innerHTML = '✨ Zero install required! Tap <strong>"Start Device Camera"</strong> below to broadcast your phone camera live.';
+        if (guideTitle) guideTitle.textContent = '💡 How to Use Direct Phone Camera (Render Cloud Mode):';
+        if (guideList) {
+            guideList.innerHTML = `
+                <li>Works 100% on Render and mobile phones with zero extra apps or IP setup.</li>
+                <li>Tap <button type="button" class="btn" onclick="startDeviceCameraStream()" style="background:#10b981;color:#000;font-weight:700;padding:5px 12px;border-radius:6px;border:none;margin:4px 0;cursor:pointer;">📸 Start Phone Camera Now</button></li>
+                <li>Allow camera access when prompted, point your phone at the TV wall.</li>
+                <li>Your phone relays live frames to Render automatically!</li>
+            `;
+        }
+    } else if (preset === 'DROIDCAM') {
         if (nameInput) nameInput.value = 'Phone Camera (DroidCam)';
         if (typeSelect) typeSelect.value = 'PHONE';
         if (addrInput) addrInput.value = 'http://192.168.1.105:4747/video';

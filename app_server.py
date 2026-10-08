@@ -16,7 +16,7 @@ import urllib.request
 import re
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask import Flask, render_template, Response, jsonify, request, send_file, send_from_directory, session
+from flask import Flask, render_template, Response, jsonify, request, send_file, send_from_directory, session, redirect
 
 from scoreboard_reader import ScoreboardReader, ScoreboardReading
 from scoreboard_preprocessor import ScoreboardPreprocessor
@@ -247,6 +247,9 @@ class WebTVChannel:
 # ========================================
 # GLOBAL CAMERA & MONITOR MANAGER
 # ========================================
+CLOUD_RELAY_FRAME: Optional[np.ndarray] = None
+CLOUD_RELAY_TIMESTAMP: float = 0.0
+
 class LoungeManager:
     def __init__(self):
         database.initialize_database()
@@ -375,6 +378,11 @@ class LoungeManager:
         return None
 
     def _get_next_frame(self) -> np.ndarray:
+        # Check if browser/edge node pushed a fresh relay frame (< 6.0s old)
+        global CLOUD_RELAY_FRAME, CLOUD_RELAY_TIMESTAMP
+        if CLOUD_RELAY_FRAME is not None and (time.time() - CLOUD_RELAY_TIMESTAMP) < 6.0:
+            return CLOUD_RELAY_FRAME.copy()
+
         with self.lock:
             if self.use_simulation:
                 # Release hardware / network camera so socket and light release cleanly
@@ -1853,13 +1861,13 @@ def api_business_analytics():
     return jsonify({"success": True, "analytics": analytics})
 
 @app.route("/api/calibration/auto_detect_tvs", methods=["POST"])
-@require_role("OWNER")
+@require_role("OWNER", "CLERK")
 def api_auto_detect_tvs():
     res = manager.auto_detect_tv_screens()
     return jsonify(res)
 
 @app.route("/api/camera_sources/<int:source_id>/activate", methods=["POST"])
-@require_role("OWNER")
+@require_role("OWNER", "CLERK")
 def api_activate_camera_source(source_id):
     sources = db_manager.get_camera_sources()
     target = next((s for s in sources if s["id"] == source_id), None)
@@ -2089,13 +2097,9 @@ def api_delete_camera_source(source_id):
     return jsonify(res)
 
 
-# Cloud Relay Frame Storage for Remote Monitoring
-CLOUD_RELAY_FRAME: Optional[np.ndarray] = None
-CLOUD_RELAY_TIMESTAMP: float = 0.0
-
 @app.route("/api/cloud/relay_frame", methods=["POST"])
 def api_cloud_relay_frame():
-    """Receives a lightweight compressed frame snapshot from a local lounge PC edge node."""
+    """Receives a lightweight compressed frame snapshot from a local lounge PC edge node or phone browser."""
     global CLOUD_RELAY_FRAME, CLOUD_RELAY_TIMESTAMP
     data = request.json or {}
     b64_data = data.get("frame_base64")
@@ -2110,10 +2114,45 @@ def api_cloud_relay_frame():
         if frame is not None:
             CLOUD_RELAY_FRAME = frame
             CLOUD_RELAY_TIMESTAMP = time.time()
-            return jsonify({"success": True, "message": "Relay frame received"})
+            manager.current_raw_frame = frame
+            manager.use_simulation = False
+            return jsonify({"success": True, "message": "Relay frame received and active"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 400
     return jsonify({"success": False, "message": "Invalid image payload"}), 400
+
+# ========================================
+# SUPER ADMIN PLATFORM MANAGEMENT & AD TRACTION API
+# ========================================
+@app.route("/api/admin/platform_stats", methods=["GET"])
+@require_role("OWNER")
+def api_admin_platform_stats():
+    """Returns platform-wide metrics: user directory (Owners, Clerks, Gamers), total lounges, match counts, and ad traction."""
+    stats = db_manager.get_platform_master_stats()
+    return jsonify(stats)
+
+@app.route("/api/promotions/<int:promo_id>/impression", methods=["POST"])
+def api_promotion_impression(promo_id):
+    """Tracks an ad impression when displayed on TV monitor or customer dashboard."""
+    res = db_manager.record_promotion_impression(promo_id)
+    return jsonify(res)
+
+@app.route("/api/promotions/<int:promo_id>/click", methods=["GET", "POST"])
+def api_promotion_click(promo_id):
+    """Tracks an ad click and redirects user to sponsor website or returns target link."""
+    res = db_manager.record_promotion_click(promo_id)
+    target_url = (res.get("ad") or {}).get("target_url")
+    if request.method == "GET" and target_url:
+        return redirect(target_url)
+    return jsonify(res)
+
+@app.route("/api/admin/promotions_analytics", methods=["GET"])
+@require_role("OWNER")
+def api_admin_promotions_analytics():
+    """Provides advertisers and platform owners verified traction data: Impressions, Clicks, CTR %."""
+    user = get_current_user()
+    analytics = db_manager.get_promotions_analytics(owner_id=user.get("id"))
+    return jsonify({"success": True, "promotions": analytics})
 
 
 if __name__ == "__main__":

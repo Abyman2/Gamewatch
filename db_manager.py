@@ -261,7 +261,7 @@ def init_lounges_table():
         )
     """)
 
-    # Promotions table
+    # Ensure promotions table has ad traction columns
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS promotions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -271,10 +271,32 @@ def init_lounges_table():
             description TEXT NOT NULL,
             badge_text TEXT DEFAULT 'SPECIAL OFFER',
             promo_rate REAL DEFAULT 20,
+            target_url TEXT DEFAULT '',
+            sponsor_name TEXT DEFAULT '',
+            impressions INTEGER DEFAULT 0,
+            clicks INTEGER DEFAULT 0,
             is_active INTEGER DEFAULT 1,
             created_at TEXT NOT NULL
         )
     """)
+    cursor.execute("PRAGMA table_info(promotions)")
+    p_cols = [r["name"] for r in cursor.fetchall()]
+    if "target_url" not in p_cols:
+        cursor.execute("ALTER TABLE promotions ADD COLUMN target_url TEXT DEFAULT ''")
+    if "sponsor_name" not in p_cols:
+        cursor.execute("ALTER TABLE promotions ADD COLUMN sponsor_name TEXT DEFAULT ''")
+    if "impressions" not in p_cols:
+        cursor.execute("ALTER TABLE promotions ADD COLUMN impressions INTEGER DEFAULT 0")
+    if "clicks" not in p_cols:
+        cursor.execute("ALTER TABLE promotions ADD COLUMN clicks INTEGER DEFAULT 0")
+
+    # Ensure events table has commission columns
+    cursor.execute("PRAGMA table_info(events)")
+    ev_cols = [r["name"] for r in cursor.fetchall()]
+    if "commission_rate" not in ev_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN commission_rate REAL DEFAULT 15.0")
+    if "commission_amount" not in ev_cols:
+        cursor.execute("ALTER TABLE events ADD COLUMN commission_amount REAL DEFAULT 0.0")
 
     connection.commit()
     connection.close()
@@ -1251,7 +1273,8 @@ def get_active_promotion(lounge_id: int = None, owner_id: int = None) -> dict:
     return dict(row) if row else None
 
 def create_promotion(owner_id: int, lounge_id: int, title: str, description: str,
-                     badge_text: str = "🔥 HAPPY HOUR SPECIAL", promo_rate: float = 20, is_active: int = 1) -> dict:
+                     badge_text: str = "🔥 HAPPY HOUR SPECIAL", promo_rate: float = 20, is_active: int = 1,
+                     target_url: str = "", sponsor_name: str = "") -> dict:
     init_lounges_table()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     connection = get_connection()
@@ -1259,9 +1282,9 @@ def create_promotion(owner_id: int, lounge_id: int, title: str, description: str
     if is_active:
         cursor.execute("UPDATE promotions SET is_active = 0 WHERE owner_id = ?", (owner_id,))
     cursor.execute("""
-        INSERT INTO promotions (owner_id, lounge_id, title, description, badge_text, promo_rate, is_active, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (owner_id, lounge_id, title.strip(), description.strip(), badge_text.strip(), float(promo_rate), int(is_active), now_str))
+        INSERT INTO promotions (owner_id, lounge_id, title, description, badge_text, promo_rate, target_url, sponsor_name, impressions, clicks, is_active, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?)
+    """, (owner_id, lounge_id, title.strip(), description.strip(), badge_text.strip(), float(promo_rate), (target_url or "").strip(), (sponsor_name or "").strip(), int(is_active), now_str))
     connection.commit()
     new_id = cursor.lastrowid
     cursor.execute("SELECT * FROM promotions WHERE id = ?", (new_id,))
@@ -1276,7 +1299,7 @@ def update_promotion(promo_id: int, data: dict = None, **kwargs) -> dict:
     cursor = connection.cursor()
     updates = []
     params = []
-    for k in ["title", "description", "badge_text", "promo_rate", "is_active"]:
+    for k in ["title", "description", "badge_text", "promo_rate", "is_active", "target_url", "sponsor_name"]:
         if k in payload and payload[k] is not None:
             updates.append(f"{k} = ?")
             params.append(payload[k])
@@ -1288,6 +1311,115 @@ def update_promotion(promo_id: int, data: dict = None, **kwargs) -> dict:
     row = cursor.fetchone()
     connection.close()
     return {"success": True, "promotion": dict(row) if row else None}
+
+def record_promotion_impression(promo_id: int) -> dict:
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("UPDATE promotions SET impressions = COALESCE(impressions, 0) + 1 WHERE id = ?", (promo_id,))
+    connection.commit()
+    cursor.execute("SELECT id, impressions, clicks FROM promotions WHERE id = ?", (promo_id,))
+    row = cursor.fetchone()
+    connection.close()
+    return {"success": True, "ad": dict(row) if row else None}
+
+def record_promotion_click(promo_id: int) -> dict:
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("UPDATE promotions SET clicks = COALESCE(clicks, 0) + 1 WHERE id = ?", (promo_id,))
+    connection.commit()
+    cursor.execute("SELECT id, target_url, impressions, clicks, sponsor_name FROM promotions WHERE id = ?", (promo_id,))
+    row = cursor.fetchone()
+    connection.close()
+    return {"success": True, "ad": dict(row) if row else None}
+
+def get_promotions_analytics(owner_id: int = None) -> list:
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+    if owner_id:
+        cursor.execute("SELECT * FROM promotions WHERE owner_id = ? ORDER BY id DESC", (owner_id,))
+    else:
+        cursor.execute("SELECT * FROM promotions ORDER BY id DESC")
+    rows = cursor.fetchall()
+    connection.close()
+    result = []
+    for r in rows:
+        d = dict(r)
+        imp = int(d.get("impressions") or 0)
+        clk = int(d.get("clicks") or 0)
+        ctr = round((clk / imp * 100.0), 2) if imp > 0 else 0.0
+        d["ctr_pct"] = ctr
+        result.append(d)
+    return result
+
+def get_platform_master_stats() -> dict:
+    init_lounges_table()
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    # User breakdown by role
+    cursor.execute("SELECT role, COUNT(*) as count FROM users GROUP BY role")
+    role_counts = {r["role"] or "UNASSIGNED": int(r["count"]) for r in cursor.fetchall()}
+
+    cursor.execute("SELECT COUNT(*) as total FROM users")
+    total_users = int(cursor.fetchone()["total"] or 0)
+
+    # Lounge count
+    cursor.execute("SELECT COUNT(*) as total FROM lounges")
+    total_lounges = int(cursor.fetchone()["total"] or 0)
+
+    # Transaction volume & matches
+    cursor.execute("""
+        SELECT 
+            COUNT(*) as total_txs,
+            COALESCE(SUM(total), 0) as total_volume,
+            COALESCE(SUM(completed_games), 0) as total_games
+        FROM transactions
+    """)
+    tx_row = cursor.fetchone()
+
+    # Tournaments & prize pools
+    cursor.execute("SELECT COUNT(*) as total_events, COALESCE(SUM(total_prize_amount), 0) as total_prizes FROM events")
+    ev_row = cursor.fetchone()
+
+    # All registered users list (clean projection)
+    cursor.execute("""
+        SELECT id, full_name, email, phone, role, auth_provider, created_at, last_login_at, status 
+        FROM users 
+        ORDER BY id DESC
+    """)
+    all_users = [dict(u) for u in cursor.fetchall()]
+
+    # Ad traction overview
+    cursor.execute("SELECT id, title, sponsor_name, target_url, impressions, clicks, is_active FROM promotions")
+    ads = []
+    for a in cursor.fetchall():
+        ad_dict = dict(a)
+        imp = int(ad_dict.get("impressions") or 0)
+        clk = int(ad_dict.get("clicks") or 0)
+        ad_dict["ctr_pct"] = round((clk / imp * 100.0), 2) if imp > 0 else 0.0
+        ads.append(ad_dict)
+
+    connection.close()
+
+    return {
+        "success": True,
+        "total_users": total_users,
+        "owners_count": role_counts.get("OWNER", 0),
+        "clerks_count": role_counts.get("CLERK", 0),
+        "customers_count": role_counts.get("CUSTOMER", 0),
+        "unassigned_count": role_counts.get("UNASSIGNED", 0),
+        "total_lounges": total_lounges,
+        "total_transactions": int(tx_row["total_txs"] or 0) if tx_row else 0,
+        "total_gaming_volume": float(tx_row["total_volume"] or 0.0) if tx_row else 0.0,
+        "total_games_played": int(tx_row["total_games"] or 0) if tx_row else 0,
+        "total_tournaments": int(ev_row["total_events"] or 0) if ev_row else 0,
+        "total_prize_money": float(ev_row["total_prizes"] or 0.0) if ev_row else 0.0,
+        "users": all_users,
+        "ads": ads
+    }
 
 def delete_promotion(promo_id: int, owner_id: int = None) -> dict:
     init_lounges_table()
