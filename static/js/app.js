@@ -225,7 +225,9 @@ function switchView(viewId) {
 
     // Switch views
     document.querySelectorAll('.app-view').forEach(v => {
-        v.classList.toggle('active', v.id === `view-${viewId}`);
+        const isActive = (v.id === `view-${viewId}`);
+        v.classList.toggle('active', isActive);
+        v.style.display = isActive ? 'block' : 'none';
     });
 
     const isAuthOrRole = (viewId === 'auth' || viewId === 'role-select');
@@ -243,16 +245,18 @@ function switchView(viewId) {
     const heroBillboard = document.getElementById('hero-sponsor-billboard');
     const marqueeTicker = document.getElementById('discovery-marquee-wrap');
     const mobileBottomNav = document.getElementById('mobile-bottom-nav');
+    const bottomBillboard = document.getElementById('sponsor-billboard-bottom');
 
     if (sidebar) sidebar.style.display = isAuthOrRole ? 'none' : '';
     if (header) header.style.display = isAuthOrRole ? 'none' : 'flex';
     if (mobileBottomNav) mobileBottomNav.style.display = isAuthOrRole ? 'none' : '';
+    if (bottomBillboard) bottomBillboard.style.display = (viewId === 'admin') ? 'none' : '';
 
     if (heroBillboard) {
         heroBillboard.style.display = (!isAuthOrRole && (viewId === 'home' || viewId === 'customer')) ? 'block' : 'none';
     }
     if (marqueeTicker) {
-        marqueeTicker.style.display = (!isAuthOrRole && viewId !== 'setup') ? 'block' : 'none';
+        marqueeTicker.style.display = (!isAuthOrRole && viewId !== 'setup' && viewId !== 'admin') ? 'block' : 'none';
     }
 
     // Scroll to top
@@ -6567,3 +6571,344 @@ window.deleteCurrentStation = async function() {
         showToast('Error deleting station: ' + e.message, 'error');
     }
 };
+
+// ============================================================
+// MASTER ADMIN PLATFORM COMMAND CENTER & AD TRACTION ENGINE
+// ============================================================
+
+let allAdminUsers = [];
+let allAdminAds = [];
+
+async function loadPlatformAdminStats() {
+    try {
+        const res = await fetch('/api/admin/platform_stats');
+        if (!res.ok) {
+            if (res.status === 401 || res.status === 403) {
+                showToast('Master Admin requires login with OWNER account (abyman24680@gmail.com)');
+            }
+            return;
+        }
+        const data = await res.json();
+        if (!data.success) return;
+
+        // KPI Badges
+        const elTotalUsers = document.getElementById('admin-kpi-total-users');
+        const elOwners = document.getElementById('admin-kpi-owners');
+        const elClerks = document.getElementById('admin-kpi-clerks');
+        const elCustomers = document.getElementById('admin-kpi-customers');
+        const elGames = document.getElementById('admin-kpi-games');
+        const elVolume = document.getElementById('admin-kpi-volume');
+
+        if (elTotalUsers) elTotalUsers.textContent = data.total_users || 0;
+        if (elOwners) elOwners.textContent = data.owners_count || 0;
+        if (elClerks) elClerks.textContent = data.clerks_count || 0;
+        if (elCustomers) elCustomers.textContent = data.customers_count || 0;
+        if (elGames) elGames.textContent = data.total_games_played || 0;
+        if (elVolume) elVolume.textContent = (data.total_gaming_volume || 0).toLocaleString() + ' ETB';
+
+        // Filter Counts
+        const cntAll = document.getElementById('user-cnt-all');
+        const cntOwner = document.getElementById('user-cnt-owner');
+        const cntClerk = document.getElementById('user-cnt-clerk');
+        const cntCust = document.getElementById('user-cnt-customer');
+        if (cntAll) cntAll.textContent = data.total_users || 0;
+        if (cntOwner) cntOwner.textContent = data.owners_count || 0;
+        if (cntClerk) cntClerk.textContent = data.clerks_count || 0;
+        if (cntCust) cntCust.textContent = data.customers_count || 0;
+
+        allAdminUsers = data.users || [];
+        allAdminAds = data.ads || [];
+
+        renderAdminUsersTable(allAdminUsers);
+        renderAdminAdsTable(allAdminAds);
+    } catch (err) {
+        console.error('loadPlatformAdminStats error:', err);
+    }
+}
+
+function renderAdminUsersTable(users) {
+    const tbody = document.getElementById('admin-users-table-body');
+    if (!tbody) return;
+    if (!users || users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="padding: 24px; text-align: center; color: #64748b;">No matching user accounts found.</td></tr>';
+        return;
+    }
+    tbody.innerHTML = users.map(u => {
+        let roleBadge = '<span style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">MEMBER</span>';
+        if (u.role === 'OWNER') {
+            roleBadge = '<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">🏢 OWNER</span>';
+        } else if (u.role === 'CLERK') {
+            roleBadge = '<span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">💼 CLERK</span>';
+        } else if (u.role === 'CUSTOMER') {
+            roleBadge = '<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">🎮 GAMER</span>';
+        }
+
+        const dateStr = u.created_at ? u.created_at.split(' ')[0] : '-';
+        const lastLogin = u.last_login_at ? u.last_login_at.split(' ')[0] : 'Never';
+
+        return `
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <td style="padding: 12px 10px; color: #64748b; font-family: monospace;">#${u.id}</td>
+                <td style="padding: 12px 10px; font-weight: 600; color: #fff;">${escapeHtml(u.full_name || 'Anonymous')}</td>
+                <td style="padding: 12px 10px; color: #38bdf8;">${escapeHtml(u.email || '-')}</td>
+                <td style="padding: 12px 10px; color: #cbd5e1;">${escapeHtml(u.phone || '-')}</td>
+                <td style="padding: 12px 10px;">${roleBadge}</td>
+                <td style="padding: 12px 10px; color: #94a3b8;">${dateStr}</td>
+                <td style="padding: 12px 10px; color: #94a3b8;">${lastLogin}</td>
+                <td style="padding: 12px 10px;"><span style="color: #10b981; font-weight: 600;">● Active</span></td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function filterAdminUsers(role, btn) {
+    document.querySelectorAll('.btn-user-filter').forEach(b => {
+        b.style.background = 'rgba(255, 255, 255, 0.05)';
+        b.style.color = '#94a3b8';
+    });
+    if (btn) {
+        btn.style.background = '#334155';
+        btn.style.color = '#fff';
+    }
+    if (role === 'ALL') {
+        renderAdminUsersTable(allAdminUsers);
+    } else {
+        const filtered = allAdminUsers.filter(u => (u.role || '').toUpperCase() === role);
+        renderAdminUsersTable(filtered);
+    }
+}
+
+function searchAdminUsers(query) {
+    const q = (query || '').toLowerCase().trim();
+    if (!q) {
+        renderAdminUsersTable(allAdminUsers);
+        return;
+    }
+    const filtered = allAdminUsers.filter(u => 
+        (u.full_name || '').toLowerCase().includes(q) ||
+        (u.email || '').toLowerCase().includes(q) ||
+        (u.phone || '').toLowerCase().includes(q) ||
+        (u.role || '').toLowerCase().includes(q)
+    );
+    renderAdminUsersTable(filtered);
+}
+
+function renderAdminAdsTable(ads) {
+    const tbody = document.getElementById('admin-ads-table-body');
+    if (!tbody) return;
+    if (!ads || ads.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding: 20px; text-align: center; color: #64748b;">No active sponsor ads. Launch your first ad above!</td></tr>';
+        return;
+    }
+    tbody.innerHTML = ads.map(a => {
+        const sponsor = escapeHtml(a.sponsor_name || 'Sponsor');
+        const title = escapeHtml(a.title || 'Special Promotion');
+        const imp = parseInt(a.impressions || 0, 10);
+        const clk = parseInt(a.clicks || 0, 10);
+        const ctr = (a.ctr_pct !== undefined ? a.ctr_pct : (imp > 0 ? ((clk/imp)*100).toFixed(1) : 0)) + '%';
+        const status = a.is_active ? '<span style="color:#10b981; font-weight:700;">● Active</span>' : '<span style="color:#94a3b8;">Paused</span>';
+
+        return `
+            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <td style="padding: 10px 8px; font-weight: 700; color: #f59e0b;">${sponsor}</td>
+                <td style="padding: 10px 8px; color: #fff;">${title}</td>
+                <td style="padding: 10px 8px; color: #38bdf8; font-weight: 700;">${imp.toLocaleString()}</td>
+                <td style="padding: 10px 8px; color: #10b981; font-weight: 700;">${clk.toLocaleString()}</td>
+                <td style="padding: 10px 8px; color: #a78bfa; font-weight: 700;">${ctr}</td>
+                <td style="padding: 10px 8px;">${status}</td>
+                <td style="padding: 10px 8px;">
+                    <button type="button" class="btn" onclick="copySponsorReport(${a.id})" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;">
+                        📋 Copy Report
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function saveNewSponsorAd(e) {
+    if (e) e.preventDefault();
+    const sponsor_name = document.getElementById('ad-sponsor-input').value.trim();
+    const title = document.getElementById('ad-title-input').value.trim();
+    const target_url = document.getElementById('ad-url-input').value.trim();
+    const badge_text = document.getElementById('ad-badge-input').value.trim();
+
+    try {
+        const res = await fetch('/api/promotions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title,
+                description: title,
+                badge_text: badge_text || '🔥 OFFICIAL SPONSOR',
+                promo_rate: 0,
+                target_url,
+                sponsor_name,
+                is_active: 1
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            showToast('✅ Sponsored campaign launched! Tracking active.');
+            loadPlatformAdminStats();
+            document.getElementById('form-create-sponsor-ad').reset();
+        } else {
+            showToast(data.message || 'Error creating ad');
+        }
+    } catch (err) {
+        showToast('Error creating ad: ' + err.message);
+    }
+}
+
+function copySponsorReport(adId) {
+    const ad = allAdminAds.find(a => a.id === adId);
+    if (!ad) return;
+
+    const sponsor = ad.sponsor_name || 'Brand Sponsor';
+    const title = ad.title || 'Official Promotion';
+    const imp = ad.impressions || 0;
+    const clk = ad.clicks || 0;
+    const ctr = (ad.ctr_pct || (imp > 0 ? ((clk/imp)*100).toFixed(1) : 0)) + '%';
+    const link = ad.target_url || '-';
+
+    const reportText = `🚀 GameWatch Official Sponsor Performance Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏢 Brand Partner: ${sponsor}
+📢 Campaign: "${title}"
+🔗 Target Link: ${link}
+
+📊 VERIFIED AUDIENCE TRACTION:
+• Total Screen Impressions: ${imp.toLocaleString()} views
+• Verified Outbound Clicks: ${clk.toLocaleString()} visitors
+• Click-Through Rate (CTR): ${ctr}
+
+⚡ Monitored Across: GameWatch Esports & Gaming Lounge Network
+📅 Generated: ${new Date().toLocaleDateString()}
+━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+
+    navigator.clipboard.writeText(reportText).then(() => {
+        showToast(`📋 Verified report copied for ${sponsor}! Ready to send.`);
+    }).catch(() => {
+        alert(reportText);
+    });
+}
+
+function switchAdminSubTab(tab) {
+    document.querySelectorAll('.admin-tab-btn').forEach(b => {
+        b.style.borderBottomColor = 'transparent';
+        b.style.color = '#94a3b8';
+    });
+    document.querySelectorAll('.admin-subpane').forEach(p => p.style.display = 'none');
+
+    const btn = document.getElementById(`atab-btn-${tab}`);
+    if (btn) {
+        btn.style.borderBottomColor = '#f59e0b';
+        btn.style.color = '#f59e0b';
+    }
+
+    const pane = document.getElementById(`admin-subpane-${tab}`);
+    if (pane) pane.style.display = 'block';
+
+    if (tab === 'tournaments') {
+        calculateTournamentCommission();
+    }
+}
+
+function calculateTournamentCommission() {
+    const count = parseInt(document.getElementById('calc-player-count').value || 16, 10);
+    const fee = parseFloat(document.getElementById('calc-entry-fee').value || 100);
+    const commPct = parseFloat(document.getElementById('calc-platform-comm-pct').value || 15);
+    const loungePct = parseFloat(document.getElementById('calc-lounge-cut-pct').value || 10);
+
+    const totalPool = count * fee;
+    const platformCut = Math.round(totalPool * (commPct / 100));
+    const loungeCut = Math.round(totalPool * (loungePct / 100));
+    const prizePool = totalPool - platformCut - loungeCut;
+
+    const firstPrize = Math.round(prizePool * 0.75);
+    const secondPrize = prizePool - firstPrize;
+
+    const elTotal = document.getElementById('calc-total-pool');
+    const elPlatform = document.getElementById('calc-platform-cut');
+    const elLounge = document.getElementById('calc-lounge-cut');
+    const el1st = document.getElementById('calc-1st-prize');
+    const el2nd = document.getElementById('calc-2nd-prize');
+
+    if (elTotal) elTotal.textContent = totalPool.toLocaleString() + ' ETB';
+    if (elPlatform) elPlatform.textContent = platformCut.toLocaleString() + ' ETB';
+    if (elLounge) elLounge.textContent = loungeCut.toLocaleString() + ' ETB';
+    if (el1st) el1st.textContent = firstPrize.toLocaleString() + ' ETB';
+    if (el2nd) el2nd.textContent = secondPrize.toLocaleString() + ' ETB';
+}
+
+// Direct Device / Phone Camera Stream Engine
+let deviceCamStream = null;
+let deviceCamInterval = null;
+
+async function startDeviceCameraStream() {
+    try {
+        if (deviceCamStream) {
+            stopDeviceCameraStream();
+        }
+        showToast('Requesting phone camera access...');
+        deviceCamStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 } }
+        });
+        showToast('✅ Device Camera Active! Streaming live to GameWatch...');
+        
+        let video = document.getElementById('device-cam-hidden-video');
+        if (!video) {
+            video = document.createElement('video');
+            video.id = 'device-cam-hidden-video';
+            video.setAttribute('playsinline', '');
+            video.autoplay = true;
+            video.style.display = 'none';
+            document.body.appendChild(video);
+        }
+        video.srcObject = deviceCamStream;
+        await video.play();
+
+        const canvas = document.createElement('canvas');
+        deviceCamInterval = setInterval(async () => {
+            if (!video || video.videoWidth === 0) return;
+            canvas.width = Math.min(1280, video.videoWidth);
+            canvas.height = Math.round(video.videoHeight * (canvas.width / video.videoWidth));
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const b64 = canvas.toDataURL('image/jpeg', 0.65);
+            try {
+                await fetch('/api/cloud/relay_frame', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ frame_base64: b64 })
+                });
+            } catch (err) {
+                console.warn('Frame relay push err:', err);
+            }
+        }, 800);
+    } catch (err) {
+        showToast('Camera access error: ' + err.message);
+        console.error(err);
+    }
+}
+
+function stopDeviceCameraStream() {
+    if (deviceCamInterval) {
+        clearInterval(deviceCamInterval);
+        deviceCamInterval = null;
+    }
+    if (deviceCamStream) {
+        deviceCamStream.getTracks().forEach(t => t.stop());
+        deviceCamStream = null;
+    }
+}
+
+window.loadPlatformAdminStats = loadPlatformAdminStats;
+window.filterAdminUsers = filterAdminUsers;
+window.searchAdminUsers = searchAdminUsers;
+window.saveNewSponsorAd = saveNewSponsorAd;
+window.copySponsorReport = copySponsorReport;
+window.switchAdminSubTab = switchAdminSubTab;
+window.calculateTournamentCommission = calculateTournamentCommission;
+window.startDeviceCameraStream = startDeviceCameraStream;
+window.stopDeviceCameraStream = stopDeviceCameraStream;
