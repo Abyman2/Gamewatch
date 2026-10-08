@@ -26,6 +26,41 @@
             } catch(e) {}
         })();
     </script>
+
+    <style>
+        .offline-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            transition: all 0.2s ease;
+        }
+        .offline-badge-pill.online {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            color: #10b981;
+        }
+        .offline-badge-pill.offline {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid rgba(245, 158, 11, 0.45);
+            color: #f59e0b;
+        }
+        .offline-badge-pill.syncing {
+            background: rgba(6, 182, 212, 0.15);
+            border: 1px solid rgba(6, 182, 212, 0.45);
+            color: #06b6d4;
+        }
+        .offline-badge-pill.pending {
+            background: rgba(139, 92, 246, 0.15);
+            border: 1px solid rgba(139, 92, 246, 0.45);
+            color: #a78bfa;
+        }
+    </style>
 </head>
 <body>
 
@@ -711,6 +746,12 @@
                         <span>Auto-Detect TVs</span>
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
+                    <button type="button" class="btn" id="btn-auto-apply-all-tvs" onclick="autoApplyAllDetectedTvs()" title="Automatically configure TV 1, TV 2, ... TV 7 from detected screens" style="padding: 6px 14px; font-size: 12px; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.15); color: #10b981; cursor: pointer; font-weight: 600;">
+                        <span>⚡ Apply All TVs</span>
+                    </button>
+                    <button type="button" class="btn" id="btn-clear-all-tvs" onclick="clearAllTvCalibrations()" title="Remove all dummy/test boxes for clean setup" style="padding: 6px 14px; font-size: 12px; border-radius: 9999px; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); color: #ef4444; cursor: pointer; font-weight: 600;">
+                        <span>🧹 Clear All Boxes</span>
+                    </button>
                 </div>
             </div>
 
@@ -753,6 +794,11 @@
                                         <input type="checkbox" id="chk-anti-glare" checked onchange="toggleAntiGlare(this.checked)">
                                         <span class="tag-slider"></span>
                                         <span class="tag-txt">☀ Anti-Glare Filter</span>
+                                    </label>
+                                    <label class="toggle-anti-glare-label" title="Shows or hides non-active TV boxes to eliminate screen clutter">
+                                        <input type="checkbox" id="chk-show-all-tvs" onchange="drawCanvasOverlay()">
+                                        <span class="tag-slider"></span>
+                                        <span class="tag-txt">👁 Show Other TV Outlines</span>
                                     </label>
                                     <span class="keystone-angle-badge" id="keystone-angle-badge">📐 Keystone: 0.0°</span>
                                 </div>
@@ -946,6 +992,9 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
                         <span>Save Configuration</span>
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </button>
+                    <button type="button" class="btn" id="btn-delete-station" onclick="deleteCurrentStation()" style="margin-top: 8px; width: 100%; border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.08); color: #f87171; border-radius: 8px; padding: 10px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                        <span>🗑 Delete This Station</span>
                     </button>
 
                     <div class="tip-box">
@@ -3680,6 +3729,7 @@
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-box" id="toast-container"></div>
 
+    <script src="/static/js/offline_engine.js?v=2"></script>
     <script src="/static/js/app.js?v=14"></script>
     <script>
         if ('serviceWorker' in navigator) {

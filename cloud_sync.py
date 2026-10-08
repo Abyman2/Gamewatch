@@ -156,3 +156,28 @@ class CloudSyncManager:
         except Exception as e:
             self.last_sync_status = f"ERROR: {str(e)[:40]}"
             return {"success": False, "message": f"Cloud sync failed: {str(e)}"}
+
+    def push_frame_to_cloud(self, frame) -> bool:
+        """Pushes a compressed camera frame snapshot to the cloud for remote monitoring."""
+        if not self.cloud_api_url or frame is None:
+            return False
+        try:
+            import cv2
+            import base64
+            # Compress to lightweight 640x360 JPEG snapshot (~15KB)
+            h, w = frame.shape[:2]
+            scale = 640.0 / w if w > 640 else 1.0
+            small = cv2.resize(frame, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_LINEAR)
+            _, jpeg = cv2.imencode(".jpg", small, [cv2.IMWRITE_JPEG_QUALITY, 55])
+            b64_str = base64.b64encode(jpeg.tobytes()).decode("utf-8")
+            
+            target_url = f"{self.cloud_api_url.rstrip('/')}/api/cloud/relay_frame"
+            req = urllib.request.Request(
+                target_url,
+                data=json.dumps({"frame_base64": b64_str}).encode("utf-8"),
+                headers={"Content-Type": "application/json"}
+            )
+            with urllib.request.urlopen(req, timeout=3.0) as resp:
+                return resp.status in (200, 201)
+        except Exception:
+            return False

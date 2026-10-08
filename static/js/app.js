@@ -302,9 +302,10 @@ function initClock() {
 async function fetchState() {
     try {
         const res = await fetch('/api/state');
-        if (!res.ok) return;
-        const data = await res.json();
-        App.state = data;
+        if (res.ok) {
+            const data = await res.json();
+            App.state = data;
+            if (window.offlineEngine) offlineEngine.setCachedState(data);
         renderHeader(data);
 
         // Toggle CBE visibility in billing and checkout
@@ -314,13 +315,23 @@ async function fetchState() {
         if (cbePayTab) cbePayTab.style.display = cbeEnabled ? 'inline-flex' : 'none';
         if (cbeCell) cbeCell.style.display = cbeEnabled ? 'flex' : 'none';
 
+        updateStationDropdown(data.tvs);
         if (App.currentView === 'home') renderTvList(data.tvs);
         else if (App.currentView === 'billing') renderBilling(data);
         else if (App.currentView === 'customer') renderCustomerLounge();
         else if (App.currentView === 'analytics') loadBusinessAnalytics();
         else if (App.currentView === 'settings') loadSettingsView();
     } catch (err) {
-        console.error('State fetch error:', err);
+        console.warn('State fetch offline, reading from IndexedDB:', err);
+        if (window.offlineEngine) {
+            const cached = await offlineEngine.getCachedState();
+            if (cached) {
+                App.state = cached;
+                renderHeader(cached);
+                updateStationDropdown(cached.tvs);
+                if (App.currentView === 'home') renderTvList(cached.tvs);
+            }
+        }
     }
 }
 
@@ -903,15 +914,24 @@ function drawCanvasOverlay() {
     if (!App.ctx) return;
     App.ctx.clearRect(0, 0, App.canvas.width, App.canvas.height);
 
-    // 1. Draw existing TV stations from App.state
+    const stationSelect = document.getElementById('station-select');
+    const activeTvId = stationSelect ? (stationSelect.value === 'new' ? null : parseInt(stationSelect.value, 10)) : null;
+    const chkShowAll = document.getElementById('chk-show-all-tvs');
+    const showAllTvs = chkShowAll ? chkShowAll.checked : false;
+
+    // 1. Draw existing TV stations from App.state (Clean, clutter-free rendering)
     if (App.state && App.state.tvs) {
-        App.state.tvs.forEach((tv, idx) => {
-            const isPrimary = (idx === 0 || tv.id === 2);
-            const strokeColor = isPrimary ? '#16B978' : '#16B8FF';
+        App.state.tvs.forEach((tv) => {
+            const isActive = (tv.id === activeTvId);
+            if (!isActive && !showAllTvs) {
+                return; // Hide non-active TVs to eliminate visual clutter!
+            }
+            
+            const strokeColor = isActive ? '#10B981' : 'rgba(6, 182, 212, 0.35)';
+            const lineWidth = isActive ? 2 : 1;
             const tagText = tv.name ? `${tv.name}` : `TV ${tv.id}`;
 
             if (tv.corners && tv.corners.length === 4) {
-                // Quadrilateral polygon
                 App.ctx.save();
                 App.ctx.beginPath();
                 App.ctx.moveTo(tv.corners[0][0], tv.corners[0][1]);
@@ -919,22 +939,28 @@ function drawCanvasOverlay() {
                 App.ctx.lineTo(tv.corners[2][0], tv.corners[2][1]);
                 App.ctx.lineTo(tv.corners[3][0], tv.corners[3][1]);
                 App.ctx.closePath();
-                App.ctx.fillStyle = isPrimary ? 'rgba(22, 185, 120, 0.08)' : 'rgba(22, 184, 255, 0.08)';
+                App.ctx.fillStyle = isActive ? 'rgba(16, 185, 129, 0.08)' : 'transparent';
                 App.ctx.fill();
                 App.ctx.strokeStyle = strokeColor;
-                App.ctx.lineWidth = 2;
+                App.ctx.lineWidth = lineWidth;
+                if (!isActive) App.ctx.setLineDash([4, 4]);
                 App.ctx.stroke();
-                drawCVTag(App.ctx, `${tagText} 📐`, tv.corners[0][0], tv.corners[0][1], strokeColor, strokeColor, 'rgba(6, 26, 53, 0.90)');
+                if (isActive) {
+                    drawCVTag(App.ctx, `${tagText} 📐`, tv.corners[0][0], tv.corners[0][1], strokeColor, strokeColor, 'rgba(6, 26, 53, 0.90)');
+                }
                 App.ctx.restore();
             } else if (tv.roi) {
                 const [rx, ry, rw, rh] = tv.roi;
                 App.ctx.save();
-                App.ctx.fillStyle = isPrimary ? 'rgba(22, 185, 120, 0.08)' : 'rgba(22, 184, 255, 0.08)';
+                App.ctx.fillStyle = isActive ? 'rgba(16, 185, 129, 0.08)' : 'transparent';
                 App.ctx.fillRect(rx, ry, rw, rh);
                 App.ctx.strokeStyle = strokeColor;
-                App.ctx.lineWidth = 2;
+                App.ctx.lineWidth = lineWidth;
+                if (!isActive) App.ctx.setLineDash([4, 4]);
                 App.ctx.strokeRect(rx, ry, rw, rh);
-                drawCVTag(App.ctx, tagText, rx, ry, strokeColor, strokeColor, 'rgba(6, 26, 53, 0.90)');
+                if (isActive) {
+                    drawCVTag(App.ctx, tagText, rx, ry, strokeColor, strokeColor, 'rgba(6, 26, 53, 0.90)');
+                }
                 App.ctx.restore();
             }
         });
@@ -1496,6 +1522,17 @@ async function confirmCheckoutPayment() {
         }
     }
 
+    // Standalone Offline Interception (Solution 2)
+    if (!navigator.onLine) {
+        if (window.offlineEngine) {
+            await offlineEngine.queueMutation(`/api/tv/${App.activeCheckoutTvId}/checkout`, payload, `Checkout TV ${App.activeCheckoutTvId}`);
+            offlineEngine.optimisticCheckout(App.activeCheckoutTvId, App.activePaymentMethod, payload.amount_received);
+        }
+        closeCheckoutModal();
+        showToast('⚡ Offline Mode: Checkout saved to device outbox! Will sync on reconnect.', 'warning');
+        return;
+    }
+
     try {
         const res = await fetch(`/api/tv/${App.activeCheckoutTvId}/checkout`, {
             method: 'POST',
@@ -1923,7 +1960,21 @@ async function submitAdjustment() {
     if (actionType === 'DEDUCT_GAME') endpoint = `/api/tv/${tvId}/deduct_game`;
     
     const clerkName = App.currentUser?.full_name || (App.currentRole === 'CLERK' ? 'Clerk' : 'Owner');
-    
+    const payload = { reason, explanation, actor: clerkName };
+
+    // Standalone Offline Interception (Solution 2)
+    if (!navigator.onLine) {
+        if (window.offlineEngine) {
+            await offlineEngine.queueMutation(endpoint, payload, `${actionType} on TV ${tvId}`);
+            if (actionType === 'ADD_GAME') offlineEngine.optimisticAddGame(tvId, reason);
+            else if (actionType === 'DEDUCT_GAME') offlineEngine.optimisticDeductGame(tvId);
+            else if (actionType === 'RESET_MATCH') offlineEngine.optimisticResetMatch(tvId);
+        }
+        closeAdjustmentModal();
+        showToast(`⚡ Offline Mode: ${actionType} saved to device outbox!`, 'warning');
+        return;
+    }
+
     try {
         const res = await fetch(endpoint, {
             method: 'POST',
@@ -6414,3 +6465,88 @@ document.addEventListener('DOMContentLoaded', () => {
     try { updateTournModalCalc(); } catch (e) {}
 });
 
+
+// ============================================================
+// DYNAMIC STATION DROPDOWN & MULTI-TV HELPERS
+// ============================================================
+window.updateStationDropdown = function(tvs) {
+    const select = document.getElementById('station-select');
+    if (!select || !tvs) return;
+    const currentVal = select.value;
+    const existingOptions = Array.from(select.options).map(o => o.value);
+    
+    // Check if options changed
+    const targetValues = tvs.map(t => String(t.id)).concat(['new']);
+    const isSame = existingOptions.length === targetValues.length && existingOptions.every((v, i) => v === targetValues[i]);
+    if (isSame) return;
+
+    select.innerHTML = '';
+    tvs.forEach(tv => {
+        const opt = document.createElement('option');
+        opt.value = String(tv.id);
+        opt.textContent = `TV ${tv.id} (${tv.name || 'Station'})`;
+        select.appendChild(opt);
+    });
+    const addOpt = document.createElement('option');
+    addOpt.value = 'new';
+    addOpt.textContent = '+ Add New Station';
+    select.appendChild(addOpt);
+
+    if (currentVal && Array.from(select.options).some(o => o.value === currentVal)) {
+        select.value = currentVal;
+    } else if (tvs.length > 0) {
+        select.value = String(tvs[0].id);
+    } else {
+        select.value = 'new';
+    }
+};
+
+window.clearAllTvCalibrations = async function() {
+    if (!confirm('Are you sure you want to clear all TV calibrations and start with a clean slate?')) return;
+    try {
+        const res = await fetch('/api/tv/clear_all', { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message || 'All TV boxes cleared!');
+        await fetchState();
+        if (App.ctx && App.canvas) App.ctx.clearRect(0, 0, App.canvas.width, App.canvas.height);
+        window.applyKeystonePreset('flat');
+    } catch (e) {
+        showToast('Error clearing boxes: ' + e.message, 'error');
+    }
+};
+
+window.autoApplyAllDetectedTvs = async function() {
+    try {
+        showToast('Applying all detected screens across the room...');
+        const res = await fetch('/api/calibration/auto_apply_all_tvs', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || 'All TV stations configured!');
+            await fetchState();
+            drawCanvasOverlay();
+        } else {
+            showToast(data.message || 'No screens found. Run Auto-Detect first.', 'warning');
+        }
+    } catch (e) {
+        showToast('Error applying TVs: ' + e.message, 'error');
+    }
+};
+
+window.deleteCurrentStation = async function() {
+    const select = document.getElementById('station-select');
+    if (!select || select.value === 'new') {
+        showToast('Select an existing TV station to delete.', 'warning');
+        return;
+    }
+    const tvId = parseInt(select.value, 10);
+    if (!confirm(`Delete TV ${tvId}?`)) return;
+    try {
+        const res = await fetch(`/api/tv/delete/${tvId}`, { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message || `TV ${tvId} deleted.`);
+        await fetchState();
+        drawCanvasOverlay();
+    } catch (e) {
+        showToast('Error deleting station: ' + e.message, 'error');
+    }
+};

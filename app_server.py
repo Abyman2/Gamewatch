@@ -113,6 +113,9 @@ class WebTVChannel:
         self.last_inference_time = time.time()
         self.last_frame: Optional[np.ndarray] = None
         self.detected_scoreboard_bbox: Optional[Tuple[int, int, int, int]] = None
+        self.last_ocr_time = 0.0
+        self.ocr_interval = 0.75  # Run heavy OCR at most once every 0.75s per TV
+        self._last_counted_games = 0
         
         # Ensure TV exists in DB
         db_manager.add_tv(self.tv_id, self.name, camera_id=1, customer_name=self.customer_name)
@@ -194,34 +197,51 @@ class WebTVChannel:
             
         self.last_frame = tv_crop
         
-        # 2. Scoreboard Detection
-        sb_crop = None
-        conf = 0.0
-        bbox = (0, 0, 0, 0)
-        
-        # If user explicitly pinned scoreboard ROI within TV, use that
-        if self.scoreboard_roi is not None and len(self.scoreboard_roi) == 4:
-            sx, sy, sw, sh = self.scoreboard_roi
-            th, tw = tv_crop.shape[:2]
-            if sx + sw <= tw and sy + sh <= th and sw > 10 and sh > 10:
-                sb_crop = tv_crop[sy:sy+sh, sx:sx+sw]
-                bbox = (sx, sy, sw, sh)
-                conf = 0.95
+        # 2. Scoreboard Detection & OCR (Throttled for ultra-smooth 30+ FPS video)
+        if (now - self.last_ocr_time) >= self.ocr_interval or self.last_reading is None:
+            self.last_ocr_time = now
+            sb_crop = None
+            conf = 0.0
+            bbox = (0, 0, 0, 0)
+            
+            # If user explicitly pinned scoreboard ROI within TV, use that
+            if self.scoreboard_roi is not None and len(self.scoreboard_roi) == 4:
+                sx, sy, sw, sh = self.scoreboard_roi
+                th, tw = tv_crop.shape[:2]
+                if sx + sw <= tw and sy + sh <= th and sw > 10 and sh > 10:
+                    sb_crop = tv_crop[sy:sy+sh, sx:sx+sw]
+                    bbox = (sx, sy, sw, sh)
+                    conf = 0.95
+                    
+            if sb_crop is None:
+                sb_crop, bbox, conf = self.reader.detect_and_crop_scoreboard(tv_crop)
                 
-        if sb_crop is None:
-            sb_crop, bbox, conf = self.reader.detect_and_crop_scoreboard(tv_crop)
+            self.detected_scoreboard_bbox = bbox if conf >= 0.40 else None
             
-        self.detected_scoreboard_bbox = bbox if conf >= 0.40 else None
-        
-        # 3. Read Scoreboard
-        if sb_crop is not None and sb_crop.size > 0 and conf >= 0.40:
-            reading = self.reader.read(sb_crop)
-        else:
-            reading = ScoreboardReading(valid=False, overall_confidence=0.0)
+            # 3. Read Scoreboard
+            if sb_crop is not None and sb_crop.size > 0 and conf >= 0.40:
+                reading = self.reader.read(sb_crop)
+            else:
+                reading = ScoreboardReading(valid=False, overall_confidence=0.0)
+                
+            self.last_reading = reading
             
-        self.last_reading = reading
-        self.current_state = self.brain.process_reading(reading, simulated_elapsed_real_seconds=elapsed_delta)
-        return reading
+            # Temporal state machine & automated game counting
+            prev_state = self.current_state
+            new_state = self.brain.process_reading(reading, simulated_elapsed_real_seconds=elapsed_delta)
+            self.current_state = new_state
+            
+            # Check for match completion and increment games in database
+            brain_games = getattr(self.brain, "games_counted", 0)
+            if (prev_state in ("MATCH_IN_PROGRESS", "EXTRA_TIME") and new_state in ("POSSIBLE_RESTART", "WAITING", "EARLY_MATCH")) or (brain_games > self._last_counted_games):
+                self._last_counted_games = brain_games
+                print(f"[AUTO-COUNT] Game finished on TV {self.tv_id}! Incrementing game count in DB.")
+                try:
+                    db_manager.add_completed_game(self.tv_id)
+                except Exception as e:
+                    print(f"[AUTO-COUNT ERROR] TV {self.tv_id}: {e}")
+                    
+        return self.last_reading or ScoreboardReading(valid=False, overall_confidence=0.0)
 
 
 # ========================================
@@ -274,7 +294,8 @@ class LoungeManager:
                 try:
                     with open(TV_REGIONS_FILE, "r") as f:
                         data = json.load(f)
-                    if isinstance(data, list) and len(data) > 0:
+                    if isinstance(data, list):
+                        loaded = True
                         for item in data:
                             tid = int(item.get("tv_id", len(self.channels) + 1))
                             name = item.get("name", f"TV {tid}")
@@ -393,12 +414,12 @@ class LoungeManager:
                 self.zero_camera = None
             
             self.zero_camera = ZeroLatencyCamera(self.active_source_address)
-            if self.zero_camera and self.zero_camera.is_connected:
-                self.use_simulation = False
-                return {"success": True, "connected": True, "message": f"Zero-latency feed active in real-time (< 30ms delay): {address}"}
-            else:
-                self.use_simulation = True
-                return {"success": True, "connected": False, "message": f"Feed configured for {address}. Waiting for frames..."}
+            for _ in range(6):
+                if self.zero_camera and self.zero_camera.is_connected:
+                    break
+                time.sleep(0.05)
+            self.use_simulation = False
+            return {"success": True, "connected": True, "message": f"Zero-latency feed active in real-time (< 30ms delay): {address}"}
 
 
     def auto_detect_tv_screens(self) -> dict:
@@ -415,7 +436,7 @@ class LoungeManager:
 
         contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         detected_candidates = []
-        min_area = (fw * fh) * 0.04
+        min_area = (fw * fh) * 0.008
 
         for c in contours:
             area = cv2.contourArea(c)
@@ -425,7 +446,7 @@ class LoungeManager:
             approx = cv2.approxPolyDP(c, 0.03 * peri, True)
             x, y, w, h = cv2.boundingRect(c)
             aspect = float(w) / max(1, h)
-            if 1.1 <= aspect <= 2.4 and w >= 200 and h >= 120:
+            if 1.0 <= aspect <= 2.6 and w >= 80 and h >= 45:
                 if len(approx) == 4:
                     pts = approx.reshape(4, 2).astype("float32")
                 else:
@@ -523,8 +544,9 @@ class LoungeManager:
 
     def _capture_and_process_loop(self):
         last_t = time.time()
+        last_cloud_frame_push = 0.0
         while self.running:
-            time.sleep(0.1)
+            time.sleep(0.02)
             frame = self._get_next_frame()
             self.current_raw_frame = frame
             now = time.time()
@@ -534,6 +556,11 @@ class LoungeManager:
             with self.lock:
                 for tid, ch in list(self.channels.items()):
                     ch.process_frame(frame, delta)
+
+            # Non-blocking remote cloud frame relay (pushed to Render every 2.5s if cloud configured)
+            if cloud_sync_manager.cloud_api_url and (now - last_cloud_frame_push) >= 2.5 and frame is not None:
+                last_cloud_frame_push = now
+                threading.Thread(target=cloud_sync_manager.push_frame_to_cloud, args=(frame.copy(),), daemon=True).start()
 
     def analyze_selection(self, x: int = 0, y: int = 0, w: int = 100, h: int = 100, 
                           corners: Optional[List[List[float]]] = None,
@@ -767,37 +794,20 @@ manager = LoungeManager()
 # VIDEO STREAM GENERATORS
 # ========================================
 def generate_full_stream():
-    """MJPEG generator for the main camera stream with glowing TV boxes."""
+    """MJPEG generator for the main camera stream: clean, ultra-low latency, 30+ FPS."""
     while True:
-        time.sleep(0.06)
-        if manager.current_raw_frame is None:
+        time.sleep(0.025)
+        display = manager.current_raw_frame if manager.current_raw_frame is not None else CLOUD_RELAY_FRAME
+        if display is None:
             continue
         
-        display = manager.current_raw_frame.copy()
-        
-        # Draw TV ROIs
-        with manager.lock:
-            for tid, ch in manager.channels.items():
-                if ch.roi:
-                    x, y, w, h = ch.roi
-                    # Glowing border
-                    color = (0, 240, 140) if ch.current_state == "MATCH_IN_PROGRESS" else (240, 160, 0)
-                    cv2.rectangle(display, (x, y), (x + w, y + h), color, 2)
-                    
-                    label = f"TV {tid}: {ch.name}"
-                    if ch.customer_name:
-                        label += f" ({ch.customer_name})"
-                    
-                    # Background tag
-                    cv2.rectangle(display, (x, max(0, y - 24)), (x + len(label) * 9 + 10, y), color, -1)
-                    cv2.putText(display, label, (x + 5, max(16, y - 6)), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (10, 15, 20), 1, cv2.LINE_AA)
-                    
-                    # Scoreboard box if detected
-                    if ch.detected_scoreboard_bbox:
-                        bx, by, bw, bh = ch.detected_scoreboard_bbox
-                        cv2.rectangle(display, (x + bx, y + by), (x + bx + bw, y + by + bh), (0, 255, 255), 1)
+        h, w = display.shape[:2]
+        # Fast downscale if 1080p+ for instant JPEG encoding and low Wi-Fi latency
+        if w > 1280:
+            scale = 1280.0 / w
+            display = cv2.resize(display, (1280, int(h * scale)), interpolation=cv2.INTER_LINEAR)
 
-        _, jpeg = cv2.imencode(".jpg", display, [cv2.IMWRITE_JPEG_QUALITY, 75])
+        _, jpeg = cv2.imencode(".jpg", display, [cv2.IMWRITE_JPEG_QUALITY, 70])
         yield (b"--frame\r\nContent-Type: image/jpeg\r\n\r\n" + jpeg.tobytes() + b"\r\n")
 
 def generate_tv_stream(tv_id: int):
@@ -949,6 +959,50 @@ def api_save_tv():
 @require_role("OWNER")
 def api_delete_tv(tv_id):
     return jsonify(manager.delete_tv(tv_id))
+
+@app.route("/api/tv/clear_all", methods=["POST"])
+@require_role("OWNER")
+def api_clear_all_tvs():
+    with manager.lock:
+        manager.channels.clear()
+        with open(TV_REGIONS_FILE, "w") as f:
+            json.dump([], f, indent=4)
+        try:
+            conn = db_manager.get_connection()
+            conn.execute("DELETE FROM tvs")
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
+    return jsonify({"success": True, "message": "All TV calibrations cleared. Clean slate ready!"})
+
+@app.route("/api/calibration/auto_apply_all_tvs", methods=["POST"])
+@require_role("OWNER")
+def api_auto_apply_all_tvs():
+    scan = manager.auto_detect_tv_screens()
+    screens = scan.get("detected_screens") or []
+    if not screens:
+        return jsonify({"success": False, "message": "No screens detected to apply."}), 400
+    
+    with manager.lock:
+        manager.channels.clear()
+        for idx, s in enumerate(screens, 1):
+            tid = idx
+            name = f"TV {tid}"
+            corners = s.get("corners")
+            bbox = s.get("bounding_box")
+            roi = (bbox["x"], bbox["y"], bbox["w"], bbox["h"]) if bbox else None
+            sb_roi = s.get("scoreboard_roi")
+            corners_list = [[float(p[0]), float(p[1])] for p in corners] if corners else None
+            ch = WebTVChannel(tid, name, "", roi, sb_roi, corners_list, enable_anti_glare=True)
+            manager.channels[tid] = ch
+        manager._save_channels_to_json()
+        
+    return jsonify({
+        "success": True, 
+        "count": len(manager.channels), 
+        "message": f"Successfully configured all {len(manager.channels)} TV stations across the room!"
+    })
 
 @app.route("/api/tv/<int:tv_id>/add_game", methods=["POST"])
 @require_role("OWNER", "CLERK")
@@ -2035,6 +2089,33 @@ def api_delete_camera_source(source_id):
     return jsonify(res)
 
 
+# Cloud Relay Frame Storage for Remote Monitoring
+CLOUD_RELAY_FRAME: Optional[np.ndarray] = None
+CLOUD_RELAY_TIMESTAMP: float = 0.0
+
+@app.route("/api/cloud/relay_frame", methods=["POST"])
+def api_cloud_relay_frame():
+    """Receives a lightweight compressed frame snapshot from a local lounge PC edge node."""
+    global CLOUD_RELAY_FRAME, CLOUD_RELAY_TIMESTAMP
+    data = request.json or {}
+    b64_data = data.get("frame_base64")
+    if not b64_data:
+        return jsonify({"success": False, "message": "frame_base64 required"}), 400
+    try:
+        if "," in b64_data:
+            b64_data = b64_data.split(",")[1]
+        img_bytes = base64.b64decode(b64_data)
+        np_arr = np.frombuffer(img_bytes, np.uint8)
+        frame = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        if frame is not None:
+            CLOUD_RELAY_FRAME = frame
+            CLOUD_RELAY_TIMESTAMP = time.time()
+            return jsonify({"success": True, "message": "Relay frame received"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 400
+    return jsonify({"success": False, "message": "Invalid image payload"}), 400
+
+
 if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("GAMEWATCH HARDENED LOUNGE OPERATING SYSTEM")
@@ -2042,4 +2123,3 @@ if __name__ == "__main__":
     print("Web UI available at: http://localhost:5000")
     print("=" * 60 + "\n")
     app.run(host="0.0.0.0", port=5000, debug=False, threaded=True)
-

@@ -1,13 +1,14 @@
 // ============================================================
-// GAMEWATCH™ OFFLINE-FIRST SERVICE WORKER (v1.0)
-// Enables full functionality during internet outages
+// GAMEWATCH™ OFFLINE-FIRST SERVICE WORKER (v2.0)
+// Enables full functionality during internet outages & offline PWA
 // ============================================================
 
-const CACHE_NAME = 'gamewatch-cache-v1';
+const CACHE_NAME = 'gamewatch-cache-v2';
 const STATIC_ASSETS = [
     '/',
-    '/static/css/style.css?v=12',
+    '/static/css/style.css',
     '/static/js/app.js',
+    '/static/js/offline_engine.js',
     '/static/img/logo.png',
     '/manifest.json'
 ];
@@ -16,7 +17,7 @@ const STATIC_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('[GameWatch SW] Pre-caching offline application shell');
+            console.log('[GameWatch SW] Pre-caching offline application shell v2');
             return cache.addAll(STATIC_ASSETS);
         }).then(() => self.skipWaiting())
     );
@@ -33,7 +34,7 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Fetch: Stale-While-Revalidate for app shell, Network-First for API
+// Fetch: Stale-While-Revalidate for app shell, Network-First with Cache fallback for state
 self.addEventListener('fetch', (event) => {
     const url = new URL(event.request.url);
 
@@ -42,8 +43,8 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // For API calls: Network-First with Cache fallback
-    if (url.pathname.startsWith('/api/')) {
+    // For state and telemetry API calls: Network-First with Cache fallback
+    if (url.pathname.startsWith('/api/state') || url.pathname.startsWith('/api/lounge_config')) {
         event.respondWith(
             fetch(event.request)
                 .then((response) => {
@@ -58,7 +59,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // For Static Shell Assets: Cache-First, fallback to Network
+    // For Static Shell Assets & Pages: Cache-First, fallback to Network, fallback to cached root
     event.respondWith(
         caches.match(event.request).then((cached) => {
             if (cached) {
@@ -70,7 +71,12 @@ self.addEventListener('fetch', (event) => {
                 }).catch(() => {});
                 return cached;
             }
-            return fetch(event.request);
+            return fetch(event.request).catch(() => {
+                // If navigation fails completely offline, serve cached index
+                if (event.request.mode === 'navigate') {
+                    return caches.match('/');
+                }
+            });
         })
     );
 });
