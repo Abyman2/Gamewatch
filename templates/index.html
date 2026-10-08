@@ -85,6 +85,17 @@
             <span class="splash-meta">GameWatch — A TSEGA Labs product · © 2026 TSEGA Labs. All rights reserved.</span>
         </div>
     </div>
+    <script>
+        (function() {
+            var autoDismissTimer = setTimeout(function() {
+                var sp = document.getElementById('splash-screen');
+                if (sp && sp.style.display !== 'none') {
+                    sp.classList.add('splash-dismissed');
+                    setTimeout(function() { sp.style.display = 'none'; }, 200);
+                }
+            }, 1200);
+        })();
+    </script>
 
     <!-- ============================================================ -->
     <!-- GAMEWATCH ENTERPRISE SAAS SHELL (Matching Image 2 Spec)       -->
@@ -3982,8 +3993,8 @@
     <!-- TOAST NOTIFICATIONS -->
     <div class="toast-box" id="toast-container"></div>
 
-    <script src="/static/js/offline_engine.js?v=2"></script>
-    <script src="/static/js/app.js?v=14"></script>
+    <script src="/static/js/offline_engine.js?v=3"></script>
+    <script src="/static/js/app.js?v=15"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

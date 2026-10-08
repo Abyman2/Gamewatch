@@ -323,6 +323,7 @@ async function fetchState() {
         else if (App.currentView === 'customer') renderCustomerLounge();
         else if (App.currentView === 'analytics') loadBusinessAnalytics();
         else if (App.currentView === 'settings') loadSettingsView();
+        }
     } catch (err) {
         console.warn('State fetch offline, reading from IndexedDB:', err);
         if (window.offlineEngine) {

@@ -3,7 +3,7 @@
 // Enables full functionality during internet outages & offline PWA
 // ============================================================
 
-const CACHE_NAME = 'gamewatch-cache-v2';
+const CACHE_NAME = 'gamewatch-cache-v3';
 const STATIC_ASSETS = [
     '/',
     '/static/css/style.css',
