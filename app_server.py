@@ -2131,6 +2131,22 @@ def api_admin_platform_stats():
     stats = db_manager.get_platform_master_stats()
     return jsonify(stats)
 
+@app.route("/api/admin/users/<int:user_id>", methods=["DELETE"])
+@require_role("OWNER")
+def api_admin_delete_user(user_id):
+    """Deletes an individual user account with protection for self and master owner."""
+    current = get_current_user()
+    res = db_manager.delete_user(user_id, current_user_id=current.get("id"))
+    return jsonify(res)
+
+@app.route("/api/admin/users/clean_test_users", methods=["POST"])
+@require_role("OWNER")
+def api_admin_clean_test_users():
+    """Purges automated dummy/seed test users in 1 click while preserving real users."""
+    current = get_current_user()
+    res = db_manager.cleanup_test_users(current_user_id=current.get("id"))
+    return jsonify(res)
+
 @app.route("/api/promotions/<int:promo_id>/impression", methods=["POST"])
 def api_promotion_impression(promo_id):
     """Tracks an ad impression when displayed on TV monitor or customer dashboard."""

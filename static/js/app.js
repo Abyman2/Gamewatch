@@ -6630,7 +6630,7 @@ function renderAdminUsersTable(users) {
     const tbody = document.getElementById('admin-users-table-body');
     if (!tbody) return;
     if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding: 24px; text-align: center; color: #64748b;">No matching user accounts found.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">No matching user accounts found.</td></tr>';
         return;
     }
     tbody.innerHTML = users.map(u => {
@@ -6646,6 +6646,13 @@ function renderAdminUsersTable(users) {
         const dateStr = u.created_at ? u.created_at.split(' ')[0] : '-';
         const lastLogin = u.last_login_at ? u.last_login_at.split(' ')[0] : 'Never';
 
+        let actionCell = '';
+        if (u.email === 'abyman24680@gmail.com') {
+            actionCell = '<span style="color: #f59e0b; font-size: 11px; font-weight: 700;">👑 Master</span>';
+        } else {
+            actionCell = `<button type="button" class="btn" onclick="deleteAdminUser(${u.id}, '${escapeHtml(u.full_name || u.email)}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;">🗑️ Delete</button>`;
+        }
+
         return `
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
                 <td style="padding: 12px 10px; color: #64748b; font-family: monospace;">#${u.id}</td>
@@ -6656,9 +6663,42 @@ function renderAdminUsersTable(users) {
                 <td style="padding: 12px 10px; color: #94a3b8;">${dateStr}</td>
                 <td style="padding: 12px 10px; color: #94a3b8;">${lastLogin}</td>
                 <td style="padding: 12px 10px;"><span style="color: #10b981; font-weight: 600;">● Active</span></td>
+                <td style="padding: 12px 10px; text-align: right;">${actionCell}</td>
             </tr>
         `;
     }).join('');
+}
+
+async function deleteAdminUser(userId, userName) {
+    if (!confirm(`Are you sure you want to permanently delete user "${userName}"?`)) return;
+    try {
+        const res = await fetch(`/api/admin/users/${userId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showToast(data.message || 'User deleted successfully.');
+            loadPlatformAdminStats();
+        } else {
+            showToast(data.message || 'Error deleting user', 'error');
+        }
+    } catch (err) {
+        showToast('Error deleting user: ' + err.message, 'error');
+    }
+}
+
+async function cleanAllTestUsers() {
+    if (!confirm('Are you sure you want to clean up all automated test/seed users? Real accounts (e.g. abyman24680@gmail.com, yordi@gmail.com, sami24680@gmail.com) will be strictly preserved.')) return;
+    try {
+        const res = await fetch('/api/admin/users/clean_test_users', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            showToast(`✅ ${data.message}`);
+            loadPlatformAdminStats();
+        } else {
+            showToast(data.message || 'Error cleaning test users', 'error');
+        }
+    } catch (err) {
+        showToast('Error cleaning test users: ' + err.message, 'error');
+    }
 }
 
 function filterAdminUsers(role, btn) {
@@ -6906,6 +6946,8 @@ function stopDeviceCameraStream() {
 window.loadPlatformAdminStats = loadPlatformAdminStats;
 window.filterAdminUsers = filterAdminUsers;
 window.searchAdminUsers = searchAdminUsers;
+window.deleteAdminUser = deleteAdminUser;
+window.cleanAllTestUsers = cleanAllTestUsers;
 window.saveNewSponsorAd = saveNewSponsorAd;
 window.copySponsorReport = copySponsorReport;
 window.switchAdminSubTab = switchAdminSubTab;

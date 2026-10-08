@@ -1622,6 +1622,71 @@ def get_all_users():
     connection.close()
     return [dict(r) for r in rows]
 
+def delete_user(user_id: int, current_user_id: int = None) -> dict:
+    if current_user_id and int(user_id) == int(current_user_id):
+        return {"success": False, "message": "Cannot delete your own active master account."}
+    connection = get_connection()
+    cursor = connection.cursor()
+    cursor.execute("SELECT id, full_name, email, role FROM users WHERE id = ?", (user_id,))
+    target = cursor.fetchone()
+    if not target:
+        connection.close()
+        return {"success": False, "message": "User not found."}
+    if target["email"] == "abyman24680@gmail.com":
+        connection.close()
+        return {"success": False, "message": "Master founder account (abyman24680@gmail.com) is protected."}
+    
+    # Clean up associated registrations if any
+    cursor.execute("DELETE FROM event_registrations WHERE customer_phone = ? OR customer_name = ?", (target["email"], target["full_name"]))
+    cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    connection.commit()
+    connection.close()
+    return {"success": True, "message": f"User {target['full_name']} ({target['email']}) deleted successfully."}
+
+def cleanup_test_users(current_user_id: int = None) -> dict:
+    """Removes automated test/seed users while strictly preserving real accounts."""
+    connection = get_connection()
+    cursor = connection.cursor()
+    
+    protected_emails = [
+        'abyman24680@gmail.com', 'sami24680@gmail.com', 'ayalnesh45@gmail.com',
+        'yordi@gmail.com', 'haylu@gamewatch.com', 'someone@gamewatch.com'
+    ]
+    
+    cursor.execute("SELECT id, email, full_name FROM users")
+    all_u = cursor.fetchall()
+    deleted_count = 0
+    deleted_names = []
+    
+    for u in all_u:
+        em = (u["email"] or "").lower()
+        fn = (u["full_name"] or "").lower()
+        uid = u["id"]
+        
+        if em in protected_emails or (current_user_id and uid == current_user_id):
+            continue
+            
+        is_test = (
+            'test' in em or 'test' in fn or
+            'bob_' in em or 'sam_' in em or 'dan_' in em or 'sim_' in em or
+            em in ['bob@lounge.et', 'sam@lounge.et', 'dan@gamer.et'] or
+            'gamewatch.et' in em
+        )
+        
+        if is_test:
+            cursor.execute("DELETE FROM users WHERE id = ?", (uid,))
+            deleted_count += 1
+            deleted_names.append(f"{u['full_name']} ({u['email']})")
+            
+    connection.commit()
+    connection.close()
+    return {
+        "success": True, 
+        "deleted_count": deleted_count, 
+        "deleted_users": deleted_names,
+        "message": f"Successfully cleaned up {deleted_count} test users."
+    }
+
 
 
 # ----------------------------------------
