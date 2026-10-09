@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/style.css?v=18">
+    <link rel="stylesheet" href="/static/css/style.css?v=19">
     <script>
         (function() {
             try {
@@ -2074,160 +2074,166 @@
         <!-- MASTER ADMIN PLATFORM COMMAND CENTER                         -->
         <!-- ============================================================ -->
         <section class="app-view" id="view-admin">
-            <div class="admin-master-container" style="max-width: 1400px; margin: 0 auto; padding: 24px 20px;">
+            <div class="admin-master-container">
                 <!-- Header Banner -->
-                <div style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.98)); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; padding: 24px 28px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+                <div class="admin-header-card">
                     <div>
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <div class="admin-header-title-wrap">
                             <span style="font-size: 26px;">👑</span>
-                            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.5px;">PLATFORM MASTER ADMIN</h2>
-                            <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase;">Founder / Super-Admin</span>
+                            <h2 class="admin-header-h2">PLATFORM MASTER ADMIN</h2>
+                            <span class="admin-badge-super">Founder / Super-Admin</span>
                         </div>
-                        <p style="margin: 0; color: #94a3b8; font-size: 14px;">Monitor platform traffic, user directory (Owners, Clerks, Gamers), verified ad traction, and tournament commissions.</p>
+                        <p class="admin-header-desc">Monitor platform traffic, user directory (Owners, Clerks, Gamers), verified ad traction, and tournament commissions.</p>
                     </div>
-                    <div style="display: flex; gap: 12px; align-items: center;">
-                        <button type="button" class="btn" onclick="loadPlatformAdminStats()" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #f59e0b; font-weight: 600; padding: 10px 18px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <div>
+                        <button type="button" class="btn-admin-refresh" onclick="loadPlatformAdminStats()">
                             <span>🔄 Refresh Platform Stats</span>
                         </button>
                     </div>
                 </div>
 
                 <!-- KPI Metric Cards Grid -->
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px;">
-                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 18px 20px;">
-                        <div style="color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">👥 Total Registered</div>
-                        <div id="admin-kpi-total-users" style="font-size: 28px; font-weight: 800; color: #38bdf8;">--</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">All platform accounts</div>
+                <div class="admin-kpi-grid">
+                    <div class="admin-kpi-card admin-kpi-users">
+                        <div class="admin-kpi-head">👥 Total Registered</div>
+                        <div id="admin-kpi-total-users" class="admin-kpi-val">--</div>
+                        <div class="admin-kpi-sub">All platform accounts</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; padding: 18px 20px;">
-                        <div style="color: #10b981; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">🏢 Lounge Owners</div>
-                        <div id="admin-kpi-owners" style="font-size: 28px; font-weight: 800; color: #10b981;">--</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Gaming lounges onboard</div>
+                    <div class="admin-kpi-card admin-kpi-owners">
+                        <div class="admin-kpi-head">🏢 Lounge Owners</div>
+                        <div id="admin-kpi-owners" class="admin-kpi-val">--</div>
+                        <div class="admin-kpi-sub">Gaming lounges onboard</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 18px 20px;">
-                        <div style="color: #a78bfa; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">💼 Active Clerks</div>
-                        <div id="admin-kpi-clerks" style="font-size: 28px; font-weight: 800; color: #a78bfa;">--</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Cashier & desk staff</div>
+                    <div class="admin-kpi-card admin-kpi-clerks">
+                        <div class="admin-kpi-head">💼 Active Clerks</div>
+                        <div id="admin-kpi-clerks" class="admin-kpi-val">--</div>
+                        <div class="admin-kpi-sub">Cashier &amp; desk staff</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 12px; padding: 18px 20px;">
-                        <div style="color: #f59e0b; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">🎮 Gamers / Players</div>
-                        <div id="admin-kpi-customers" style="font-size: 28px; font-weight: 800; color: #f59e0b;">--</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Registered players</div>
+                    <div class="admin-kpi-card admin-kpi-customers">
+                        <div class="admin-kpi-head">🎮 Gamers / Players</div>
+                        <div id="admin-kpi-customers" class="admin-kpi-val">--</div>
+                        <div class="admin-kpi-sub">Registered players</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 12px; padding: 18px 20px;">
-                        <div style="color: #60a5fa; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">⚡ Matches Played</div>
-                        <div id="admin-kpi-games" style="font-size: 28px; font-weight: 800; color: #60a5fa;">--</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">AI camera verified</div>
+                    <div class="admin-kpi-card admin-kpi-games">
+                        <div class="admin-kpi-head">⚡ Matches Played</div>
+                        <div id="admin-kpi-games" class="admin-kpi-val">--</div>
+                        <div class="admin-kpi-sub">AI camera verified</div>
                     </div>
-                    <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(236, 72, 153, 0.2); border-radius: 12px; padding: 18px 20px;">
-                        <div style="color: #f472b6; font-size: 12px; font-weight: 600; text-transform: uppercase; margin-bottom: 6px;">💰 Gaming Turnover</div>
-                        <div id="admin-kpi-volume" style="font-size: 28px; font-weight: 800; color: #f472b6;">-- ETB</div>
-                        <div style="color: #64748b; font-size: 11px; margin-top: 4px;">Total settled volume</div>
+                    <div class="admin-kpi-card admin-kpi-volume">
+                        <div class="admin-kpi-head">💰 Gaming Turnover</div>
+                        <div id="admin-kpi-volume" class="admin-kpi-val">-- ETB</div>
+                        <div class="admin-kpi-sub">Total settled volume</div>
                     </div>
                 </div>
 
                 <!-- Admin Tab Switcher -->
-                <div style="display: flex; gap: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 24px;">
-                    <button type="button" class="admin-tab-btn" id="atab-btn-users" onclick="switchAdminSubTab('users')" style="background: transparent; border: none; border-bottom: 2px solid #f59e0b; color: #f59e0b; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer;">👥 User Directory & Accounts</button>
-                    <button type="button" class="admin-tab-btn" id="atab-btn-ads" onclick="switchAdminSubTab('ads')" style="background: transparent; border: none; border-bottom: 2px solid transparent; color: #94a3b8; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer;">📢 Ad Sponsors & Traction Stats</button>
-                    <button type="button" class="admin-tab-btn" id="atab-btn-tournaments" onclick="switchAdminSubTab('tournaments')" style="background: transparent; border: none; border-bottom: 2px solid transparent; color: #94a3b8; padding: 12px 20px; font-weight: 700; font-size: 14px; cursor: pointer;">🏆 Tournament Commission Engine</button>
+                <div class="admin-tabs-bar">
+                    <button type="button" class="admin-tab-btn active" id="atab-btn-users" onclick="switchAdminSubTab('users')">👥 User Directory &amp; Accounts</button>
+                    <button type="button" class="admin-tab-btn" id="atab-btn-ads" onclick="switchAdminSubTab('ads')">📢 Ad Sponsors &amp; Traction Stats</button>
+                    <button type="button" class="admin-tab-btn" id="atab-btn-tournaments" onclick="switchAdminSubTab('tournaments')">🏆 Tournament Commission Engine</button>
                 </div>
 
                 <!-- SUB-TAB 1: USERS DIRECTORY -->
                 <div id="admin-subpane-users" class="admin-subpane">
-                    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 22px;">
+                    <div class="admin-card">
                         <!-- Controls Row -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px;">
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                                <button type="button" class="btn-user-filter active" onclick="filterAdminUsers('ALL', this)" style="background: #334155; border: none; color: #fff; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">All Users (<span id="user-cnt-all">0</span>)</button>
-                                <button type="button" class="btn-user-filter" onclick="filterAdminUsers('OWNER', this)" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #10b981; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">🏢 Owners (<span id="user-cnt-owner">0</span>)</button>
-                                <button type="button" class="btn-user-filter" onclick="filterAdminUsers('CLERK', this)" style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.4); color: #a78bfa; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">💼 Clerks (<span id="user-cnt-clerk">0</span>)</button>
-                                <button type="button" class="btn-user-filter" onclick="filterAdminUsers('CUSTOMER', this)" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #f59e0b; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">🎮 Gamers (<span id="user-cnt-customer">0</span>)</button>
-                                <button type="button" class="btn" onclick="cleanAllTestUsers()" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <div class="admin-controls-row">
+                            <div class="admin-filter-group">
+                                <button type="button" class="btn-user-filter active" onclick="filterAdminUsers('ALL', this)">All Users (<span id="user-cnt-all">0</span>)</button>
+                                <button type="button" class="btn-user-filter" onclick="filterAdminUsers('OWNER', this)">🏢 Owners (<span id="user-cnt-owner">0</span>)</button>
+                                <button type="button" class="btn-user-filter" onclick="filterAdminUsers('CLERK', this)">💼 Clerks (<span id="user-cnt-clerk">0</span>)</button>
+                                <button type="button" class="btn-user-filter" onclick="filterAdminUsers('CUSTOMER', this)">🎮 Gamers (<span id="user-cnt-customer">0</span>)</button>
+                                <button type="button" class="btn-clean-test" onclick="cleanAllTestUsers()">
                                     <span>🧹 Clean Up Test Users</span>
                                 </button>
                             </div>
-                            <div style="position: relative; min-width: 260px;">
-                                <input type="text" id="admin-user-search-input" oninput="searchAdminUsers(this.value)" placeholder="🔍 Search name, email, phone..." style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 14px; border-radius: 8px; font-size: 13px; outline: none;">
+                            <div class="admin-search-wrap">
+                                <span class="search-icon">🔍</span>
+                                <input type="text" id="admin-user-search-input" class="admin-search-input" oninput="searchAdminUsers(this.value)" placeholder="Search name, email, phone...">
                             </div>
                         </div>
 
-                        <!-- Table -->
-                        <div style="overflow-x: auto;">
-                            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                        <!-- Desktop Table -->
+                        <div class="admin-table-wrap">
+                            <table class="admin-table">
                                 <thead>
-                                    <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; text-transform: uppercase; font-size: 11px; font-weight: 700;">
-                                        <th style="padding: 12px 10px;">ID</th>
-                                        <th style="padding: 12px 10px;">User Name</th>
-                                        <th style="padding: 12px 10px;">Email Address</th>
-                                        <th style="padding: 12px 10px;">Phone</th>
-                                        <th style="padding: 12px 10px;">Role</th>
-                                        <th style="padding: 12px 10px;">Joined</th>
-                                        <th style="padding: 12px 10px;">Last Login</th>
-                                        <th style="padding: 12px 10px;">Status</th>
-                                        <th style="padding: 12px 10px; text-align: right;">Action</th>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>User Name</th>
+                                        <th>Email Address</th>
+                                        <th>Phone</th>
+                                        <th>Role</th>
+                                        <th>Joined</th>
+                                        <th>Last Login</th>
+                                        <th>Status</th>
+                                        <th style="text-align: right;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="admin-users-table-body">
                                     <tr>
-                                        <td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">Loading user accounts...</td>
+                                        <td colspan="9" style="padding: 24px; text-align: center; color: var(--text-tertiary);">Loading user accounts...</td>
                                     </tr>
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Mobile User Cards (Rendered on phones < 768px) -->
+                        <div class="admin-mobile-user-list" id="admin-users-mobile-list">
+                            <!-- Populated dynamically via app.js -->
                         </div>
                     </div>
                 </div>
 
                 <!-- SUB-TAB 2: AD SPONSORS & TRACTION STATS -->
                 <div id="admin-subpane-ads" class="admin-subpane" style="display:none;">
-                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; align-items: start;">
+                    <div class="admin-ads-grid">
                         <!-- Create / Add Ad Form -->
-                        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 22px;">
-                            <h3 style="margin-top: 0; color: #fff; font-size: 16px; margin-bottom: 6px;">📢 Deploy Advertiser Banner</h3>
-                            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">Add a sponsored campaign. Every view and link click will be logged with verified traction proof.</p>
+                        <div class="admin-card">
+                            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 16px; margin-bottom: 6px;">📢 Deploy Advertiser Banner</h3>
+                            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">Add a sponsored campaign. Every view and link click will be logged with verified traction proof.</p>
 
                             <form id="form-create-sponsor-ad" onsubmit="saveNewSponsorAd(event)">
-                                <div style="margin-bottom: 12px;">
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Sponsor / Brand Name</label>
-                                    <input type="text" id="ad-sponsor-input" placeholder="e.g. ShebaTech / Predator Energy" required style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Sponsor / Brand Name</label>
+                                    <input type="text" id="ad-sponsor-input" class="admin-form-input" placeholder="e.g. ShebaTech / Predator Energy" required>
                                 </div>
-                                <div style="margin-bottom: 12px;">
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Campaign Title / Headline</label>
-                                    <input type="text" id="ad-title-input" placeholder="e.g. Get 20% Off Gaming Headsets!" required style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Campaign Title / Headline</label>
+                                    <input type="text" id="ad-title-input" class="admin-form-input" placeholder="e.g. Get 20% Off Gaming Headsets!" required>
                                 </div>
-                                <div style="margin-bottom: 12px;">
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Sponsor Website / Telegram URL</label>
-                                    <input type="url" id="ad-url-input" placeholder="https://shebatech.et or https://t.me/sponsor" required style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                <div class="admin-form-group">
+                                    <label class="admin-form-label">Sponsor Website / Telegram URL</label>
+                                    <input type="url" id="ad-url-input" class="admin-form-input" placeholder="https://shebatech.et or https://t.me/sponsor" required>
                                 </div>
-                                <div style="margin-bottom: 16px;">
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Badge Highlight Text</label>
-                                    <input type="text" id="ad-badge-input" value="🔥 OFFICIAL SPONSOR" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                <div class="admin-form-group" style="margin-bottom: 16px;">
+                                    <label class="admin-form-label">Badge Highlight Text</label>
+                                    <input type="text" id="ad-badge-input" class="admin-form-input" value="🔥 OFFICIAL SPONSOR">
                                 </div>
-                                <button type="submit" style="width: 100%; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #000; font-weight: 800; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px;">🚀 Launch Campaign</button>
+                                <button type="submit" style="width: 100%; background: linear-gradient(135deg, #f59e0b, #d97706); border: none; color: #000; font-weight: 800; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);">🚀 Launch Campaign</button>
                             </form>
                         </div>
 
                         <!-- Live Advertiser Performance Report -->
-                        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 22px;">
-                            <h3 style="margin-top: 0; color: #fff; font-size: 16px; margin-bottom: 6px;">📊 Advertiser Traction Proof</h3>
-                            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">Give sponsors unshakeable data on how many impressions and outbound clicks GameWatch generated for them.</p>
+                        <div class="admin-card">
+                            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 16px; margin-bottom: 6px;">📊 Advertiser Traction Proof</h3>
+                            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">Give sponsors unshakeable data on how many impressions and outbound clicks GameWatch generated for them.</p>
 
-                            <div style="overflow-x: auto;">
-                                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                            <div class="admin-table-wrap" style="display: block !important;">
+                                <table class="admin-table">
                                     <thead>
-                                        <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: #94a3b8; text-transform: uppercase; font-size: 11px; font-weight: 700;">
-                                            <th style="padding: 10px 8px;">Sponsor</th>
-                                            <th style="padding: 10px 8px;">Campaign</th>
-                                            <th style="padding: 10px 8px;">Views (Imp.)</th>
-                                            <th style="padding: 10px 8px;">Clicks</th>
-                                            <th style="padding: 10px 8px;">CTR %</th>
-                                            <th style="padding: 10px 8px;">Status</th>
-                                            <th style="padding: 10px 8px;">Action</th>
+                                        <tr>
+                                            <th>Sponsor</th>
+                                            <th>Campaign</th>
+                                            <th>Views (Imp.)</th>
+                                            <th>Clicks</th>
+                                            <th>CTR %</th>
+                                            <th>Status</th>
+                                            <th>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="admin-ads-table-body">
                                         <tr>
-                                            <td colspan="7" style="padding: 20px; text-align: center; color: #64748b;">Loading sponsor campaigns...</td>
+                                            <td colspan="7" style="padding: 20px; text-align: center; color: var(--text-tertiary);">Loading sponsor campaigns...</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -2238,66 +2244,66 @@
 
                 <!-- SUB-TAB 3: TOURNAMENT COMMISSION ENGINE -->
                 <div id="admin-subpane-tournaments" class="admin-subpane" style="display:none;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start;">
+                    <div class="admin-calc-grid">
                         <!-- Interactive Commission Calculator -->
-                        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 22px;">
-                            <h3 style="margin-top: 0; color: #fff; font-size: 16px; margin-bottom: 6px;">💰 Tournament Commission Calculator</h3>
-                            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 16px;">Calculate platform commission, lounge host fee, and prize distribution in real-time.</p>
+                        <div class="admin-card">
+                            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 16px; margin-bottom: 6px;">💰 Tournament Commission Calculator</h3>
+                            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">Calculate platform commission, lounge host fee, and prize distribution in real-time.</p>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
                                 <div>
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Player Count</label>
-                                    <input type="number" id="calc-player-count" value="16" min="4" max="64" oninput="calculateTournamentCommission()" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                    <label class="admin-form-label">Player Count</label>
+                                    <input type="number" id="calc-player-count" class="admin-form-input" value="16" min="4" max="64" oninput="calculateTournamentCommission()">
                                 </div>
                                 <div>
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Entry Fee (ETB)</label>
-                                    <input type="number" id="calc-entry-fee" value="100" min="10" step="10" oninput="calculateTournamentCommission()" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                    <label class="admin-form-label">Entry Fee (ETB)</label>
+                                    <input type="number" id="calc-entry-fee" class="admin-form-input" value="100" min="10" step="10" oninput="calculateTournamentCommission()">
                                 </div>
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                                 <div>
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Platform Commission %</label>
-                                    <input type="number" id="calc-platform-comm-pct" value="15" min="0" max="50" oninput="calculateTournamentCommission()" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                    <label class="admin-form-label">Platform Cut %</label>
+                                    <input type="number" id="calc-platform-comm-pct" class="admin-form-input" value="15" min="0" max="50" oninput="calculateTournamentCommission()">
                                 </div>
                                 <div>
-                                    <label style="display: block; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">Lounge Venue Cut %</label>
-                                    <input type="number" id="calc-lounge-cut-pct" value="10" min="0" max="50" oninput="calculateTournamentCommission()" style="width: 100%; background: #0f172a; border: 1px solid #334155; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 13px; box-sizing: border-box;">
+                                    <label class="admin-form-label">Lounge Cut %</label>
+                                    <input type="number" id="calc-lounge-cut-pct" class="admin-form-input" value="10" min="0" max="50" oninput="calculateTournamentCommission()">
                                 </div>
                             </div>
 
-                            <!-- Payout Breakdown Cards -->
-                            <div style="background: rgba(0, 0, 0, 0.4); border-radius: 10px; padding: 16px; margin-bottom: 14px;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #cbd5e1;">
+                            <!-- Payout Breakdown Box -->
+                            <div class="admin-payout-box">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">
                                     <span>Total Collected Pool:</span>
-                                    <strong id="calc-total-pool" style="color: #38bdf8;">1,600 ETB</strong>
+                                    <strong id="calc-total-pool" style="color: var(--blue-electric); font-weight: 800;">1,600 ETB</strong>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #f59e0b;">
-                                    <span>👑 Your Platform Revenue (15%):</span>
-                                    <strong id="calc-platform-cut" style="color: #f59e0b; font-size: 16px;">240 ETB</strong>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: #d97706;">
+                                    <span>👑 Your Platform Revenue:</span>
+                                    <strong id="calc-platform-cut" style="color: #d97706; font-size: 16px; font-weight: 800;">240 ETB</strong>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #cbd5e1;">
-                                    <span>🏢 Lounge Venue Share (10%):</span>
-                                    <strong id="calc-lounge-cut" style="color: #cbd5e1;">160 ETB</strong>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-secondary);">
+                                    <span>🏢 Lounge Venue Share:</span>
+                                    <strong id="calc-lounge-cut" style="color: var(--text-primary); font-weight: 700;">160 ETB</strong>
                                 </div>
-                                <hr style="border: none; border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 10px 0;">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #10b981;">
-                                    <span>🥇 1st Place Champion (75% of prize):</span>
-                                    <strong id="calc-1st-prize">900 ETB</strong>
+                                <hr style="border: none; border-top: 1px solid var(--border-subtle); margin: 10px 0;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #059669;">
+                                    <span>🥇 1st Place Champion (75%):</span>
+                                    <strong id="calc-1st-prize" style="font-weight: 800;">900 ETB</strong>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 13px; color: #10b981;">
-                                    <span>🥈 2nd Place Runner-Up (25% of prize):</span>
-                                    <strong id="calc-2nd-prize">300 ETB</strong>
+                                <div style="display: flex; justify-content: space-between; font-size: 13px; color: #059669;">
+                                    <span>🥈 2nd Place Runner-Up (25%):</span>
+                                    <strong id="calc-2nd-prize" style="font-weight: 800;">300 ETB</strong>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Step-by-Step Operator Guide -->
-                        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 22px;">
-                            <h3 style="margin-top: 0; color: #fff; font-size: 16px; margin-bottom: 6px;">📖 Complete Tournament Management Walkthrough</h3>
-                            <p style="color: #94a3b8; font-size: 12px; margin-bottom: 14px;">Follow these 5 steps to successfully host and monetize esports tournaments in GameWatch:</p>
+                        <div class="admin-card">
+                            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 16px; margin-bottom: 6px;">📖 Complete Tournament Management Walkthrough</h3>
+                            <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 14px;">Follow these 5 steps to successfully host and monetize esports tournaments in GameWatch:</p>
 
-                            <ol style="margin: 0; padding-left: 20px; color: #cbd5e1; font-size: 13px; line-height: 1.8;">
+                            <ol style="margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 13px; line-height: 1.8;">
                                 <li><strong>Open Tournament:</strong> In the <em>Tournaments</em> tab, create an event (e.g. "Sunday EA FC 25 Showdown", 100 ETB entry, 16 players).</li>
                                 <li><strong>Collect Registration:</strong> Players register online or clerk collects entry fees at the counter (via Telebirr, CBE Birr, or Cash).</li>
                                 <li><strong>Roster Check-In &amp; Lock:</strong> On tournament day, verify participants and tap <code>🔒 Lock Roster</code>.</li>
@@ -2306,7 +2312,7 @@
                             </ol>
 
                             <div style="margin-top: 18px; text-align: center;">
-                                <button type="button" onclick="switchView('tournaments')" style="background: rgba(16, 185, 129, 0.2); border: 1px solid #10b981; color: #10b981; font-weight: 700; padding: 10px 20px; border-radius: 8px; cursor: pointer;">🏆 Go to Live Tournaments Arena →</button>
+                                <button type="button" onclick="switchView('tournaments')" style="background: rgba(16, 185, 129, 0.15); border: 1px solid #10b981; color: #059669; font-weight: 700; padding: 10px 20px; border-radius: 8px; cursor: pointer;">🏆 Go to Live Tournaments Arena →</button>
                             </div>
                         </div>
                     </div>
@@ -3998,7 +4004,7 @@
     <div class="toast-box" id="toast-container"></div>
 
     <script src="/static/js/offline_engine.js?v=3"></script>
-    <script src="/static/js/app.js?v=17"></script>
+    <script src="/static/js/app.js?v=18"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {

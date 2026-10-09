@@ -31,4 +31,5 @@ desktop.ini
 .env
 .env.local
 .env.*.local
-
+# Private developer notes
+chat.md

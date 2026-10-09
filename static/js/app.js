@@ -6628,45 +6628,104 @@ async function loadPlatformAdminStats() {
 
 function renderAdminUsersTable(users) {
     const tbody = document.getElementById('admin-users-table-body');
-    if (!tbody) return;
+    const mlist = document.getElementById('admin-users-mobile-list');
+    if (!tbody && !mlist) return;
+
     if (!users || users.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: #64748b;">No matching user accounts found.</td></tr>';
+        if (tbody) tbody.innerHTML = '<tr><td colspan="9" style="padding: 24px; text-align: center; color: var(--text-tertiary);">No matching user accounts found.</td></tr>';
+        if (mlist) mlist.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 13px;">No matching user accounts found.</div>';
         return;
     }
-    tbody.innerHTML = users.map(u => {
-        let roleBadge = '<span style="background: rgba(148, 163, 184, 0.2); color: #cbd5e1; padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">MEMBER</span>';
-        if (u.role === 'OWNER') {
-            roleBadge = '<span style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">🏢 OWNER</span>';
-        } else if (u.role === 'CLERK') {
-            roleBadge = '<span style="background: rgba(139, 92, 246, 0.2); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">💼 CLERK</span>';
-        } else if (u.role === 'CUSTOMER') {
-            roleBadge = '<span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 2px 8px; border-radius: 6px; font-weight: 700; font-size: 11px;">🎮 GAMER</span>';
-        }
 
-        const dateStr = u.created_at ? u.created_at.split(' ')[0] : '-';
-        const lastLogin = u.last_login_at ? u.last_login_at.split(' ')[0] : 'Never';
+    if (tbody) {
+        tbody.innerHTML = users.map(u => {
+            let roleBadge = '<span class="role-badge role-badge-member">MEMBER</span>';
+            if (u.role === 'OWNER') {
+                roleBadge = '<span class="role-badge role-badge-owner">🏢 OWNER</span>';
+            } else if (u.role === 'CLERK') {
+                roleBadge = '<span class="role-badge role-badge-clerk">💼 CLERK</span>';
+            } else if (u.role === 'CUSTOMER') {
+                roleBadge = '<span class="role-badge role-badge-gamer">🎮 GAMER</span>';
+            }
 
-        let actionCell = '';
-        if (u.email === 'abyman24680@gmail.com') {
-            actionCell = '<span style="color: #f59e0b; font-size: 11px; font-weight: 700;">👑 Master</span>';
-        } else {
-            actionCell = `<button type="button" class="btn" onclick="deleteAdminUser(${u.id}, '${escapeHtml(u.full_name || u.email)}')" style="background: rgba(239, 68, 68, 0.15); border: 1px solid #ef4444; color: #ef4444; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;">🗑️ Delete</button>`;
-        }
+            const dateStr = u.created_at ? u.created_at.split(' ')[0] : '-';
+            const lastLogin = u.last_login_at ? u.last_login_at.split(' ')[0] : 'Never';
 
-        return `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 12px 10px; color: #64748b; font-family: monospace;">#${u.id}</td>
-                <td style="padding: 12px 10px; font-weight: 600; color: #fff;">${escapeHtml(u.full_name || 'Anonymous')}</td>
-                <td style="padding: 12px 10px; color: #38bdf8;">${escapeHtml(u.email || '-')}</td>
-                <td style="padding: 12px 10px; color: #cbd5e1;">${escapeHtml(u.phone || '-')}</td>
-                <td style="padding: 12px 10px;">${roleBadge}</td>
-                <td style="padding: 12px 10px; color: #94a3b8;">${dateStr}</td>
-                <td style="padding: 12px 10px; color: #94a3b8;">${lastLogin}</td>
-                <td style="padding: 12px 10px;"><span style="color: #10b981; font-weight: 600;">● Active</span></td>
-                <td style="padding: 12px 10px; text-align: right;">${actionCell}</td>
-            </tr>
-        `;
-    }).join('');
+            let actionCell = '';
+            if (u.email === 'abyman24680@gmail.com') {
+                actionCell = '<span style="color: #d97706; font-size: 11px; font-weight: 800;">👑 Master</span>';
+            } else {
+                actionCell = `<button type="button" class="btn" onclick="deleteAdminUser(${u.id}, '${escapeHtml(u.full_name || u.email)}')" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;">🗑️ Delete</button>`;
+            }
+
+            return `
+                <tr>
+                    <td class="admin-id-col">#${u.id}</td>
+                    <td class="admin-user-name">${escapeHtml(u.full_name || 'Anonymous')}</td>
+                    <td><a href="mailto:${escapeHtml(u.email || '')}" class="admin-user-email">${escapeHtml(u.email || '-')}</a></td>
+                    <td style="color: var(--text-secondary);">${escapeHtml(u.phone || '-')}</td>
+                    <td>${roleBadge}</td>
+                    <td style="color: var(--text-tertiary); font-size: 12px;">${dateStr}</td>
+                    <td style="color: var(--text-tertiary); font-size: 12px;">${lastLogin}</td>
+                    <td><span style="color: var(--emerald-400); font-weight: 700; font-size: 12px;">● Active</span></td>
+                    <td style="text-align: right;">${actionCell}</td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    if (mlist) {
+        mlist.innerHTML = users.map(u => {
+            let roleBadge = '<span class="role-badge role-badge-member">MEMBER</span>';
+            let avatarBg = 'rgba(148, 163, 184, 0.15)';
+            let avatarColor = 'var(--text-secondary)';
+            if (u.role === 'OWNER') {
+                roleBadge = '<span class="role-badge role-badge-owner">🏢 OWNER</span>';
+                avatarBg = 'rgba(16, 185, 129, 0.15)';
+                avatarColor = '#059669';
+            } else if (u.role === 'CLERK') {
+                roleBadge = '<span class="role-badge role-badge-clerk">💼 CLERK</span>';
+                avatarBg = 'rgba(139, 92, 246, 0.15)';
+                avatarColor = '#7c3aed';
+            } else if (u.role === 'CUSTOMER') {
+                roleBadge = '<span class="role-badge role-badge-gamer">🎮 GAMER</span>';
+                avatarBg = 'rgba(245, 158, 11, 0.15)';
+                avatarColor = '#d97706';
+            }
+
+            const initial = (u.full_name || u.email || 'U').charAt(0).toUpperCase();
+            const dateStr = u.created_at ? u.created_at.split(' ')[0] : '-';
+            const lastLogin = u.last_login_at ? u.last_login_at.split(' ')[0] : 'Never';
+
+            let actionCell = '';
+            if (u.email === 'abyman24680@gmail.com') {
+                actionCell = '<span style="color: #d97706; font-size: 11px; font-weight: 800;">👑 Master</span>';
+            } else {
+                actionCell = `<button type="button" class="btn" onclick="deleteAdminUser(${u.id}, '${escapeHtml(u.full_name || u.email)}')" style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); color: #dc2626; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">🗑️ Delete</button>`;
+            }
+
+            return `
+                <div class="admin-user-mcard">
+                    <div class="admin-user-mcard-top">
+                        <div class="admin-user-mcard-name">
+                            <span style="width: 28px; height: 28px; border-radius: 50%; background: ${avatarBg}; color: ${avatarColor}; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; flex-shrink: 0;">${initial}</span>
+                            <span>${escapeHtml(u.full_name || 'Anonymous')}</span>
+                            <span class="admin-user-mcard-id">#${u.id}</span>
+                        </div>
+                        <div>${roleBadge}</div>
+                    </div>
+                    <div class="admin-user-mcard-details">
+                        <div>📧 <a href="mailto:${escapeHtml(u.email || '')}" class="admin-user-email">${escapeHtml(u.email || '-')}</a></div>
+                        ${u.phone ? `<div>📞 <span style="color: var(--text-secondary);">${escapeHtml(u.phone)}</span></div>` : ''}
+                    </div>
+                    <div class="admin-user-mcard-meta">
+                        <div>📅 Joined ${dateStr} • Last: ${lastLogin}</div>
+                        <div>${actionCell}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
 }
 
 async function deleteAdminUser(userId, userName) {
@@ -6702,14 +6761,9 @@ async function cleanAllTestUsers() {
 }
 
 function filterAdminUsers(role, btn) {
-    document.querySelectorAll('.btn-user-filter').forEach(b => {
-        b.style.background = 'rgba(255, 255, 255, 0.05)';
-        b.style.color = '#94a3b8';
-    });
-    if (btn) {
-        btn.style.background = '#334155';
-        btn.style.color = '#fff';
-    }
+    document.querySelectorAll('.btn-user-filter').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
     if (role === 'ALL') {
         renderAdminUsersTable(allAdminUsers);
     } else {
@@ -6737,7 +6791,7 @@ function renderAdminAdsTable(ads) {
     const tbody = document.getElementById('admin-ads-table-body');
     if (!tbody) return;
     if (!ads || ads.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="padding: 20px; text-align: center; color: #64748b;">No active sponsor ads. Launch your first ad above!</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="padding: 20px; text-align: center; color: var(--text-tertiary);">No active sponsor ads. Launch your first ad above!</td></tr>';
         return;
     }
     tbody.innerHTML = ads.map(a => {
@@ -6746,18 +6800,18 @@ function renderAdminAdsTable(ads) {
         const imp = parseInt(a.impressions || 0, 10);
         const clk = parseInt(a.clicks || 0, 10);
         const ctr = (a.ctr_pct !== undefined ? a.ctr_pct : (imp > 0 ? ((clk/imp)*100).toFixed(1) : 0)) + '%';
-        const status = a.is_active ? '<span style="color:#10b981; font-weight:700;">● Active</span>' : '<span style="color:#94a3b8;">Paused</span>';
+        const status = a.is_active ? '<span style="color:var(--emerald-400); font-weight:700;">● Active</span>' : '<span style="color:var(--text-tertiary);">Paused</span>';
 
         return `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 10px 8px; font-weight: 700; color: #f59e0b;">${sponsor}</td>
-                <td style="padding: 10px 8px; color: #fff;">${title}</td>
-                <td style="padding: 10px 8px; color: #38bdf8; font-weight: 700;">${imp.toLocaleString()}</td>
-                <td style="padding: 10px 8px; color: #10b981; font-weight: 700;">${clk.toLocaleString()}</td>
-                <td style="padding: 10px 8px; color: #a78bfa; font-weight: 700;">${ctr}</td>
-                <td style="padding: 10px 8px;">${status}</td>
-                <td style="padding: 10px 8px;">
-                    <button type="button" class="btn" onclick="copySponsorReport(${a.id})" style="background: rgba(245, 158, 11, 0.15); border: 1px solid #f59e0b; color: #f59e0b; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;">
+            <tr>
+                <td style="padding: 10px 10px; font-weight: 700; color: #d97706;">${sponsor}</td>
+                <td style="padding: 10px 10px; color: var(--text-primary); font-weight: 600;">${title}</td>
+                <td style="padding: 10px 10px; color: var(--blue-electric); font-weight: 700;">${imp.toLocaleString()}</td>
+                <td style="padding: 10px 10px; color: var(--emerald-400); font-weight: 700;">${clk.toLocaleString()}</td>
+                <td style="padding: 10px 10px; color: var(--purple-400); font-weight: 700;">${ctr}</td>
+                <td style="padding: 10px 10px;">${status}</td>
+                <td style="padding: 10px 10px; text-align: right;">
+                    <button type="button" class="btn" onclick="copySponsorReport(${a.id})" style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); color: #d97706; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 6px; cursor: pointer;">
                         📋 Copy Report
                     </button>
                 </td>
@@ -6834,17 +6888,11 @@ function copySponsorReport(adId) {
 }
 
 function switchAdminSubTab(tab) {
-    document.querySelectorAll('.admin-tab-btn').forEach(b => {
-        b.style.borderBottomColor = 'transparent';
-        b.style.color = '#94a3b8';
-    });
+    document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.admin-subpane').forEach(p => p.style.display = 'none');
 
     const btn = document.getElementById(`atab-btn-${tab}`);
-    if (btn) {
-        btn.style.borderBottomColor = '#f59e0b';
-        btn.style.color = '#f59e0b';
-    }
+    if (btn) btn.classList.add('active');
 
     const pane = document.getElementById(`admin-subpane-${tab}`);
     if (pane) pane.style.display = 'block';
